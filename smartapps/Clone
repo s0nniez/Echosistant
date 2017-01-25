@@ -1,17 +1,22 @@
-/*
+/* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
- *		01/20/2017		Ver. 4 build	Updates to Engine
- *		01/02/2017		Ver. 4 build	Smart Vents added, Garage door changed commands
- *		01/01/2017		Ver. 4 build	Bug Fix - Devices not showing in List_of_Devices in the Live Logs
- *		01/01/20017		Ver. 4 build	Ceiling Fan controls - speed up, slow down, low, medium, high
- *		12/31/2016		Ver. 4 build	Garage door support w/commands open and close, notifications in profiles
- *		12/27/2016		Rebuild			Complete makeover of the EchoSistant UI
+ *		1/25/2017		Version:4.0 R.4.2.14		Bug fixes: new Pin Validation process, more bug fixes, removed feedback page
+ *		1/20/2017		Version:4.0 R.4.2.13		Bug fixes: minor fixes
+ *		1/20/2017		Version:4.0 R.4.2.11		Feature: completed Phase 2 - Basic Device Feedback
+ *		1/14/2017		Version:4.0 R.4.2.10		Feature: added garage door relay control 
+ *		1/14/2017		Version:4.0 R.4.2.08		Bug fixes: for try again module; added PIN cycle for relays 
+ *		1/13/2017		Version:4.0 R.4.2.07		Feature Added: Alexa Feedback and device status 
+ *		1/13/2017		Version:4.0 R.4.2.05		Feature: First Alexa Thinks
+ *		1/12/2017		Version:4.0 R.4.2.04		Bug fixes: scheduling process
+ *		1/12/2017		Version:4.0 R.4.2.03		Bug fixes: pin requests
+ *		1/12/2017		Version:4.0 R.4.2.02		Bug fixes: fans, pin,  and non dimmer switches 
+ *		1/11/2017		Version:4.0 R.4.2.01		New features: HVAC filters reminders 
+ *												Improvements: Alexa responses
+ *		12/31/2016		Version:4.0 R.4.1.1		New features: status updates, custom commands, weather alerts, message reminders 
+ *												Improvements: streamlined UI and processing 
  *
- *
- *
- *
- *  Copyright 2016 Jason Headley
+ *  Copyright 2016 Jason Headley & Bobby Dobrescu
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -22,172 +27,277 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ * Phase 1 - Device Control Module - status COMPLETED
+ * Phase 2 - Feedback Module (same app) - status COMPLETED
+ * Phase 3 - Text to Speech Module (new add-on app Profile) - in PROGRESS
+ * Phase 4 - Scenes Labs (new add-on app Scenes) - not STARTED
+ * Phase 5 - Security Module - Parent App - not STARTED
+ * Phase 6 - Adding UI (review and test final product)
+ *
+ *
 /**********************************************************************************************************************************************/
 definition(
-	name			: "Clone${parent ? " - Profile" : ""}",
-    namespace		: "Clone",
+	name			: "EchoSistantLabs",
+    namespace		: "EchoLabs",
     author			: "JH/BD",
 	description		: "The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.",
-	singleInstance	: true,
-    parent: parent ? "Clone.Clone" : null,
-    category		: "My Apps",
+	category		: "My Apps",
+    singleInstance	: true,
 	iconUrl			: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png",
 	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
 /**********************************************************************************************************************************************/
-
-/************************************************************************************************************
-   PARENT PAGES
-************************************************************************************************************/
-preferences {
-    page name: "pageMain"
-    //Parent Pages    
+preferences {   
     page name: "mainParentPage"
     		page name: "mIntent"
-            	page name: "mDevices"
-                page name: "mFeedback"
-                page name: "mDefaults"
-                page name: "mCustomDevices"
-                page name: "mSHMSec"
-                page name: "customSounds"
-                page name: "alerts"
-            page name: "mNotifyProfile"
-            page name: "mSecuritySuite"
+            	page name: "mSHMSec"
+                	page name: "mSecuritySuite"
+				page name: "mDevices"
+                page name: "mDefaults"            
+    		page name: "mRooms"
+            	page name: "mNotifyProfile"
+            	page name: "mControlProfile"
             page name: "mSupport"
-        	page name: "mSecurity"
+            page name: "mSettings"
+           		page name: "mSkill"
+            		page name: "mProfileDetails"
+            		page name: "mDeviceDetails" 
+                page name: "mTokens"
+                    page name: "mConfirmation"            
+                    	page name: "mTokenReset"
             page name: "mBonus"
             	page name: "mDashboard"
                 	page name: "mDashConfig"
                     page name: "pageTwo"
                     page name: "mWeatherConfig"
-                    page name: "severeWeatherAlertsPage"   
-        	page name: "SkillDetails"
-        	page name: "ProfileDetails"
-            page name: "DeviceDetails"
-            page name: "tokens"
-            page name: "pageConfirmation"
-            page name: "pageReset"
-      
-    //Profile Pages    
-      	page name: "pCreate"
-        page name: "MainProfiles"
-        page name: "mainProfilePage"
-    		page name: "pSend"
-        	page name: "pActions"
-        	page name: "pConfig"
-            page name: "pRestrict"
-            	page name: "certainTime"            
-        	page name: "pScenes"
-}
-def pageMain() { if (!parent) mainParentPage() else mainProfilePage() }
-/***********************************************************************************************************************
-    PARENT UI CONFIGURATION
-***********************************************************************************************************************/
+                    page name: "severeWeatherAlertsPage" 
+}            
+//dynamic page methods
 page name: "mainParentPage"
-	def mainParentPage() {	
-       	dynamicPage(name: "mainParentPage", title:"", install: true, uninstall:false) {
-		section ("") {
-			href "mIntent", title: "Main Home Intent",  description: mIntentSettings(), state: mIntentComplete(),
-			image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant%402x.png"                
-			href "pCreate", title: "View and Create Profiles", description: cCreateSettings(), state: cCreateComplete(),
-			image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"    
-			href "mSupport", title: "Install and Support", description: mSupportSettings(), state: mSupportComplete(),
-			image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"                               
-			href "mSecurity", title: "App Information Data", description: mSecuritySettings(), state: mSecurityComplete(),
-			image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Amazon_alexa.png"                               
-		if (activateDashboard) {
-			href "mDashboard", title: "Dashboard", description: dashboardSettings(), state: dashboardComplete(),
-			image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
-			}
-			href "mBonus", title: "                    The Current Mode is \n" +
-			"					                        ${location.currentMode} \n" +
+    def mainParentPage() {	
+       dynamicPage(name: "mainParentPage", title:"", install: true, uninstall:false) {
+       		section ("") {
+                href "mIntent", title: "Main Home Control",
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png"    
+				href "mRooms", title: "Configure Rooms",
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_msg.png"
+				href "mSettings", title: "General Settings",
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
+				href "mSupport", title: "Install and Support",// description: mSupportSettings(), state: mSupportComplete(),
+					image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"                               
+			if (activateDashboard) {
+				href "mDashboard", title: "Dashboard",// description: dashboardSettings(), state: dashboardComplete(),
+					image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
+				}
+				href "mBonus", title: "                    The Current Mode is \n" +
+				"					                        ${location.currentMode} \n" +
                      
-				"       Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}", description: ""
+					"       Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}", description: ""
 			}
 		}
 	}
 page name: "mIntent"
     def mIntent() {
-            dynamicPage (name: "mIntent", title: "", install: false, uninstall: false) {
-            section (" I want EchoSistant to... ")
-			section("... use these devices") {
-	            href "mDevices", title: "Select devices...", description: mDevicesSettings(), state: mDevicesComplete(),
-    	        image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
-				}
-            section ("... control my devices using these settings") {
-                href "mDefaults", title: "Default control options...", description: mDefaultsSettings(), state: mDefaultsComplete(), 
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png" 
-    		}
-            section ("...secure my home") {
-            	href "mSHMSec", title: "Home Security control options...", description: mSHMSecSettings(), state: mSHMSecComplete(),
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
-            }                
-            section ("This section is for Testing") {
-            	href "customSounds", title: "Testing Custom Sound Notifications", description: none,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"
+    	dynamicPage (name: "mIntent", title: "", install: false, uninstall: false) {
+			section("Devices that are controlled by EchoSistant") {
+	            href "mDevices", title: "Select Devices",
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"    
+			}               
+            section ("System and Device Control Defaults") {
+                href "mDefaults", title: "Change Defaults",
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+			}
+            section ("Manage Home Security") {
+            	href "mSHMSec", title: "Home Security control options...",//, description: mSHMSecSettings(), state: mSHMSecComplete(),
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
             }
-		}            
+    	}            
 	}
+page name: "mRooms"    
+	def mRooms() {	
+    	dynamicPage(name: "mRooms", title:"I want to create a...", install: true, uninstall: false) {
+        	if (!controlOn && !notifyOn && !feedbackOn && !securityOn) {
+        	section ("Where are my Rooms???") {
+        	paragraph "You have not installed and/or activated any of the plug in modules! \n" +
+        	"Please navigate to the 'Install and Support' section on the main page to activate modules"
+        	}
+        }
+        if (controlOn) {
+        	section ("Control and Messaging Profile") {
+				href "mControlProfile", title: "View and Create Control and Messaging Profiles...",// description: pCreateSettings(), state: pCreateComplete(),
+            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+            	}
+            }
+     	if (notifyOn) {
+        	section ("Notifications Profile") {
+  				href "mNotifyProfile", title: "View and Create Notification Profiles...",// description: pCreateSettings(), state: pCreateComplete(),
+            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+				}
+			}
+    	}   
+	}
+page name: "mSupport"  
+ def mSupport(){
+        dynamicPage(name: "mSupport", uninstall: false) {
+        	section ("EchoSistant Modules") {
+            	paragraph "For the notifications and room feedback to be operational, they must be installed in the ST IDE and the toggles below must be activated"
+            	input "controlOn", "bool", title: "Is the Control & Messaging Module Installed?", required: true, defaultValue: false
+                input "notifyOn", "bool", title: "Is the Notifications Module Installed? ", required: true, defaultValue: false
+ 				input "securityOn", "bool", title: "Is the Security Suite Module Installed?", required: true, defaultValue: false
+                }
+                section ("Amazon AWS Skill Details") {
+					href "SkillDetails", title: "Tap to view setup data for the AWS Main Intent Skill...", description: "",
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"
+            		}
+                section ("Directions, How-to's, and Troubleshooting") { 
+ 					href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png"
+                	}   
+            	section ("AWS Lambda website") {
+            		href url:"https://aws.amazon.com/lambda/", title: "Tap to go to the AWS Lambda Website", description: none,
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_aws.png"
+                	}
+            	section ("Amazon Developer website") {    
+   					href url:"https://developer.amazon.com/", title: "Tap to go to Amazon Developer website", description: none,
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Skills.png"
+					}
+                section ("Developers", hideWhenEmpty: true){  
+            		paragraph ("You can reach out to the Echosistant Developers with the following information: \n" + 
+                	"Jason Headley \n"+
+                	"Forum user name @bamarayne \n" +
+                	"Bobby Dobrescu \n"+
+                	"Forum user name @SBDobrescu")
+                	}
+                }	            	
+            }    
+page name: "mSHMSec"    
+    def mSHMSec(){
+        dynamicPage(name: "mSHMSec", title: "Home Security Information via Alexa",install: false, uninstall: false) {
+        section ("Configure Security Options for Alexa") {
+        	input "cSec", "capability.relaySwitch", title: "Select switch(s) for Alexa SHM control...", multiple: true, required: false, submitOnChange: true
+			input "cPIN", "password", title: "Set PIN for ALL Alexa Controlled Controls", default: false, required: false
+        	}
+        if (securityOn) {    
+		section ("Access Security Suite") {
+			href "mSecuritySuite", title: "Tap to configure your Home Security Suite module", description: "",
+            image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+        	}    
+        }        	
+		section ("Smart Home Monitor Status Change Feedback", hideable: true, hidden: true) {
+			input "fSecFeed", "bool", title: "Activate SHM status change announcements.", default: false, submitOnChange: true
+			if (fSecFeed) {    
+				input "shmSynthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false,
+				image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
+				input "shmSonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true,    
+				image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
+				}
+            if (fSecFeed) {
+				input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+				input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
+				}
+			}
+        }
+    }     
+page name: "mControlProfile"    
+    def mControlProfile() {
+        dynamicPage (name: "mControlProfile", title: "", install: true, uninstall: false) {
+        	if (childApps.size()) { 
+            	section(childApps.size()==1 ? "One Room configured" : childApps.size() + " Room configured" )
+            }
+            if (childApps.size()) {  
+            	section("Rooms",  uninstall: false){
+                	app(name: "rooms", appName: "Rooms", namespace: "EchoLabs", title: "Create a new Room", multiple: true,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Rooms",  uninstall: false){
+            		paragraph "NOTE: Looks like you haven't created any Rooms yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
+            		app(name: "room", appName: "Rooms", namespace: "EchoLabs", title: "Create a new Room", multiple: true,  uninstall: false)
+        		}
+            }
+       }
+}   
+page name: "mNotifyProfile"    
+    def mNotifyProfile() {
+        dynamicPage (name: "mNotifyProfile", title: "", install: true, uninstall: false) {
+        	if (childApps.size()) { 
+            	section(childApps.size()==1 ? "One Room configured" : childApps.size() + " Room configured" )
+            }
+            if (childApps.size()) {  
+            	section("Notification Profile",  uninstall: false){
+                	app(name: "profile", appName: "NotificationProfile", namespace: "Clone", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Profiles",  uninstall: false){
+            		paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
+            		app(name: "profile", appName: "NotificationProfile", namespace: "Clone", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
+        		}
+            }
+       }
+	}
+page name: "mSecuritySuite"    
+    def mSecuritySuite() {
+        dynamicPage (name: "mSecuritySuite", title: "", install: true, uninstall: false) {
+        	if (childApps.size()) { 
+            	section(childApps.size()==1 ? "Security configured" : childApps.size() + " Room configured" )
+            }
+            if (childApps.size()) {  
+            	section("Security Suite",  uninstall: false){
+                	app(name: "profile", appName: "SecuritySuite", namespace: "Clone", title: "Configure Security Suite", multiple: false,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Profiles",  uninstall: false){
+            		paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
+            		app(name: "profile", appName: "SecuritySuite", namespace: "Clone", title: "Configure Security Suite", multiple: false,  uninstall: false)
+        		}
+            }
+       }
+	}    
+
 page name: "mDevices"    
         def mDevices(){
             dynamicPage(name: "mDevices", title: "",install: false, uninstall: false) {
+                // DEVICE categories: cSwitch,cVent,cFan,cTstat,cDoor,cRelay,cContactRelay,cLock,cMotion,cContact,cWater,cPresence,cSpeaker,cSynth,cMedia,cBattery 
                 section ("Select devices", hideWhenEmpty: true){ }
-                section ("Lights and Switches", hideWhenEmpty: true, hideable: true){  
+                section ("Lights and Switches", hideWhenEmpty: true){  
                     input "cSwitch", "capability.switch", title: "Allow These Switch(es)...", multiple: true, required: false, submitOnChange: true
                     input "cVent", "capability.switchLevel", title: "Allow These Smart Vent(s)...", multiple: true, required: false
                     input "cFan", "capability.switchLevel", title: "Allow These Fan(s)...", multiple: true, required: false
                 }
-           		section ("Custom Devices", hideWhenEmpty: true, hideable: true){
-                input "showAdvanced", "bool", title: "Advanced Device Options", default: false, submitOnChange: true
+                section ("PIN Protected Devices (Voice Activated Setting)" , hideWhenEmpty: true) {
+                    input "cTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false, submitOnChange: true
+                    if (cTstat) {input "uPIN_T", "bool", title: "Use PIN to control Thermostats?", default: false}
+                    input "cDoor", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
+                    input "cRelay", "capability.switch", title: "Allow These Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
+                    if (cRelay) input "cContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
+                    if (cDoor || cRelay) {input "uPIN_D", "bool", title: "Use PIN to control Doors?", default: false}  
+                    input "cLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
+                    if (cLock) {input "uPIN_L", "bool", title: "Use PIN to control Locks?", default: false}
+                	input "cMiscDev", "capability.switch", title: "Allow these Misc. Switches...", multiple: true, required: false, submitOnChange: true
+                    if (cMiscDev) paragraph "All devices chosen here require PIN for all (on/off) operations. Commands are 'Activate' & 'Deactivate'"
+                } 
+                section ("Sensors", hideWhenEmpty: true) {
+                 	input "cMotion", "capability.motionSensor", title: "Allow These Motion Sensor(s)...", multiple: true, required: false
+                    input "cContact", "capability.contactSensor", title: "Allow These Contact Sensor(s)...", multiple: true, required: false      
+            		input "cWater", "capability.waterSensor", title: "Allow These Water Sensor(s)...", multiple: true, required: false                       
+                    input "cPresence", "capability.presenceSensor", title: "Allow These Presence Sensors(s)...", multiple: true, required: false
+                }
+                section ("Media" , hideWhenEmpty: true){
+                    input "cSpeaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
+                    input "cSynth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
+                    input "cMedia", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
+                } 
+                section ("Batteries", hideWhenEmpty: true ){
+                    input "cBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
+                } 
 				if (showAdvanced) {	
                     href "mCustomDevices", title: "Create custom devices and commands",// description: devicesControlCustomDescr() , state: completeDevicesControlCustom(),
                     image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Plus.png"                    
             		}
-            	}
-                section ("PIN Protected Devices (Voice Enabled Setting)" , hideWhenEmpty: true, hideable: true) {
-                    input "cTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false, submitOnChange: true
-                    	if (cTstat) {input "usePIN_T", "bool", title: "Use PIN to control Thermostats?", default: false}
-                    input "cDoor", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
-                    	if (cDoor) {input "usePIN_D", "bool", title: "Use PIN to control Doors?", default: false}  
-                    input "cLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
-                    	if (cLock) {input "usePIN_L", "bool", title: "Use PIN to control Locks?", default: false}
-                	input "cMiscDev", "capability.switch", title: "Allow these Misc. Switches...", multiple: true, required: false, submitOnChange: true
-                    	if (cMiscDev) paragraph "All devices chosen here require PIN for all operations"
-                }
-                section ("Sensors", hideWhenEmpty: true, hideable: true) {
-                 	input "cMotion", "capability.motionSensor", title: "Allow These Motion Sensor(s)...", multiple: true, required: false
-                    input "cContact", "capability.contactSensor", title: "Allow These Contact Sensor(s)...", multiple: true, required: false      
-                    input "cPresence", "capability.presenceSensor", title: "Allow These Presence Sensors(s)...", multiple: true, required: false
-                }
-                section ("Media" , hideWhenEmpty: true, hideable: true){
-                    input "cSpeaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
-                } 
-                section ("Batteries", hideWhenEmpty: true, hideable: true ){
-                    input "cBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
-                } 
-            }
-		}   
-	page name: "mDefaults"
-        def mDefaults(){
-                dynamicPage(name: "mDefaults", title: "", uninstall: false){
-                    section ("General Control") {            
-                        input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
-                        input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 3, required: false
-                        input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false
-						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 1, required: false                    
-                    }
-                    section ("Fan Control") {            
-                        input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
-                        input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
-                        input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
-                        input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
-                    }
-                    section ("Activity Defaults") {            
-                        input "cLowBattery", "number", title: "Alexa Provides Low Battery Feddback when the Bettery Level falls below (default is 25%)", defaultValue: 25, required: false
-                        input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feddback when No Activity was Detected for (default is 24 hours) ", defaultValue: 24, required: false
-					}
 				}
-			}
+    		} 
 page name: "mCustomDevices"    
     def mCustomDevices(){
         dynamicPage(name: "mCustomDevices", title: "Create Devices That Alexa Can Control Directly",install: false, uninstall: false) {
@@ -250,130 +360,38 @@ page name: "mCustomDevices"
                 }
             }
         }
-    }             
-page name: "mSHMSec"    
-    def mSHMSec(){
-        dynamicPage(name: "mSHMSec", title: "Home Security Information via Alexa",install: false, uninstall: false) {
-        section ("Configure Security Options for Alexa") {
-        	input "cSec", "capability.relaySwitch", title: "Select switch(s) for SHM control(s)...", multiple: true, required: false, submitOnChange: true
-			input "cPIN", "password", title: "Set PIN for ALL Home Security options (While using Alexa)", default: false, required: false
-        	}
-        section ("Smart Home Monitor Status Change Feedback", hideable: true, hidden: true) {
-			input "fSecFeed", "bool", title: "Activate SHM status change announcements.", default: false, submitOnChange: true
-			if (fSecFeed) {    
-				input "shmSynthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false,
-				image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
-				input "shmSonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true,    
-				image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
-				}
-            if (fSecFeed) {
-				input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
-				input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
-				}
-			}
-        }
-    } 
-page name: "mNotifyProfile"    
-    def mNotifyProfile() {
-        dynamicPage (name: "mNotifyProfile", title: "", install: true, uninstall: false) {
-        	if (childApps.size()) { 
-            	section(childApps.size()==1 ? "One Room configured" : childApps.size() + " Room configured" )
-            }
-            if (childApps.size()) {  
-            	section("Notification Profile",  uninstall: false){
-                	app(name: "profile", appName: "NotificationProfile", namespace: "Clone", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
-            	}
-            }
-            else {
-            	section("Profiles",  uninstall: false){
-            		paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-            		app(name: "profile", appName: "NotificationProfile", namespace: "Clone", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
-        		}
-            }
-       }
+    }     
+page name: "mDefaults"
+    def mDefaults(){
+		dynamicPage(name: "mDefaults", title: "", uninstall: false){
+	section ("General Control") {            
+		input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
+		input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
+		input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false
+		input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                    
+		}
+	section ("Fan Control") {            
+		input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
+		input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
+		input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
+		input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
+		}
+	section ("Activity Defaults") {            
+		input "cLowBattery", "number", title: "Alexa Provides Low Battery Feddback when the Bettery Level falls below (default is 25%)", defaultValue: 25, required: false
+		input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feddback when No Activity was Detected for (default is 24 hours) ", defaultValue: 24, required: false
+		}
 	}
-page name: "mSecuritySuite"    
-    def mSecuritySuite() {
-        dynamicPage (name: "mSecuritySuite", title: "", install: true, uninstall: false) {
-        	if (childApps.size()) { 
-            	section(childApps.size()==1 ? "Security configured" : childApps.size() + " Room configured" )
-            }
-            if (childApps.size()) {  
-            	section("Security Suite",  uninstall: false){
-                	app(name: "profile", appName: "SecuritySuite", namespace: "Clone", title: "Configure Security Suite", multiple: false,  uninstall: false)
-            	}
-            }
-            else {
-            	section("Profiles",  uninstall: false){
-            		paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-            		app(name: "profile", appName: "SecuritySuite", namespace: "Clone", title: "Configure Security Suite", multiple: false,  uninstall: false)
-        		}
-            }
-       }
-	}    
-page name: "mFeedbackProfile"    
-    def mFeedbackProfile() {
-        dynamicPage (name: "mFeedbackProfile", title: "", install: true, uninstall: false) {
-        	if (childApps.size()) { 
-            	section(childApps.size()==1 ? "One Profile configured" : childApps.size() + " Profile configured" )
-            }
-            if (childApps.size()) {  
-            	section("Feedback Profile",  uninstall: false){
-                	app(name: "profile", appName: "FeedbackProfile", namespace: "Clone", title: "Create a new Feedback Profile", multiple: true,  uninstall: false)
-            	}
-            }
-            else {
-            	section("Profile",  uninstall: false){
-            		paragraph "NOTE: Looks like you haven't created any Rooms yet.\n \nPlease make sure you have installed the Profile Smart App Add-on before creating a new Room!"
-            		app(name: "profile", appName: "FeedbackProfile", namespace: "Clone", title: "Create a new Feedback Profile", multiple: true,  uninstall: false)
-        		}
-            }
-       }
-	}
-page name: "mSupport"  
- def mSupport(){
-        dynamicPage(name: "mSupport", uninstall: false) {
-        	section ("EchoSistant Modules") {
-            	paragraph "For the notifications and room feedback to be operational, they must be installed in the ST IDE and the toggles below must be activated"
-            	input "controlOn", "bool", title: "Is the Control & Messaging Module Installed?", required: true, defaultValue: false
-                input "notifyOn", "bool", title: "Is the Notifications Module Installed? ", required: true, defaultValue: false
- 				input "securityOn", "bool", title: "Is the Security Suite Module Installed?", required: true, defaultValue: false
-                }
-                section ("Developers", hideWhenEmpty: true){  
-            		paragraph ("You can reach out to the Echosistant Developers with the following information: \n" + 
-                	"Jason Headley \n"+
-                	"Forum user name @bamarayne \n" +
-                	"Bobby Dobrescu \n"+
-                	"Forum user name @SBDobrescu")
-                	}
-                section ("Amazon AWS Skill Details") {
-					href "SkillDetails", title: "Tap to view setup data for the AWS Main Intent Skill...", description: "",
-                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"
-            		}
-                section ("Directions, How-to's, and Troubleshooting") { 
- 					href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
-                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png"
-                	}   
-            	section ("AWS Lambda website") {
-            		href url:"https://aws.amazon.com/lambda/", title: "Tap to go to the AWS Lambda Website", description: none,
-                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_aws.png"
-                	}
-            	section ("Amazon Developer website") {    
-   					href url:"https://developer.amazon.com/", title: "Tap to go to Amazon Developer website", description: none,
-                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Skills.png"
-					}
-                }	            	
-            }
-page name: "mSecurity"    
-    def mSecurity(){
-        dynamicPage(name: "mSecurity", title: "View Apllication Information",install: false, uninstall: true) {
+}
+page name: "mSettings"  
+	def mSettings(){
+        dynamicPage(name: "mSettings", uninstall: true) {
                 section("Debugging") {
                     input "debug", "bool", title: "Enable Debug Logging", default: false, submitOnChange: true 
                     }
                 section ("Apache License"){
                     input "ShowLicense", "bool", title: "Show License", default: false, submitOnChange: true
-                    def msg = textLicense()
-                        if (ShowLicense) paragraph "${msg}"
+//                    def msg = textLicense()
+//                        if (ShowLicense) paragraph "${msg}"
                     }
                 section ("Show Security Tokens") {
                 	paragraph ("Log into the IDE on your computer and navigate to the Live Logs tab. Leave that window open, come back here, and open this section")
@@ -394,6 +412,90 @@ page name: "mSecurity"
                 }	
 			}             
 		}
+page name: "SkillDetails"
+    def SkillDetails(){
+            dynamicPage(name: "SkillDetails", uninstall: false) {
+ 			section ("List of Profiles") { 
+				href "ProfileDetails", title: "View your List of Profiles for copy & paste to the AWS Skill...", description: "", state: "complete", 
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"
+            }
+            section ("List of Devices") {
+				href "DeviceDetails", title: "View your List of Devices for copy & paste to the AWS Skill...", description: "", state: "complete", 
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"            	
+				}
+            }
+        }         
+page name: "ProfileDetails"
+    def ProfileDetails(){
+            dynamicPage(name: "ProfileDetails", uninstall: false) {
+ 			section ("List of Profiles") { 
+                def ProfileList = getProfileDetails()   
+                    paragraph ("${ProfileList}")
+                      	log.info "${ProfileList} "
+                        }
+					}
+				} 
+page name: "DeviceDetails"
+    def DeviceDetails(){
+            dynamicPage(name: "DeviceDetails", uninstall: false) {
+ 			section ("List of Devices") { 
+                def DeviceList = getDeviceDetails()   
+                    paragraph ("${DeviceList}")
+                      	log.info "${DeviceList} "
+                        }
+					}
+                }    
+page name: "tokens"
+	def tokens(){
+            dynamicPage(name: "tokens", title: "Security Tokens", uninstall: false){
+                section(""){
+                    paragraph "Tap below to Reset/Renew the Security Token. You must log in to the IDE and open the Live Logs tab before tapping here. "+
+                    "Copy and paste the displayed tokens into your Amazon Lambda Code."
+                    if (!state.accessToken) {
+                        OAuthToken()
+                        paragraph "You must enable OAuth via the IDE to setup this app"
+                        }
+                    }
+                        def msg = state.accessToken != null ? state.accessToken : "Could not create Access Token. "+
+                        "OAuth may not be enabled. Go to the SmartApp IDE settings to enable OAuth." 
+                        log.trace "STappID = '${app.id}' , STtoken = '${state.accessToken}'"
+                section ("Reset Access Token / Application ID"){
+                    href "pageConfirmation", title: "Reset Access Token and Application ID", description: none
+                    }
+                }
+            } 
+page name: "pageConfirmation"
+    def pageConfirmation(){
+            dynamicPage(name: "pageConfirmation", title: "Reset/Renew Access Token Confirmation", uninstall: false){
+                section {
+                    href "pageReset", title: "Reset/Renew Access Token", description: "Tap here to confirm action - READ WARNING BELOW"
+                    paragraph "PLEASE CONFIRM! By resetting the access token you will disable the ability to interface this SmartApp with your Amazon Echo."+
+                    "You will need to copy the new access token to your Amazon Lambda code to re-enable access." +
+                    "Tap below to go back to the main menu with out resetting the token. You may also tap Done above."
+                    }
+                section(" "){
+                    href "mainParentPage", title: "Cancel And Go Back To Main Menu", description: none 
+                    }
+                }
+            }
+page name: "pageReset"
+    def pageReset(){
+            dynamicPage(name: "pageReset", title: "Access Token Reset", uninstall: false){
+                section{
+                    revokeAccessToken()
+                    state.accessToken = null
+                    OAuthToken()
+                    def msg = state.accessToken != null ? "New access token:\n${state.accessToken}\n\n" : "Could not reset Access Token."+
+                    "OAuth may not be enabled. Go to the SmartApp IDE settings to enable OAuth."
+                    paragraph "${msg}"
+                    paragraph "The new access token and app ID are now displayed in the Live Logs tab of the IDE."
+                    log.info "STappID = '${app.id}' , STtoken = '${state.accessToken}'"
+                }
+                section(" "){ 
+                    href "mainParentPage", title: "Tap Here To Go Back To Main Menu", description: none 
+                    }
+                }
+            }
 page name: "mBonus"    
     def mBonus(){
         dynamicPage(name: "mBonus", title: "EchoSistant Bonus Features",install: false, uninstall: false) {
@@ -535,332 +637,7 @@ page name: "severeWeatherAlertsPage"
         section ("Choose which Alerts to Activate and Receive") {
 		}
 	}
-}    
-page name: "SkillDetails"
-    def SkillDetails(){
-            dynamicPage(name: "SkillDetails", uninstall: false) {
- 			section ("List of Profiles") { 
-				href "ProfileDetails", title: "View your List of Profiles for copy & paste to the AWS Skill...", description: "", state: "complete", 
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"
-            }
-            section ("List of Devices") {
-				href "DeviceDetails", title: "View your List of Devices for copy & paste to the AWS Skill...", description: "", state: "complete", 
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"            	
-				}
-            }
-        }         
-page name: "ProfileDetails"
-    def ProfileDetails(){
-            dynamicPage(name: "ProfileDetails", uninstall: false) {
- 			section ("List of Profiles") { 
-                def ProfileList = getProfileDetails()   
-                    paragraph ("${ProfileList}")
-                      	log.info "${ProfileList} "
-                        }
-					}
-				} 
-page name: "DeviceDetails"
-    def DeviceDetails(){
-            dynamicPage(name: "DeviceDetails", uninstall: false) {
- 			section ("List of Devices") { 
-                def DeviceList = getDeviceDetails()   
-                    paragraph ("${DeviceList}")
-                      	log.info "${DeviceList} "
-                        }
-					}
-                }    
-page name: "tokens"
-	def tokens(){
-            dynamicPage(name: "tokens", title: "Security Tokens", uninstall: false){
-                section(""){
-                    paragraph "Tap below to Reset/Renew the Security Token. You must log in to the IDE and open the Live Logs tab before tapping here. "+
-                    "Copy and paste the displayed tokens into your Amazon Lambda Code."
-                    if (!state.accessToken) {
-                        OAuthToken()
-                        paragraph "You must enable OAuth via the IDE to setup this app"
-                        }
-                    }
-                        def msg = state.accessToken != null ? state.accessToken : "Could not create Access Token. "+
-                        "OAuth may not be enabled. Go to the SmartApp IDE settings to enable OAuth." 
-                        log.trace "STappID = '${app.id}' , STtoken = '${state.accessToken}'"
-                section ("Reset Access Token / Application ID"){
-                    href "pageConfirmation", title: "Reset Access Token and Application ID", description: none
-                    }
-                }
-            } 
-page name: "pageConfirmation"
-    def pageConfirmation(){
-            dynamicPage(name: "pageConfirmation", title: "Reset/Renew Access Token Confirmation", uninstall: false){
-                section {
-                    href "pageReset", title: "Reset/Renew Access Token", description: "Tap here to confirm action - READ WARNING BELOW"
-                    paragraph "PLEASE CONFIRM! By resetting the access token you will disable the ability to interface this SmartApp with your Amazon Echo."+
-                    "You will need to copy the new access token to your Amazon Lambda code to re-enable access." +
-                    "Tap below to go back to the main menu with out resetting the token. You may also tap Done above."
-                    }
-                section(" "){
-                    href "mainParentPage", title: "Cancel And Go Back To Main Menu", description: none 
-                    }
-                }
-            }
-page name: "pageReset"
-    def pageReset(){
-            dynamicPage(name: "pageReset", title: "Access Token Reset", uninstall: false){
-                section{
-                    revokeAccessToken()
-                    state.accessToken = null
-                    OAuthToken()
-                    def msg = state.accessToken != null ? "New access token:\n${state.accessToken}\n\n" : "Could not reset Access Token."+
-                    "OAuth may not be enabled. Go to the SmartApp IDE settings to enable OAuth."
-                    paragraph "${msg}"
-                    paragraph "The new access token and app ID are now displayed in the Live Logs tab of the IDE."
-                    log.info "STappID = '${app.id}' , STtoken = '${state.accessToken}'"
-                }
-                section(" "){ 
-                    href "mainParentPage", title: "Tap Here To Go Back To Main Menu", description: none 
-                    }
-                }
-            } 
-/***********************************************************************************************************************
-    PROFILE UI CONFIGURATION
-***********************************************************************************************************************/
-def pCreate() {	
-    dynamicPage(name: "pCreate", title:"I want to create a...", install: true, uninstall: false) {
-        if (!controlOn && !notifyOn && !feedbackOn && !securityOn) {
-        section ("Where are my profiles???") {
-        paragraph "You have not installed and/or activated any of the plug in modules! \n" +
-        "Please navigate to the 'Install and Support' section on the main page to activate modules"
-        	}
-        }
-        if (controlOn) {
-        section ("Control and Messaging Profile") {
-			href "MainProfiles", title: "View and Create Control and Messaging Profiles...", description: pCreateSettings(), state: pCreateComplete(),
-            image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
-            	}
-            }
-     	if (notifyOn) {
-        section ("Notifications Profile") {
-  			href "mNotifyProfile", title: "View and Create Notification Profiles...", description: pCreateSettings(), state: pCreateComplete(),
-            image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
-			}
-		}
-        if (securityOn) {
-        section ("Security Suite") {
-        	href "mSecuritySuite", title: "Plug in Module for SHM Security...", description: pCreateSettings(), state: pCreateComplete(),
-        	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
-            }
-        }
-    }   
-}		
-page name: "MainProfiles"
-    def MainProfiles() {
-            dynamicPage (name: "MainProfiles", title: "", install: false, uninstall: false) {
-        	if (childApps.size()) { 
-            	section(childApps.size()==1 ? "One Profile configured" : childApps.size() + " Profile configured" )
-            }
-            if (childApps.size()) {  
-            	section("Profile",  uninstall: false){
-                	app(name: "Clone", appName: "Clone", namespace: "Clone", title: "Create a new Messaging Profile", multiple: true,  uninstall: false)
-            	}
-            }
-            else {
-            	section("Profile",  uninstall: false){
-            		paragraph "NOTE: Looks like you haven't created any Profile yet.\n \nPlease make sure you have installed the Profile Smart App Add-on before creating a new Room!"
-            		app(name: "Clone", appName: "Clone", namespace: "Clone", title: "Create a new Messaging Profile", multiple: true,  uninstall: false)
-        		}
-            }
-		} 
-    }
-def mainProfilePage() {	
-    dynamicPage(name: "mainProfilePage", title:"I Want This Profile To...", install: true, uninstall: true, multiple: true) {
-        section {
-           	href "pSend", title: "Send Messages... ", description: pSendComplete(), state: pSendSettings(),
-   				image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"   			
-			href "pConfig", title: "Audio Message Options...", description: pConfigComplete(), state: pConfigSettings(),
-            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"             
-            href "pScenes", title: "Create Scenes... ", description: pScenesComplete(), state: pScenesSettings(),
-            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Plus.png" 
-			href "pActions", title: "Execute Actions when Profile runs...", description: pActionsComplete(), state: pActionsSettings(),
-            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
-            href "pRestrict", title: "With These General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings(),
-            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png" 
-		}
-        section ("Name and/or Remove this Profile") {
- 		   	label title:"              Rename Profile ", required:false, defaultValue: "New Control and Messaging Profile"  
-        }    
-	}
-}
-page name: "pSend"
-    def pSend(){
-        dynamicPage(name: "pSend", title: "", uninstall: false){
-             section ("Speakers", hideWhenEmpty: true){
-                input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false,
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
-                input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true,    
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
-                if (sonosDevice) {
-                    input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
-                    input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
-                }  
-            }
-            section ("Text Messages" ) {
-            	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true,    
-                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-                if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-           			input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true,      
-                        image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-                if (sendText){      
-                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122;8046663344"
-                    input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
-                }
-            }    
-            section ("Push Messages") {
-            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png"
-            }        
-    	}                 
-    } 
-page name: "pActions"
-    def pActions() {
-            dynamicPage(name: "pActions", title: "Select Devices to use with this profile",install: false, uninstall: false) {
-                 section ("AppLink actions") {
-                 	 input "appLink", "enum", title: "Trigger These appLink Actions", required: false, multiple: true, options: parent.appLinkHandler(value: "list")
-                     }
-                 section ("Light Switches", hideWhenEmpty: true){
-                    input "switches", "capability.switch", title: "Select Lights and Switches...", multiple: true, required: false, submitOnChange: true
-                        if (switches) input "switchCmd", "enum", title: "What do you want to do with these switches?", options:["on":"Turn on","off":"Turn off","toggle":"Toggle","delay":"Delay"], multiple: false, required: false, submitOnChange:true
-                        if (switchCmd) {
-                        input "sSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
-                        input "sSecondsOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
-                        }
-                        if (switchCmd) input "otherSwitch", "capability.switch", title: "...and these other switches?", multiple: true, required: false, submitOnChange: true
-                        if (otherSwitch) input "otherSwitchCmd", "enum", title: "What do you want to do with these other switches?", options: ["on1":"Turn on","off1":"Turn off","toggle1":"Toggle","delay1":"Delay"], multiple: false, required: false, submitOnChange: true
-                        if (otherSwitchCmd) {
-                        input "sSecondsOn1", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
-                        input "sSecondsOff1", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
-                    	}
-                    }
-        		section ("Colored lights", hideWhenEmpty: true){
-            		input "hues", "capability.colorControl", title: "Select These Colored Lights...", multiple: true, required: false, submitOnChange:true
-            			if (hues) {
-                        	input "hueCmd", "enum", title: "What do you want to do with these color bulbs?", options:["on":"Turn on","off":"Turn off","setColor":"Set Color"], multiple: false, required: false, submitOnChange:true
-							if (hueCmd == "setColor") input "color", "enum", title: "Hue Color?", required: false, multiple:false, options: parent.fillColorSettings().name
-							input "lightLevel", "enum", title: "Light Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
-        					}
-						}
-                section ("Dimmers", hideWhenEmpty: true){
-                    input "dimmers", "capability.switchLevel", title: "Select Dimmers...", multiple: true, required: false , submitOnChange:true
-                        if (dimmers) input "dimmersCmd", "enum", title: "Command To Send To Dimmers", options:["set":"Set level","delay2":"Delay","off":"Turn off"], multiple: false, required: false, submitOnChange:true
-                        if (dimmersCmd) input "dimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true
-                            if (dimmersCmd) {
-                        		input "sSecondsOn2", "number", title: "Turn on in Seconds?", defaultValue: none, required: false, submitOnChange: true
-                        		input "sSecondsOff2", "number", title: "Turn off in Seconds?", defaultValue: none, required: false, submitOnChange: true
-                        		}	
-                        if (dimmersLVL) input "otherDimmers", "capability.switchLevel", title: "Control These Other Dimmers...", multiple: true, required: false , submitOnChange:true
-                        if (otherDimmers) input "otherDimmersCmd", "enum", title: "Command To Send To Other Dimmers", options:["set":"Set level","delay3":"Delay","off":"Turn off"], multiple: false, required: false, submitOnChange:true
-                        if (otherDimmersCmd) input "otherDimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true
-                			if (otherDimmersCmd) {
-                        		input "sSecondsOn3", "number", title: "Turn on in Seconds?", defaultValue: none, required: false, submitOnChange: true
-                        		input "sSecondsOff3", "number", title: "Turn off in Seconds?", defaultValue: none, required: false, submitOnChange: true
-                        		}
-                    		}
-                section ("Flash These Switches") {
-					input "flashSwitches", "capability.switch", title: "Select Flashers", multiple: true, required: false, submitOnChange:true
-					if (flashSwitches) {
-					input "Fcolor", "enum", title: "Flasher Color?", required: false, multiple:false, options: ["Red","Green","Blue","Yellow","Orange","Purple","Pink"]
- 					input "FlashLevel", "enum", title: "Light Flash Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
-                    input "numFlashes", "number", title: "This number of times (default 3)", required: false, submitOnChange:true
-                    input "onFor", "number", title: "On for (default 1 second)", required: false, submitOnChange:true
-					input "offFor", "number", title: "Off for (default 1 second)", required: false, submitOnChange:true
-					}
-                }
-			}
-        }
-page name: "pConfig"
-    def pConfig(){
-        dynamicPage(name: "pConfig", title: "Configure Global Profile Options...", uninstall: false) {
-            section ("Voice Message Options and Alexa Responses") {
-            input "MsgOpt", "bool", title: "I want to use these configuration options...", defaultValue: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
-                if (MsgOpt) {
-					input "ShowPreMsg", "bool", title: "Pre-Message (plays on Audio Playback Device before message)", defaultValue: false, submitOnChange: true
-                        if (ShowPreMsg) input "PreMsg", "text", title: "Pre-Message...", defaultValue: none, submitOnChange: true, required: false 
-                    input "Acustom", "bool", title: "Custom Response from Alexa...", defaultValue: false, submitOnChange: true
-                        if (Acustom) input "outputTxt", "text", title: "Input custom phrase...", required: false, defaultValue: "Message sent,   ", submitOnChange: true
-                    input "Arepeat", "bool", title: "Alexa repeats message to sender when sent...", defaultValue: false, submitOnChange: true
-                        if (Arepeat) {			
-                        if (Arepeat && Acustom){
-                            paragraph "NOTE: only one custom Alexa response can"+
-                            " be delivered at once. Please only enable Custom Response OR Repeat Message"
-                            }				
-                        }
-                    input "AfeedBack", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options...", defaultValue: false, submitOnChange: true
-                    input "disableTts", "bool", title: "Disable All spoken notifications (No voice output from the speakers or Alexa)", required: false, submitOnChange: true  
-                    input "ContCmds", "bool", title: "Allow Alexa to prompt for additional commands after message is delivered...", defaultValue: false, submitOnChange: true
-                    input "ContCmdsR", "bool", title: "Allow Alexa to prompt for additional commands after Repeat command is given...", defaultValue: false, submitOnChange: true
-                    }
-                }            	
-	        }
-    	}
-page name: "pRestrict"
-	def pRestrict() {
-    	dynamicPage(name:"pRestrict", title: "Using these General Profile Restrictions", uninstall: false) {
-        	 section ("Mode Restrictions") {
-                input "modes", "mode", title: "Only when mode is", multiple: true, required: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
-                }        
-            section ("Days - Audio only on these days"){	
-                input "runDay", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
-                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
-                }
-            section ("Time - Audio only during these times"){
-                href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
-                }
-			}
-		}         
-page name: "certainTime"
-    def certainTime() {
-        dynamicPage(name:"certainTime",title: "Only during a certain time", uninstall: false) {
-            section("Beginning at....") {
-                input "startingX", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
-                if(startingX in [null, "A specific time"]) input "starting", "time", title: "Start time", required: false, submitOnChange: true
-                else {
-                    if(startingX == "Sunrise") input "startSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                    else if(startingX == "Sunset") input "startSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                }
-            }
-            section("Ending at....") {
-                input "endingX", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
-                if(endingX in [null, "A specific time"]) input "ending", "time", title: "End time", required: false, submitOnChange: true
-                else {
-                    if(endingX == "Sunrise") input "endSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                    else if(endingX == "Sunset") input "endSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                }
-            }
-        }
-    }          
-page name: "pScenes"    
-    def pScenes() {
-        dynamicPage (name: "pScenes", title: "", install: true, uninstall: false) {
-        	if (childApps.size()) { 
-            	section(childApps.size()==1 ? "One Scene configured" : childApps.size() + " Scenes configured" )
-            }
-            if (childApps.size()) {  
-            	section("Scenes",  uninstall: false){
-                	app(name: "scenes", appName: "Scenes", namespace: "Clone", title: "Create a new scene for this Profile", multiple: true,  uninstall: false)
-            	}
-            }
-            else {
-            	section("Scenes",  uninstall: false){
-            		paragraph "NOTE: Looks like you have no Scenes yet, please make sure you have installed the Scenes Smart App Add-on before creating a new Scene!"
-            		app(name: "scenes", appName: "Scenes", namespace: "Clone", title: "Create a new scene for this Profile", multiple: true,  uninstall: false)
-        		}
-            }
-		}
-	}
+}                             
 /*************************************************************************************************************
    CREATE INITIAL TOKEN
 ************************************************************************************************************/
@@ -882,7 +659,6 @@ mappings {
     path("/p") { action: [GET: "controlProfiles"] }
     path("/r") { action: [GET: "incomingResponse"] }    
 	path("/t") { action: [GET: "processTts"] }
-    path("/m") { action: [GET: "messengerGetHandler", POST: "messengerPostHandler"] }
 }
 /************************************************************************************************************
 		Base Process
@@ -896,28 +672,24 @@ def updated() {
     initialize()
 }
 def initialize() {
-	 log.debug "there are ${childApps.size()} child smartapps"
-    childApps.each {child ->
-        log.debug "child app: ${child.label}"
-    }
-    //SHM status change and keypad initialize
-    	subscribe(location, locationHandler)
-    	subscribe(location, "alarmSystemStatus",alarmStatusHandler)//used for ES speaker feedback
-		def event = [name:"alarmSystemStatus", value: location.currentState("alarmSystemStatus").value, 
-		displayed: true, description: "System Status is ${shmState}"]
-     
-	// APPLINK INTEGRATION
-    	subscribe(location, "appLink", appLinkHandler) //listen for appLink capable apps
-        if(settings?.appLink){ appLink.each { app -> parent.appLinkHandler(value: "run", data: app) } }
 	// Other stuff
-        sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
-        def children = getChildApps()
-    	if (debug) log.debug "Refreshing Profiles for CoRE, ${getChildApps()*.label}"
-		if (!state.accessToken) {
+    	 	log.debug "there are ${childApps.size()} child smartapps"
+    		childApps.each {child ->
+        	log.debug "child app: ${child.label}"
+    		}
+        	sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
+        	def children = getChildApps()
+    		if (debug) log.debug "Refreshing Profiles for CoRE, ${getChildApps()*.label}"
+			if (!state.accessToken) {
         	if (debug) log.error "Access token not defined. Attempting to refresh. Ensure OAuth is enabled in the SmartThings IDE."
                 OAuthToken()
-			}
-		//State Variables            
+			}            
+    //SHM status change and keypad initialize
+    		subscribe(location, locationHandler)
+    		subscribe(location, "alarmSystemStatus",alarmStatusHandler)//used for ES speaker feedback
+			def event = [name:"alarmSystemStatus", value: location.currentState("alarmSystemStatus").value, 
+			displayed: true, description: "System Status is ${shmState}"]
+     //State Vriables            
             state.lastMessage = null
             state.lastIntent  = null
             state.lastTime  = null
@@ -934,8 +706,7 @@ def initialize() {
             state.usePIN_T = settings.uPIN_T
             state.usePIN_L = settings.uPIN_L
             state.usePIN_D = settings.uPIN_D
-            state.usePin_S = settings.uPin_S
-            state.usePin_M = settings.uPin_M
+            state.usePIN_S = false
             state.savedPINdata = null
             state.pinTry = null
         //Other Settings
@@ -955,72 +726,6 @@ def childUninstalled() {
 	if (debug) log.debug "Profile has been deleted, refreshing Profiles for CoRE, ${getChildApps()*.label}"
     sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
 } 
-/*****************************************************************
-  appLink
-*****************************************************************/
-// appLink core code: This should be included in every appLink compatible app, and not customised.
-def appLinkHandler(evt){
-    if(!state.appLink) state.appLink = [:]
-    switch(evt.value) { //[appLink V0.0.2 2016-12-08]
-   		case "add":	state.appLink << evt.jsonData;	break;
-        case "del":	state.appLink.remove(evt.jsonData.app);	break;             
-        case "list":	def list = [:];	state.appLink.each {key, value -> value.each{skey, svalue -> list << ["${key}:${skey}" : "[${key}] ${svalue}"]}};
-        	return list.sort { a, b -> a.value.toLowerCase() <=> b.value.toLowerCase() };	break;
-        case "run":	sendLocationEvent(name: "${evt.data.split(":")[0]}", value: evt.data.split(":")[1] , isStateChange: true, descriptionText: "appLink run"); break;
-    }
-    state.appLink.remove("$app.name") // removes this app from list
-}
-/*****************************************************************
-  Facebook Messenger
-*****************************************************************/
-
-def messengerGetHandler(){
-    if (params.hub.mode == 'subscribe' && params.hub.verify_token == settings.verifyToken) {
-        log.debug "Validating webhook"
-        render contentType: "text/html", data: params.hub.challenge, status: 200
-    } else {
-        log.debug "Failed validation. Make sure the Verify Tokens match."
-        render contentType: "text/html", data: params.hub.challenge, status: 403        
-    }
-}
-
-def messengerPostHandler(){
-    def fbJSON = request.JSON
-    def responseTxt = "Sorry I don't know you."
-    if (debug) log.debug "FB MESSENGER POST EVENT - MESSAGE:  ${fbJSON.entry.messaging.message.text[0][0]}"
-    if (debug) log.debug "FB MESSENGER POST EVENT - SENDER_ID:  ${fbJSON.entry.messaging.sender.id[0][0]}"
-	if(fbAllowedUsers != null && fbAllowedUsers.indexOf("${fbJSON.entry.messaging.sender.id[0][0]}") >= 0){ 
-    	//responseTxt = actionCommand(fbJSON.entry.messaging.message.text[0][0]) as String
-        // The above is my code so wont work for you you will need to set response Txt whatever value you want to return in the FB chat in response to a message
-    }
-    fbSendMessage(fbJSON.entry.messaging.sender.id[0][0], responseTxt)
-}
-
-def fbSendMessage(userid, message){
-	// Send a message to FB
-    def params = [
-        uri: "https://graph.facebook.com/v2.6/me/messages?access_token=$fbAccessToken",
-        body: [recipient: [id: userid], message: [text: message] ]
-    ]
-    try { httpPostJson(params) { resp ->
-    	resp.headers.each { if (debug) log.debug "${it.name} : ${it.value}" }
-        if (debug) log.debug "response contentType: ${resp.contentType}"
-    } } catch (e) { if (debug) log.debug "something went wrong: $e" }
-}
-
-/*
-		// This is used for linking to FB messenger and setting valid users
-		section ("Facebook Messenger Settings") { 
-            input "verifyToken", "password", title: "Verify Token", description:"", required: false
-            input "fbAccessToken", "password", title: "FB Page Access Token", description:"", required: false
-            input "fbAllowedUsers", "text", title: "Allowed User IDs", description:"", required: false
-            paragraph "Verify Token: Used to setup link to FB bot (You make up this value)\nAccess Token: To allow ST to send messages via FB Messenger (From developers.facebook.com)\nAllowed Users: These are the Facebook user IDs, seperated by commas (You can get this in the debug logging)"
-        }
-        
-        // This you should put in the same method you use for returning the app ID and OAuth 
-        log.trace "URL FOR USE AT DEVELOPERS.FACEBOOK.COM:\n${getApiServerUrl()}/api/smartapps/installations/${app.id}/m?access_token=${state.accessToken}"
-*/
-
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
@@ -1036,7 +741,9 @@ def processBegin(){
     def versionSTtxt = textVersion() 
     def pPendingAns = false    
     def String outputTxt = (String) null 
-    
+
+	try {
+
     if (event == "noAction") {//event == "AMAZON.NoIntent" removed 1/20/17
     	state.pinTry = null
         state.savedPINdata = null
@@ -1047,6 +754,7 @@ def processBegin(){
     	if(state.pContCmdsR == "level"){
             if (state.lastAction != null) {
                 def savedData = state.lastAction
+                //getCustomCmd(ctCommand, ctUnit, ctGroup)
                 outputTxt = controlHandler(savedData) 
                 pPendingAns = "level"
             }
@@ -1062,13 +770,19 @@ def processBegin(){
                 pPendingAns = null 
             }
         }
-        if( state.pContCmdsR == "feedback"){
+        if( state.pContCmdsR == "feedback" ||  state.pContCmdsR == "bat" || state.pContCmdsR == "act" ){
             if (state.lastAction != null) {
                 state.lastAction = null
                 state.pContCmdsR = null 
                 pPendingAns = null 
             }
-        } 
+        }
+        if( state.pContCmdsR == "init"){
+        	state.pTryAgain = false
+        }
+        if( state.pContCmdsR == null){
+        	state.pTryAgain = false
+        }
     }
     if (event == "AMAZON.YesIntent") {
         if (state.pContCmdsR == "level") {
@@ -1082,25 +796,64 @@ def processBegin(){
         if( state.pContCmdsR == "door"){
             if (state.lastAction != null) {
                 def savedData = state.lastAction
+ 				//PIN VALIDATION
+ 				if(state.usePIN_D == true) {
+     				//RUN PIN VALIDATION PROCESS
+                	def pin = "undefined"
+               		def command = "validation"
+                	def num = 0
+                	def unit = "doors"
+                	outputTxt = pinHandler(pin, command, num, unit)
+                    pPendingAns = "pin"
+					return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+            	}
+                else {
                 outputTxt = controlHandler(savedData) 
                 pPendingAns = "door"
-            }
+            	}
+        	}
         }
         if( state.pContCmdsR == "feedback"){
             if (state.lastAction != null) {
                 def savedData = state.lastAction
                 outputTxt = getMoreFeedback(savedData) 
                 pPendingAns = "feedback"
+				return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+            }
+         }
+         if( state.pContCmdsR == "bat" || state.pContCmdsR == "act"){
+            if (state.lastAction != null) {
+                def savedData = state.lastAction
+                outputTxt = savedData
+                pPendingAns = "feedback"
+				return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+            }
+       }
+       if( state.pContCmdsR == "caps"){
+            if (state.lastAction != null) {
+                outputTxt = state.lastAction
+                pPendingAns = "caps"
+				state.pContCmdsR = null 
+				state.lastAction = null
+                return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
         }        
      }   
     //state.pContCmdsR = null
     //state.lastAction = null
 	  if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
-      "; data sent: pContinue = '${state.pContCmds}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}'; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
+      "; data sent: pContinue = '${state.pContCmds}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
 	}
     return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-} 
+
+	} catch (e) {
+		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
+        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
+        state.pTryAgain = true
+        return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+	}
+
+}   
 
 /************************************************************************************************************
 		FEEDBACK HANDLER - from Lambda via page f
@@ -1121,15 +874,34 @@ def feedbackHandler() {
     def stateDate
     def stateTime
 	def data = [:]
-    
+    fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
     if (debug){
     	log.debug 	"Feedback data: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}'"
-    }
+    } 
+    
+	try {
     
     fOperand = fOperand == "switches" ? "lights" : fOperand
-
-
+    
+    if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about"  ) {
+    	def dMatch = deviceMatchHandler(fDevice)
+		if (dMatch?.deviceMatch == null) { 				
+			outputTxt = "Sorry, I couldn't find any details about " + fDevice
+            state.pTryAgain = true
+            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+		}
+        else {
+            def dDevice = dMatch?.deviceMatch
+            def dType = dMatch?.deviceType
+            def dState = dMatch?.currState
+            def dMainCap = dMatch?.mainCap
+            def dCapCount = getCaps(dDevice,dType, dMainCap, dState)
+            state.pContCmdsR = "caps"
+            outputTxt = "Sorry, I couldn't quite get that, but I found a matching device that has " + dCapCount + " capabilities. Would you like to hear more about this device?"         
+            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+		}
+	}
     if (fOperand == "undefined" && fQuery == "about") {
 		def deviceMatch=cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
 			if(deviceMatch)	{
@@ -1145,13 +917,13 @@ def feedbackHandler() {
                     stateTime = deviceMatch.currentState("temperature").date.time
                     def timeText = getTimeVariable(stateTime, deviceType)            
                     outputTxt = "The " + fDevice + " temperature is " + temp + " degrees and the current mode is " + currentMode + " , with set points of " + cSP + " for cooling and " + hSP + " for heating"
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR": state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 			}
             else {
 				def rSearch = deviceMatchHandler(fDevice)
 				if (debug) log.debug "Getting device details"
                     if (rSearch?.deviceMatch == null) { 
-                        outputTxt = "Sorry I couldn't find any details about" + fDevice
+                        outputTxt = "Sorry I couldn't find any details about " + fDevice
                         state.pTryAgain = true
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                     }
@@ -1194,10 +966,23 @@ def feedbackHandler() {
                         stateDate = s.currentState("temperature").date
                         stateTime = s.currentState("temperature").date.time
                         def timeText = getTimeVariable(stateTime, deviceType)            
-                        outputTxt = "The temperature " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
+                        outputTxt = "The temperature in " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
                     }
                 }
             }
+            if(cWater){
+                cWater.find {s -> 
+                    if(s.label.toLowerCase() == fDevice.toLowerCase()){
+                        deviceType = "cWater"
+                        def currentTMP = s.latestValue("temperature")
+                        int temp = currentTMP
+                        stateDate = s.currentState("temperature").date
+                        stateTime = s.currentState("temperature").date.time
+                        def timeText = getTimeVariable(stateTime, deviceType)            
+                        outputTxt = "The temperature in the " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
+                    }
+                }
+            }            
 			if (outputTxt == null ) { outputTxt = "Device named " + fDevice + " doesn't have a temperature sensor" }
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]                        
         }
@@ -1232,7 +1017,7 @@ def feedbackHandler() {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 
 				}
-				else if (fQuery.contains ("what") || fQuery.contains ("which")) {
+				else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
                 	def devNames = []
                     if (cSwitch.latestValue("switch").contains(fCommand)) {
                     	cSwitch.each { deviceName ->
@@ -1251,16 +1036,22 @@ def feedbackHandler() {
 				}     
             }
         }
-		if(fOperand == "doors" && fCommand != "undefined") { 
-            if(cContact){
+		if(fOperand.contains("doors")) { // && fCommand != "undefined") { removed 1/23/2017
+            //if(cContact){
 				def devList = []
-                if (cContact.latestValue("contact").contains(fCommand)) {
+				if (cContact.latestValue("contact").contains(fCommand) || cDoor.latestValue("door").contains(fCommand)) {
                     cContact.each { deviceName ->
                                 if (deviceName.latestValue("contact")=="${fCommand}") {
                                     String device  = (String) deviceName
                                     devList += device
                                 }
                     }
+                    cDoor?.each { deviceName ->
+								if (deviceName.latestValue("door")=="${fCommand}") {
+                                   	String device  = (String) deviceName
+                                   	devNames += device
+                                }
+                    }                    
                 }
 				if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there") {
                     if (devList.size() > 0) {
@@ -1280,71 +1071,96 @@ def feedbackHandler() {
                     }
                     else {outputTxt = "There are no doors or windows " + fCommand}
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-
 				}
-				else if (fQuery.contains ("what") || fQuery.contains ("which")) {
+				else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
                 	def devNames = []
-                    if (cContact.latestValue("contact").contains(fCommand)) {
-                    	cContact.each { deviceName ->
-									if (deviceName.latestValue("contact")=="${fCommand}") {
-                                    	String device  = (String) deviceName
-                                    	devNames += device
-                                	}
-                    	}
-                    outputTxt = "The following doors or windows are " + fCommand + "," + devNames.sort().unique()
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    fOperand = fOperand.contains("closed") ? "closed" : fOperand.contains("open") ? "open" : fOperand 
+                    fCommand = fCommand.contains("close") ? "closed" : fCommand
+                    fCommand = fOperand == "closed" ? "closed" : fOperand == "open" ? "open" : fCommand                  
+                    log.warn "fCommand = '${fCommand}'"
+                        if (cContact.latestValue("contact").contains(fCommand) || cDoor.latestValue("door").contains(fCommand)) {
+                            cContact?.each { deviceName ->
+                                        if (deviceName.latestValue("contact")=="${fCommand}") {
+                                            String device  = (String) deviceName
+                                            devNames += device
+                                        }
+                            }
+                            cDoor?.each { deviceName ->
+                                        if (deviceName.latestValue("door")=="${fCommand}") {
+                                            String device  = (String) deviceName
+                                            devNames += device
+                                        }
+                            }
+                        outputTxt = "The following doors or windows are " + fCommand + "," + devNames.sort().unique()
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 
-                	}
-                    else {outputTxt = "There are no doors or windows " + fCommand}
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-				}     
-            }
+                        }
+                        else {outputTxt = "There are no doors or windows " + fCommand}
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+            	}
         }
-		if(fOperand == "batteries") { 
-            if(cBattery){
-				def devList = []
-                    cBattery.each { deviceName ->
-                                if (deviceName.latestValue("battery") < settings.cLowBattery) {
-                                    String device  = (String) deviceName
-                                    devList += device
-                                }
-                    }
-				if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fCommand == "low") {
-                    if (devList.size() > 0) {
-                    	if (devList.size() == 1) {
+		if(fOperand == "batteries") {
+        def cap = "bat"
+        def devList = getCapabilities(cap)
+			if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fCommand == "low" || fQuery == "give" || fQuery == "get") {
+                    if (devList.listSize > 0) {
+                    	if (devList.listSize == 1) {
                     		outputTxt = "There is one device with low battery level , would you like to know which one"                           			
                     	}
                     	else {
-                    		outputTxt = "There are " + devList.size() + " devices with low battery levels, would you like to know which devices"
+                    		outputTxt = "There are " + devList.listSize + " devices with low battery levels, would you like to know which devices"
                     	}
-                    data.devices = devList
-                    data.cmd = fCommand
-                    data.deviceType = "cBattery"
-                    state.lastAction = data
-                    state.pContCmdsR = "feedback"
+                    def sdevices = devList?.listBat
+                    def devListString = sdevices.join(",")
+                    data.list = devListString
+                    state.lastAction = devListString
+                    state.pContCmdsR = "bat"
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
                     else {outputTxt = "There are no devices with low battery levels"}
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 				}
                 else if (fQuery.contains ("what") || fQuery.contains ("which")) {
-                	def devNames = []
-                    	cBattery.each { deviceName ->
-									if (deviceName.latestValue("battery")< settings.cLowBattery) {
-                                    	String device  = (String) deviceName
-                                    	devNames += device
-                                	}
-                    	}
-                    if (devList.size() > 0) {
-                    outputTxt = "The following devices have low battery levels " + devNames.sort().unique()
+                    if (devList.listSize > 0) {
+                    outputTxt = "The following devices have low battery levels " + devList.listBat.sort()//.unique()
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 	}
                     else {outputTxt = "There are no devices with low battery levels "
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 					} 
             	}
-			}
-        }
+		}
+		if(fOperand == "inactive" || fOperand.contains("inactive") ) { //devices inactive
+        def cap = "act"
+        def devList = getCapabilities(cap)
+			if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fQuery == "give" || fQuery == "get") {
+                    if (devList.listSize > 0) {
+                    	if (devList.listSize == 1) {
+                    		outputTxt = "There is one inactive device, would you like to know which one?"                           			
+                    	}
+                    	else {
+                    		outputTxt = "There are " + devList.listSize + " inactive devices, would you like to know which devices"
+                    	}
+                    def sdevices = devList?.listDev
+                    def devListString = sdevices.join(",")
+                    data.list = devListString
+                    state.lastAction = devListString
+                    state.pContCmdsR = "act"
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    }
+                    else {outputTxt = "There are no inactive devices"}
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+				}
+                else if (fQuery.contains ("what") || fQuery.contains ("which")) {
+                    if (devList.listSize > 0) {
+                    outputTxt = "The following devices have been inactive for more than " + cInactiveDev + " " + devList.listDev.sort()
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                	}
+                    else {outputTxt = "There are no inactive devices"
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+					} 
+            	}
+		}       
 		if(fOperand == "settings") {
   			def pCmds = state.pContCmds == true ? "enabled" : "disabled"
             def pCmdsR = state.pContCmdsR //last continuation response
@@ -1353,8 +1169,20 @@ def feedbackHandler() {
             def pin_D = state.usePIN_D == true ? "active" : "inactive"
             def pin_L = state.usePIN_L == true ? "active" : "inactive"
             def pin_T = state.usePIN_T == true ? "active" : "inactive"
-            outputTxt = pMute + " and the conversational module is " + pCmds + ". The pin number for doors is " + pin_D + ", for locks is " + pin_L + ", and for thermostats is " + pin_T
-			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+			def pin_S = state.usePIN_S == true ? "active" : "inactive"
+            
+            def activePin = pin_D == "active" ? "doors" : null
+                activePin  = pin_L == "active" ? activePin + ", locks" : activePin
+            	activePin  = pin_S == "active" ? activePin + ", switches" : activePin
+                activePin  = pin_T == "active" ? activePin + ", thermostats"  : activePin
+            if (activePin == null) { activePin = "no groups"}                
+            def inactivePin = pin_D == "inactive" ? "doors" : null
+                inactivePin  = pin_L == "inactive" ? inactivePin + ", locks" : inactivePin
+            	inactivePin  = pin_S == "inactive" ? inactivePin + ", switches" : inactivePin
+                inactivePin  = pin_T == "inactive" ? inactivePin + ", thermostats" : inactivePin
+            if (inactivePin == null) { inactivePin = "no groups"}    
+            outputTxt = pMute + " and the conversational module is " + pCmds + ". The pin number is active for: " +  activePin + " and inactive for: " + inactivePin
+            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 		}
         if (fQuery == "who" ) {
 			if(cPresence){
@@ -1405,12 +1233,20 @@ def feedbackHandler() {
         }
         if (fQuery.contains ("when")) {
             def deviceData = deviceMatchHandler(fDevice)
-            deviceM  = deviceData?.deviceMatch  
-			outputTxt = deviceM + " was last " + fOperand + " " + deviceData?.tText
+            deviceM  = deviceData.deviceMatch  
+			outputTxt = deviceM + " was last " + fOperand + " " + deviceData.tText
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 
-		}     
+		}
 	}
+
+	} catch (e) {
+		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
+        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
+        state.pTryAgain = true
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+	}
+
 }
 
 /******************************************************************************
@@ -1426,7 +1262,19 @@ private deviceMatchHandler(fDevice) {
     def stateDate
     def stateTime
 	def deviceMatch
-
+    def result
+	
+		if(cTstat){
+           deviceMatch = cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+			if(deviceMatch){
+				deviceType = "cTstat"
+                currState = deviceMatch.currentState("thermostatOperatingState").value
+                stateDate = deviceMatch.currentState("thermostatOperatingState").date
+                stateTime = deviceMatch.currentState("thermostatOperatingState").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)            
+            	return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "thermostatOperatingState" ]
+            }
+        }
         if (cSwitch){
 		deviceMatch = cSwitch.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
 			if(deviceMatch){
@@ -1435,7 +1283,7 @@ private deviceMatchHandler(fDevice) {
 				stateDate = deviceMatch.currentState("switch").date
 				stateTime = deviceMatch.currentState("switch").date.time
 				def timeText = getTimeVariable(stateTime, deviceType)
-            	return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+            	return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "switch"]
         	}
         }
         if (cContact){
@@ -1446,7 +1294,7 @@ private deviceMatchHandler(fDevice) {
 				stateDate = deviceMatch.currentState("contact").date
 				stateTime = deviceMatch.currentState("contact").date.time
 				def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "contact"]
             }
         }
         if (cMotion){
@@ -1457,7 +1305,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("motion").date
                 stateTime = deviceMatch.currentState("motion").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "motion"]
         	}
         } 
         if (cLock){
@@ -1468,7 +1316,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("lock").date
                 stateTime = deviceMatch.currentState("lock").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "lock"]
         	}
         }        
         if (cPresence){
@@ -1479,7 +1327,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("presence").date
                 stateTime = deviceMatch.currentState("presence").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, , "mainCap": "presence"]
         	}
         }  
         if (cDoor){
@@ -1490,7 +1338,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("door").date
                 stateTime = deviceMatch.currentState("door").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "door"]
         	}
         }  
         if (cVent){
@@ -1502,9 +1350,20 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("switch").date
                 stateTime = deviceMatch.currentState("switch").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, , "mainCap": "switch"]
         	}
         }
+        if (cWater){
+		deviceMatch =cWater.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cWater"
+                currState = deviceMatch.currentState("water").value 
+                stateDate = deviceMatch.currentState("water").date
+                stateTime = deviceMatch.currentState("water").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText,  "mainCap": "water"]
+        	}
+        }        
         if (cMedia){
 		deviceMatch =cMedia.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
             if(deviceMatch)	{
@@ -1514,7 +1373,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("currentActivity").date
                 stateTime = deviceMatch.currentState("currentActivity").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText,  "mainCap": "currentActivity"]
             }
         }        
         if (cFan){
@@ -1525,7 +1384,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = deviceMatch.currentState("switch").date
                 stateTime = deviceMatch.currentState("switch").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText] 
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "switch"] 
             }
         }         
         if (cRelay){
@@ -1537,7 +1396,7 @@ private deviceMatchHandler(fDevice) {
                 stateDate = cContactRelay.currentState("contact").date
                 stateTime = cContactRelay.currentState("contact").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText] 
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText,  "mainCap": "contact"] 
                 }
 			}
         }
@@ -1548,28 +1407,9 @@ private deviceMatchHandler(fDevice) {
                 currState = cBattery.currentState("battery").value
 				stateTime = cBattery.currentState("battery").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)            
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": "", "tText": timeText.tText]
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": "", "tText": timeText.tText,  "mainCap": "battery"]
             } 
-     	}
-		if (cSpeaker){
-        deviceMatch =cSpeaker.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()} 
-			if(deviceMatch)	{
-                deviceType = "cSpeaker" 
-                currState = cSpeaker.currentState("switch").value
-                def lastTrack = cSpeaker.currentState("switch").trackDescription
-                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": lastTrack] 
-        	}
-   		}
-        if (cSynth){
-        deviceMatch =cSynth.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()} 
-			if(deviceMatch)	{
-            	deviceType = "cSynth" 
-				stateTime = cSynth.currentState("contact").date.time
-                def timeText = getTimeVariable(stateTime, deviceType)
-            	return ["deviceMatch" : deviceMatch, "deviceType": deviceType]
-			}
-        }        
-        
+     	}       
 }
 /******************************************************************************
 	 ADDITIONAL FEEDBACK											
@@ -1586,31 +1426,266 @@ def result
 	if ( deviceType == "cContact") {
     	result = "The following doors or windows are " + command + "," + devices.sort().unique()
     }
-	
-    state.pContCmdsR == null 
+    state.pContCmdsR = null 
 	state.lastAction = null
 	
     return result
 }
 
 /******************************************************************************
-	 OTHER CAPABILITIES											
+	 DEVICE CAPABILITIES											
 ******************************************************************************/
-private getCaps(device, type) {
-def deviceName = device 
-def deviceType = type 
+private getCaps(capDevice,capType, capMainCap, capState) {
 
-def caps = []
-log.warn "device is '${deviceName}' "
+def deviceName = capDevice
+def deviceType = capType
+def deviceCap = capMainCap
+def deviceState = capState
+state.pContCmdsR = "caps"
+
+def result
+def attr = [:]
+
+log.warn " deviceName: ${deviceName} deviceName: ${deviceName} , deviceType: ${deviceType}, deviceCap: ${deviceCap}, deviceState: ${deviceState}"
 def supportedCaps = deviceName.capabilities
-
 	supportedCaps.each { c ->
 		def capName = c.name
-        def currState = deviceName.currentValue(capName)
-        log.debug "This device:  ${deviceName} also supports: caps ${capName} capsState: ${currState}"
-        caps << [name:capName, currState:deviceName.currentValue("${caps.name}")]
+            c.attributes.each {a ->
+        		def attrName = a.name
+                 def attrValue = deviceName.latestValue(attrName)
+                 
+                 if (a.name != null && a.name !=checkInterval && a.name !=polling  && a.name !=refresh && attrValue != null ) {
+                    if (a.name == "temperature") 		{ result = "The " + attrName + " is " + attrValue + " degrees, " }
+                    if (a.name == "motion") 			{ result = result + attrName + " is " + attrValue +", " }
+                    if (a.name == "humidity") 			{ result = result + attrName + " is " + attrValue + ", " }
+                    if (a.name == "illuminance") 		{ result = result + "lux level is " + attrValue + ", " }
+                    if (a.name == "heatingSetpoint") 	{ result = result + "Heating Set Point is " + attrValue + " degrees, " }
+                    if (a.name == "coolingSetpoint") 	{ result = result + "Cooling Set Point is" + attrValue + " degrees, " }
+                    if (a.name == "thermostatMode") 	{ result = result + "The thermostat Mode is " + attrValue + ", " }
+                    if (a.name == "thermostatFanMode") 	{ result = result + "The Fan Mode is " + attrValue + ", " }
+					if (a.name == "battery") 			{ result = result + attrName + " level is " + attrValue + " percent, " }
+                    	attr << ["${attrName}": attrValue]
+            	}
+           }
+     }
+	state.lastAction = result
+	state.pContCmdsR = "caps"
+    log.debug "${deviceName} has ${attr.size()} capabilities:  ${attr}  with the following attributes: ${result}" 
+    result = attr.size()
+    return result
+}
+/******************************************************************************
+	 CAPABILITIES GROUP											
+****************************************************************************/
+private getCapabilities(cap) {
+// DEVICE categories: cSwitch,cVent,cFan,cTstat,cDoor,cRelay,cContactRelay,cLock,cMotion,cContact,cWater,cPresence,cSpeaker,cSynth,cMedia,cBattery 
+def DeviceDetails = [] 
+def batDetails = [] 
+def result = [:] 
+	try {
+
+//batteries
+	if (cap == "bat") {
+        cMotion?.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName         
+             }     
+         }
+        cContact?.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName         
+             }
+         }
+         
+        cPresence?.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName         
+             }
+         }
+        cWater?.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName         
+             }
+         }
+        cVent?.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName        
+             }
+         }
+        cLock.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName         
+             }
+         }    
+        cBattery?.each 	{ d ->
+        def attrValue = d.latestValue("battery") 
+        	if (attrValue < cLowBattery) {
+        		batDetails << d.displayName     
+             }
+         }
+        def dUniqueList = batDetails.unique (false)
+        dUniqueList = dUniqueList.sort()       
+        def listSize = dUniqueList.size()
+        def listBat = dUniqueList
+        result = [listSize: listSize, listBat: listBat]
+        return result //dUniqueListString
 	}
-	log.debug "This device:  ${deviceName} also supports: caps ${caps.name}, capsState: ${caps.currState}"   
+//activity	
+    if (cap == "act") {
+        cMotion?.each 	{ d ->
+        	def stateTime = d.currentState("motion").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cContact?.each 	{ d ->
+        def attrValue = d.latestValue("contact") 
+        	def stateTime = d.currentState("contact").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cPresence?.each 	{ d ->
+        def attrValue = d.latestValue("presence") 
+        	def stateTime = d.currentState("presence").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cWater?.each 	{ d ->
+        def attrValue = d.latestValue("water") 
+        	def stateTime = d.currentState("water").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cVent?.each 	{ d ->
+        def attrValue = d.latestValue("switch") 
+        	def stateTime = d.currentState("switch").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cLock.each 	{ d ->
+        def attrValue = d.latestValue("lock") 
+        	def stateTime = d.currentState("lock").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cSwitch.each 	{ d ->
+        	def attrValue = d.latestValue("switch") 
+            if (d?.currentState("switch") != null) {
+            def stateTime = d?.currentState("switch").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+           	}
+        }        
+        cLock.each 	{ d ->
+        def attrValue = d.latestValue("lock") 
+        	def stateTime = d.currentState("lock").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }        
+        def dUniqueList = DeviceDetails.unique (false)
+        dUniqueList = dUniqueList.sort()       
+        def listSize = dUniqueList.size()
+        def listDev = dUniqueList
+        result = [listSize: listSize, listDev: listDev]
+        log.warn " result = ${result}"
+        return result //dUniqueListString
+	}
+
+//non battery repo
+/*
+swi =  device.currentValue("switch")
+
+wat = device.currentValue("water")
+
+hum = device.currentValue("humidity")
+        cMotion.each 	{DeviceDetails << it.displayName +"\n"}
+        cWater.each 	{DeviceDetails << it.displayName +"\n"}
+
+tem = device.currentValue("temperature")
+        cMotion.each 	{DeviceDetails << it.displayName +"\n"}
+        cContact.each 	{DeviceDetails << it.displayName +"\n"}
+        cWater.each 	{DeviceDetails << it.displayName +"\n"}
+        cTstat.each 	{DeviceDetails << it.displayName +"\n"}
+
+acc = device.currentValue("acceleration")
+        cContact.each 	{DeviceDetails << it.displayName +"\n"}
+
+mot = device.currentValue("motion")
+        cMotion.each 	{DeviceDetails << it.displayName +"\n"}
+
+lux = device.currentValue("illuminance")
+        cMotion.each 	{DeviceDetails << it.displayName +"\n"}
+
+loc = device.currentValue("lock")
+        cLock.each 		{DeviceDetails << it.displayName +"\n"}     
+
+win = device.currentValue("windowShade")
+lev = device.currentValue("level")
+tra = device.currentValue("trackDescription") 
+mut = device.currentValue("mute")
+pow = device.currentValue("power")
+}
+*/
+
+    	} catch (e) {
+		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
+        result = "Oh no, something went wrong. If this happens again, please reach out for help!"
+        state.pTryAgain = true
+        return result
+		}
 }
 /******************************************************************************
 	 CUSTOM FEEDBACK MESSAGE											
@@ -1659,15 +1734,6 @@ private getTimeVariable(date, type) {
  
 }
 /************************************************************************************************************
-   ALEXA THINKS HANDLER 
-************************************************************************************************************/
-def alexaThinks() {
-	def outputTxt = "Sorry, the group control module is not ready. If you believe this was not a request to control a Profile group, please open a trouble ticket. Thank you for your help, "
-	def pPIN = false
-    state.pTryAgain = false
-    
-}
-/************************************************************************************************************
 		PROFILE CONTROL HANDLER - from Lambda via page p
 ************************************************************************************************************/
 def controlProfiles() {
@@ -1676,7 +1742,6 @@ def controlProfiles() {
     state.pTryAgain = true
     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 }
-
 /************************************************************************************************************
    CONTROL DEVICES - from Lambda via page c
 ************************************************************************************************************/
@@ -1697,11 +1762,14 @@ def controlDevices() {
         def String result = (String) null
         def delay = false
         def data
-    	state.pContCmdsR == "undefined"
+        ctDevice = ctDevice.replaceAll("[^a-zA-Z0-9 ]", "")
+    	state.pContCmdsR = "undefined"
         if (debug) log.debug "Received Lambda request to control devices with settings:" +
         					 " (ctCommand)= ${ctCommand}',(ctNum) = '${ctNum}', (ctPIN) = '${ctPIN}', "+
                              "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (pintentName) = '${pintentName}'"
-	if (pintentName == "main") {	
+	try {	
+    
+    if (pintentName == "main") {	
         if (ctNum == "undefined" || ctNum =="?") {ctNum = 0 } 
         if (ctCommand =="?") {ctCommand = "undefined"} 
 			ctNum = ctNum as int
@@ -1726,10 +1794,16 @@ def controlDevices() {
         if (ctNum > 0 && ctDevice != "undefined" && ctCommand == "undefined") {
             ctCommand = "set"
         }
-        if (state.pinTry != null ) {
-        	log.debug "Pin try is not null"
-            outputTxt = pinHandler(ctPIN, ctCommand, ctNum)
-        	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+        if (state.pinTry != null) {
+        	if (ctCommand == "undefined" && ctDevice == "undefined") {
+        		log.debug "Pin try is not null and it doesn't appear that this is a new request"
+            	outputTxt = pinHandler(ctPIN, ctCommand, ctNum, ctUnit)
+        		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+        	}
+            else {
+            state.pinTry = null
+            state.pTryAgain = false  
+        	}
         }
         if (ctCommand != "undefined") {
         	if (ctCommand.contains ("try again") && state.lastAction != null ) {
@@ -1767,7 +1841,7 @@ def controlDevices() {
         	}
 		}
         
-		log.warn "Beginning searching for devices to control with : '${deviceType}', command= '${command}'"
+		log.warn "Begining searching for devices to control with : '${deviceType}', command= '${command}'"
             if (deviceType == "volume" || deviceType == "general" || deviceType == "light") {      
                     def deviceMatch = null
                     def dType = null
@@ -1826,7 +1900,7 @@ def controlDevices() {
                     if (deviceMatch) {
  						device = deviceMatch 
                         if (debug) log.debug "Found a device: '${deviceMatch}'"        	
-                        if(state.usePIN_T == true) {
+                        if(state.usePIN_T == true) { // (THIS PIN VALIDATION HAS BEEN Deprecated as of 1/23/2017)
             				if (debug) log.debug "PIN protected device type - '${deviceType}'"
                 			delay = false
                             data = ["type": "cTstat", "command": command , "device": ctDevice, "unit": ctUnit, "num": ctNum, delay: delay]
@@ -1863,7 +1937,7 @@ def controlDevices() {
                 if (deviceMatch) {
                     if (debug) log.debug "Found a device: '${deviceMatch}'"
                     device = deviceMatch
-					if(state.usePIN_L == true) {
+					if(state.usePIN_L == true) { // (THIS PIN VALIDATION HAS BEEN Deprecated as of 1/23/2017)
             			if (debug) log.debug "PIN protected device type - '${deviceType}'"               		
                         delay = false
 	                    data = [type: "cLock", "command": command , "device": ctDevice, "unit": ctUnit, "num": ctNum, delay: delay]
@@ -1923,10 +1997,28 @@ def controlDevices() {
                 if (debug) log.debug "Searching for a door named '${ctDevice}'"
                 def deviceMatch = cDoor.find {d -> d.label.toLowerCase() == ctDevice.toLowerCase()}
                 if (deviceMatch) {
-                    if (debug) log.debug "Found a device: '${deviceMatch}'"
-                        device = deviceMatch
+                	if (debug) log.debug "Found a device: '${deviceMatch}'"
+                    device = deviceMatch
+                //Check Status
+					def deviceR = device.label
+					def cDoorStatus = device.contactState.value
+					if (debug) log.debug "Garage Door Status is: '${cDoorStatus}', command is: '${command}'  "
+						if (command == "open" && cDoorStatus == "open") {
+						outputTxt = "The " + device + " is already open, would you like to close it instead?"
+						state.pContCmdsR = "door"
+						def actionData = ["type": "cDoor", "command": "close" , "device": deviceR, "unit": ctUnit, "num": ctNum, delay: delayD]
+						state.lastAction = actionData
+						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    }
+					if (command == "close" && cDoorStatus =="closed") {
+                        outputTxt = "The " + device + " is already closed, would you like to open it instead? "
+                        state.pContCmdsR = "door"
+                        def actionData = ["type": "cDoor", "command": "open" , "device": deviceR, "unit": ctUnit, "num": ctNum, delay: delayD]
+                        state.lastAction = actionData
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    }
 					if(state.usePIN_D == true) {
-     					//PIN VALIDATION PROCESS
+     					//PIN VALIDATION PROCESS (Deprecated code as of 1/23/2017)
                         if (debug) log.debug "PIN protected device type - '${deviceType}'"
                 		delay = false
 	                    data = [type: "cDoor", "command": command , "device": ctDevice, "unit": ctUnit, "num": ctNum, delay: delay]
@@ -1955,74 +2047,6 @@ def controlDevices() {
                 	}
                 }
             }
-			if (cRelay !=null) {
-            //this is needed for Garage Doors that are set up as relays
-            	if (debug) log.debug "Searching for a relay named '${ctDevice}'"
-                def deviceMatch = cRelay.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
-				if (deviceMatch) {
-                	if (debug) log.debug "Found a device: '${deviceMatch}'"
-                	device = deviceMatch
-                    	//PIN VALIDATION PROCESS
-						if(state.usePIN_D == true) {
-                        	if (debug) log.debug "PIN protected device type - '${deviceType}'"
-                            delay = false
-                            data = [type: "cRelay", "command": command , "device": ctDevice, "unit": ctUnit, "num": ctNum, delay: delay]
-                            state.savedPINdata = data
-                            outputTxt = "Pin number please"
-                            pPIN = true
-                            state.pinTry = 0
-                            if (debug) log.debug "PIN response pending - '${state.pinTry}'"
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                        }
-                        else {                 
-                        //END PIN VALIDATION                                       
-                        	if (ctNum > 0 && ctUnit == "minutes") {
-                                device = device.label
-                                delay = true
-                                data = [type: "cRelay", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
-                                runIn(ctNum*60, controlHandler, [data: data])
-                                if (ctCommand == "open") {outputTxt = "Ok, opening the " + ctDevice + " in " + numText}
-                                else if (command == "close") {outputTxt = "Ok, closing the " + ctDevice + " in " + numText}
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                            }
-                            else {
-                            	delay = false
-                                data = [type: "cRelay", "command": command, "device": device, unit: ctUnit, num: ctNum, delay: delay]
-                                outputTxt = controlHandler(data)
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                           }
-                     }
-                }
-            }
-            if (settings.cVent?.size()>0) {
-            //this is needed to enable open/close command for Vents group
-            	if (debug) log.debug "Searching for a vent named '${ctDevice}'"
-                def deviceMatch = cVent.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
-                if (deviceMatch) {
-                	if (debug) log.debug "Found a device: '${deviceMatch}'"
-                    if (command == "open") {command = "onD"}
-                    if (command == "close") {command = "offD"}
-                    device = deviceMatch
-                    	if (ctNum > 0 && ctUnit == "minutes") {
-                            device = device.label
-                            delay = true
-                            data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
-                            runIn(ctNum*60, controlHandler, [data: data])
-                            if (ctCommand == "open") {outputTxt = "Ok, opening the " + ctDevice + " in " + numText}
-                            else if (command == "close") {outputTxt = "Ok, closing the " + ctDevice + " in " + numText}
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                        }
-                        else {
-                            delay = false
-                            data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
-                            controlHandler(data)
-                            if (ctCommand == "open") {outputTxt = "Ok, opening the " + ctDevice}
-                            else if (ctCommand == "close") {outputTxt = "Ok, closing the " + ctDevice}
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                        }
-				}
-			}
-		}
                 else if (deviceType == "Security") {
                 if (debug) log.debug "Searching for a security switch named '${ctDevice}'"
                 def deviceMatch = cSec.find {l -> l.label.toLowerCase() == ctDevice.toLowerCase()}             
@@ -2091,15 +2115,34 @@ def controlDevices() {
                             outputTxt = controlHandler(data)
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     	}   
-                    }                                      
+                    }             
 			if (cRelay !=null) {
             //this is needed for Garage Doors that are set up as relays
             	if (debug) log.debug "Searching for a relay named '${ctDevice}'"
                 def deviceMatch = cRelay.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
 				if (deviceMatch) {
                 	if (debug) log.debug "Found a device: '${deviceMatch}'"
-                	device = deviceMatch
-                    	//PIN VALIDATION PROCESS
+                    device = deviceMatch
+             		if (cContactRelay) {
+                    	if (debug) log.debug "Garage Door has a contact sensor"
+                        def deviceR = device.label
+                         def cCRelayValue = cContactRelay.contactState.value
+                            if (command == "open" && cCRelayValue == "open") {
+                                outputTxt = "The " + device + " is already open, would you like to close it instead?"
+                                state.pContCmdsR = "door"
+                                def actionData = ["type": "cRelay", "command": "close" , "device": deviceR, "unit": unitU, "num": newLevel, delay: delayD]
+                                state.lastAction = actionData
+	                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                            }
+                            if (command == "close" && cCRelayValue =="closed") {
+                                outputTxt = "The " + device + " is already closed, would you like to open it instead? "
+                                state.pContCmdsR = "door"
+                                def actionData = ["type": "cRelay", "command": "open" , "device": deviceR, "unit": ctUnit, "num": ctNum, delay: delay]
+                                state.lastAction = actionData
+                            	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                             }
+                         }
+                    	//PIN VALIDATION PROCESS (Deprecated code as of 1/23/2017)
 						if(state.usePIN_D == true) {
                         	if (debug) log.debug "PIN protected device type - '${deviceType}'"
                             delay = false
@@ -2130,10 +2173,46 @@ def controlDevices() {
                            }
                      }
                 }
-            }        
+            }
+            if (settings.cVent?.size()>0) {
+            //this is needed to enable open/close command for Vents group
+            	if (debug) log.debug "Searching for a vent named '${ctDevice}'"
+                def deviceMatch = cVent.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
+                if (deviceMatch) {
+                	if (debug) log.debug "Found a device: '${deviceMatch}'"
+                    if (command == "open") {command = "onD"}
+                    if (command == "close") {command = "offD"}
+                    device = deviceMatch
+                    	if (ctNum > 0 && ctUnit == "minutes") {
+                            device = device.label
+                            delay = true
+                            data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
+                            runIn(ctNum*60, controlHandler, [data: data])
+                            if (ctCommand == "open") {outputTxt = "Ok, opening the " + ctDevice + " in " + numText}
+                            else if (command == "close") {outputTxt = "Ok, closing the " + ctDevice + " in " + numText}
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                        }
+                        else {
+                            delay = false
+                            data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
+                            controlHandler(data)
+                            if (ctCommand == "open") {outputTxt = "Ok, opening the " + ctDevice}
+                            else if (ctCommand == "close") {outputTxt = "Ok, closing the " + ctDevice}
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                        }
+				}
+			}
+		}
 		outputTxt = "I wish I could help, but EchoSistant couldn't find the device named '${ctDevice}' or the command may not be supported"
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+	}
+    
+    	} catch (e) {
+		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
+        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
+        state.pTryAgain = true
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
 }
 /************************************************************************************************************
@@ -2162,14 +2241,13 @@ private getUnitText (unit, num) {
    	if (unit == "text" || unit.contains ("text")) {text = "send you a text"}
     if (unit == "audio" || unit.contains ("audio")){text = "play a message"}
     	return ["text":text, "unit":nUnit]
-}    
+}   
 /************************************************************************************************************
 	CUSTOM CONTROL COMMANDS
 ************************************************************************************************************/ 
 private getCustomCmd(command, unit, group) {
+
     def result
-//[attribute: "currentActivity",	commands: ["startActivity", "getAllActivities", "getCurrentActivity"]              
-   
     if (command == "repeat") {
 		result = getLastMessageMain()
 		return result
@@ -2181,17 +2259,19 @@ private getCustomCmd(command, unit, group) {
 		return result
     }
     if (command == "cancel" || command == "stop" || command == "disable" || command == "unschedule") {  //|| command == "deactivate"  Removed due to interferring with misc PIN switches
-    	if (unit == "reminder" || unit == "reminders" || unit == "timer" || unit == "timers" || unit.contains ("reminder") || unit.contains ("timer") ) {
-        	if (unit.contains ("reminder")) {
+    	if (unit == "reminder" || unit == "reminders" || unit == "timer" || unit == "timers" || unit.contains ("reminder") || unit.contains ("timer") || unit.contains ("schedule") ) {
+        	if (unit.contains ("reminder") || unit.contains ("schedule")) {
             	if (state.scheduledHandler != null) {
-                	def reminderHandler = state.scheduledHandler == "filters"+"Handler"
-                	unschedule("${reminderHandler}")
-                result = "Ok, canceling reminder for " + state.scheduledHandler
+                	if (state.scheduledHandler == "filters") {
+                    	unschedule(filtersHandler)
+                        state.scheduledHandler = null
+		                result = "Ok, canceling reminder for " + state.scheduledHandler
+                    }
+                    else {
+                    result = "Sorry, I couldn't find any scheduled reminders"// for " + state.scheduledHandler
+                    }
+                    return result
             	}
-                else {
-                result = "Sorry, I couldn't find any scheduled reminders"// for " + state.scheduledHandler
-                }
-                return result
             }
             else {
                 if (unit.contains ("timer")) {
@@ -2207,14 +2287,14 @@ private getCustomCmd(command, unit, group) {
 			return result
         }
 		if (unit == "pin number" || unit == "pin") {
-			if(state.usePIN_D == true || state.usePIN_T == true || state.usePIN_L == true || state.usePIN_S == true || state.usePIN_M == true) {
+			if(state.usePIN_D == true || state.usePIN_T == true || state.usePIN_L == true || state.usePIN_S != null || state.usePIN_M == true) {
         		result = "Pin number please"
         		state.pinTry = 0
                 state.savedPINdata = "disable" + group
         		if (debug) log.debug "PIN response pending to disable pin number - '${state.pinTry}'"
         		return result
-				}
 			}
+		}
          if (unit == "feedback") {
         	state.pMuteAlexa = true
             result = "Ok, disabling Alexa feedback. To activate just say, activate the feedback"
@@ -2225,15 +2305,15 @@ private getCustomCmd(command, unit, group) {
             return result
 		}        
     }
-	if (command == "start" || command == "enable"  || command == "schedule") {//|| command == "activate" Removed due to interferring with misc PIN switche
-		if (unit == "reminder" || unit == "reminders" || unit == "timer" || unit == "timers" || unit.contains ("reminder") || unit.contains ("timer"))
+	if (command == "start" || command == "enable" || command == "schedule") {  //|| command == "activate" Removed due to interferring with misc PIN switches
+		if (unit == "reminder" || unit == "reminders" || unit == "timer" || unit == "timers" || unit.contains ("reminder") || unit.contains ("timer") ) {
         	state.scheduledHandler = "reminder"
             result = "Ok, reminder scheduled"
            	return result
     	}
 		if (unit == "conversation" || unit.contains ("conversation")) {
            state.pContCmds = true        
-           result = "Ok, enabling conversational features. To disable just say, stop the conversation"
+           result = "Ok, activating conversational features. To disable just say, stop the conversation"
             return result
         }
 		if (unit == "pin number" || unit == "pin") {
@@ -2241,7 +2321,7 @@ private getCustomCmd(command, unit, group) {
             	if (group == "thermostats") {state.usePIN_T = true}
             	if (group == "locks") {state.usePIN_L = true}
             	if (group == "doors") {state.usePIN_D = true}
-                if (group == "security") {state.usePIN_S = true}
+                if (group == "security") {state.usePIN_S = true}                
                 if (group == "miscDevices") {state.usePIN_M = true}
             	if (debug) log.debug "Group:'${group}' PIN: T- '${state.usePIN_T}', L-'${state.usePIN_L}', D-'${state.usePIN_D}', S-'${state.usePIN_S}', M-'${state.usePIN_M}'"
                 result = "Ok, the pin has been activated for " + group + ".  To disable, just say disable the PIN for " + group
@@ -2258,22 +2338,34 @@ private getCustomCmd(command, unit, group) {
             return result
 		}
 	}
-//} 
+} 
 /************************************************************************************************************
 	PIN HANDLER
 ************************************************************************************************************/ 
-private pinHandler(pin, command, num) {
+private pinHandler(pin, command, num, unit) {
 	def result
         def String pinNum = (String) null
 		pinNum = num
-	if (pin == cPIN || command == cPIN || pinNum == cPIN) {
-		def data = state.savedPINdata
+	
+    if (command == "validation") {
+		state.savedPINdata = state.lastAction
+        state.lastAction = null
+		result = "Pin number please"
+		state.pinTry = 0
+		if (debug) log.debug "PIN response pending - '${state.pinTry}'"  
+        return result
+	}    
+    
+    if (pin == cPIN || command == cPIN || pinNum == cPIN || unit == cPIN ) {
+		//def data = state.savedPINdata 1/23/17
+		def data = state.savedPINdata != null ? state.savedPINdata : lastAction
+        state.pTryAgain = false
             if (data == "disablelocks" || data == "disablethermostats" || data == "disabledoors" || data == "disablesecurity" || data == "disabledevices"){ 
                 if (data == "disablelocks"){state.usePIN_L = false}
                 else if (data == "disablethermostats") {state.usePIN_T = false}
-                else if (data == "disabledoors") {state.usePIN_D = false}  
+                else if (data == "disabledoors") {state.usePIN_D = false}
                 else if (data == "disablesecurity") {state.usePIN_S = false}
-                else if (date == "disabledevices") {state.usePIN_M = false}
+                else if (date == "disabledevices") {state.usePIN_M = false}                
                 result = "Ok, pin number for " + data.replace("disable", "") + " has been disabled.  To activate it again, just say enable the PIN number for " + data.replace("disable", "")   
             }
             else {
@@ -2282,11 +2374,11 @@ private pinHandler(pin, command, num) {
             state.pinTry = null
             state.savedPINdata = null  
             return result
-			}
+	}
 	else {
 		state.pinTry = state.pinTry + 1
 			if (state.pinTry < 4){
-				result = "I'm sorry, that is incorrect, "
+				result = "I'm sorry, that is incorrect "
 				if (debug) log.debug "PIN NOT Matched! PIN = '${cPIN}', ctPIN= '${ctPIN}', ctNum= '${num}', ctCommand ='${command}', try# ='${state.pinTry}'"
 				state.pTryAgain = true
                 return result
@@ -2297,8 +2389,8 @@ private pinHandler(pin, command, num) {
 				result = "I'm sorry, that is incorrect. Please check your pin number and try again later"
                 return result
 			}
-		} 
-	}
+	} 
+}
 /************************************************************************************************************
    DEVICE CONTROL HANDLER
 ************************************************************************************************************/      
@@ -2314,7 +2406,9 @@ def controlHandler(data) {
     if (debug) log.debug 	"Received device control handler data: " +
         					" (deviceType)= ${deviceType}',(deviceCommand) = '${deviceCommand}', (deviceD) = '${deviceD}', " +
                             "(unitU) = '${unitU}', (numN) = '${numN}', (delayD) = '${delayD}'"  
-    if (deviceType == "cSwitch") {
+
+	try {
+	if (deviceType == "cSwitch") {
     	if (deviceCommand == "on" || deviceCommand == "off") {
             if (delayD == true) {
                 deviceD = cSwitch.find {s -> s.label.toLowerCase() == deviceD.toLowerCase()}   
@@ -2339,7 +2433,6 @@ def controlHandler(data) {
                 deviceD = cSwitch.find {s -> s.label.toLowerCase() == deviceD.toLowerCase()} 
                 if (debug) log.debug "Matched device control (deviceD)= ${deviceD.label}"
             }
-            //state.pContCmdsR = null
             def currLevel = deviceD.latestValue("level")
             def currState = deviceD.latestValue("switch")
             def newLevel = cLevel*10
@@ -2509,7 +2602,7 @@ def controlHandler(data) {
         	}  
         }
     }
-    	else if (deviceType == "cMiscDev") {
+    else if (deviceType == "cMiscDev") {
     	if (delayD == true || state.pinTry != null) {  
         	deviceD = cMiscDev.find {l -> l.label.toLowerCase() == deviceD.toLowerCase()} 
         }
@@ -2539,17 +2632,7 @@ def controlHandler(data) {
         else if (deviceCommand == "off") result = "Ok, disarming the " + deviceD + " system"                  
         if (delayD == false) {return result}  
 	}   
-	else if (deviceType == "cLock") {
-    	if (delayD == true || state.pinTry != null) {  
-        	deviceD = cLock.find {l -> l.label.toLowerCase() == deviceD.toLowerCase()} 
-        }
-        state.pinTry = null
-   		deviceD."${deviceCommand}"()
-        if (deviceCommand == "lock") result = "Ok, locking " + deviceD
-        else if (deviceCommand == "unlock") result = "Ok, unlocking the  " + deviceD                    
-        if (delayD == false) {return result}  
-	}
-    else if (deviceType == "cDoor" || deviceType == "cRelay" ) {
+	else if (deviceType == "cDoor" || deviceType == "cRelay" ) {
     	def cmd = deviceCommand
         if (delayD == true || state.pinTry != null || state.pContCmdsR == "door" ) {  
             def deviceR = cRelay.find {r -> r.label.toLowerCase() == deviceD.toLowerCase()}
@@ -2558,34 +2641,13 @@ def controlHandler(data) {
         }
         if (deviceType == "cRelay") {
 		     cmd = "on"
-             def deviceR = deviceD.label
-             //get garage contact status
-             if (cContactRelay) {
-             def cCRelayValue = cContactRelay.contactState.value
-             	if (deviceCommand == "open" && cCRelayValue == "open") {
-                	result = "The " + deviceD + " is already open, would you like to close it instead?"
-                    state.pContCmdsR = "door"
-		            actionData = ["type": deviceType, "command": "close" , "device": deviceR, "unit": unitU, "num": newLevel, delay: delayD]
-		        	state.lastAction = actionData
-		        	if (debug) log.debug "Saved last action for door relay ('open') reversing command to close"
-                    return result
-                }
-                if (deviceCommand == "close" && cCRelayValue =="closed") {
-                    result = "The " + deviceD + " is already closed, would you like to open it instead? "
-                    state.pContCmdsR = "door"
-		            actionData = ["type": deviceType, "command": "open" , "device": deviceR, "unit": unitU, "num": newLevel, delay: delayD]
-		        	state.lastAction = actionData
-		        	if (debug) log.debug "Saved last action for door relay ('closed') reversing command to 'open'"
-					return result             
-                 }
-             }
         }
         state.pinTry = null
    		deviceD."${cmd}"()
         state.pContCmdsR = null //"reverse"
         if (deviceCommand == "open") {result = "Ok, opening the " + deviceD}
         if (deviceCommand == "close") {result = "Ok, closing the  " + deviceD}                   
-        if (delayD == false) {return result}  
+        if (delayD == false || delayD == null) {return result}  
 	}
     else if (deviceType == "cFan") {
 		if (cHigh == null) cHigh = 99
@@ -2673,6 +2735,12 @@ def controlHandler(data) {
             return result
        }
     }
+	} catch (e) {
+		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
+        result = "Oh no, something went wrong. If this happens again, please reach out for help!"
+        state.pTryAgain = true
+        return result
+	}    
 }
 /***********************************************************************************************************************
     LAST MESSAGE HANDLER
@@ -2713,7 +2781,7 @@ def alarmStatusHandler(evt) {
 def subscribeToEvents() {
 	subscribe (location.onSecurityEnable("alarmSystemStatus")?.value)
     log.info "The SHM security system has changed status to '${alarmSystemStatus}'"
-}    
+} 
 /***********************************************************************************************************************
     SCHEDULE HANDLER
 ***********************************************************************************************************************/
@@ -2748,7 +2816,6 @@ if (state.filterNotif == "flash") {text = "flashing lights"}
 if(state.filterNotif == "text")  {text = "sending text"}
 if(state.filterNotif == "audio")  {text = "pushed audio message"}
 }
-
 /***********************************************************************************************************************
  		SKILL DETAILS
  ***********************************************************************************************************************/
@@ -2761,8 +2828,9 @@ private getProfileDetails() {
     	return  ProfileDetails
 }
 private getDeviceDetails() {
-// DEVICE categories
+// DEVICE categories: cSwitch,cVent,cFan,cTstat,cDoor,cRelay,cContactRelay,cLock,cMotion,cContact,cWater,cPresence,cSpeaker,cSynth,cMedia,cBattery 
 def DeviceDetails = [] 
+        //switches
         cSwitch.each 	{DeviceDetails << it.displayName +"\n"}
         cTstat.each 	{DeviceDetails << it.displayName +"\n"}
         cLock.each 		{DeviceDetails << it.displayName +"\n"}     
@@ -2770,6 +2838,7 @@ def DeviceDetails = []
         cContact.each 	{DeviceDetails << it.displayName +"\n"}
         cPresence.each 	{DeviceDetails << it.displayName +"\n"}
         cDoor.each 		{DeviceDetails << it.displayName +"\n"}
+        cWater.each 	{DeviceDetails << it.displayName +"\n"}
         cSpeaker.each 	{DeviceDetails << it.displayName +"\n"}
         cVent.each 		{DeviceDetails << it.displayName +"\n"}
         cFan.each 		{DeviceDetails << it.displayName +"\n"}
@@ -2778,8 +2847,6 @@ def DeviceDetails = []
         cSynth.each		{DeviceDetails << it.displayName +"\n"}
         cMedia.each		{DeviceDetails << it.displayName +"\n"}
         cBattery.each	{DeviceDetails << it.displayName +"\n"}
-        cMiscDev.each	{DeviceDetails << it.displayName +"\n"}
-
 
         def dUniqueList = DeviceDetails.unique (false)
         dUniqueList = dUniqueList.sort()
@@ -2864,7 +2931,7 @@ private getCommand(command, unit) {
         }
 		else if (command == "high" || command == "medium"|| command == "low") {
 			deviceType = "fan"                  
-		}
+		}         
     //case "Other Commands":
     	if (command == "activate" || command == "deactivate") {
         	deviceType = "miscDevices"
@@ -3065,7 +3132,6 @@ def fillColorSettings() {
 		[ name: "Yellow Green",				rgb: "#9ACD32",		h: 80,		s: 61,		l: 50,	],
 	]
 }
-
 /************************************************************************************************************
    Version/Copyright/Information/Help
 ************************************************************************************************************/
@@ -3097,7 +3163,7 @@ private def textHelp() {
 		"This smartapp allows you to use an Alexa device to generate a voice or text message on on a different device"
         "See our Wikilinks page for user information!"
 		}
-       
+
 /************************************************************************************************************
    Page status and descriptions 
 ************************************************************************************************************/       
