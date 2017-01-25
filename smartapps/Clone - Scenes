@@ -17,7 +17,7 @@
 /**********************************************************************************************************************************************/
 definition(
 	name			: "Scenes",
-    namespace		: "Clone",
+    namespace		: "EchoLabs",
     author			: "JH/BD",
 	description		: "EchoSistant Add-on",
 	category		: "My Apps",
