@@ -3309,3 +3309,4 @@ def pRestrictComplete() {def text = "Tap here to configure settings"
     	text = "Configured"}
     	else text = "Tap to Show"
         text}
+ 
