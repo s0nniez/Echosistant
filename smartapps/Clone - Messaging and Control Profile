@@ -1,0 +1,231 @@
+/**
+ *  Clone - Messaging and Control
+ *
+ *  Copyright 2017 Jason Headley
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ */
+/**********************************************************************************************************************************************/
+definition(
+	name			: "MessagingAndControl",
+    namespace		: "EchoLabs",
+    author			: "JH/BD",
+	description		: "EchoSistant Add-on",
+	category		: "My Apps",
+    parent			: "Clone:Clone",
+	iconUrl			: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png",
+	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
+	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
+/**********************************************************************************************************************************************/
+
+preferences {
+ //   page name: "pageMain"
+    //Parent Pages  
+        page name: "mainProfilePage"
+    		page name: "pSend"
+        	page name: "pActions"
+        	page name: "pConfig"
+            page name: "pRestrict"
+            	page name: "certainTime"            
+        	page name: "pScenes"
+}
+
+def mainProfilePage() {	
+    dynamicPage(name: "mainProfilePage", title:"I Want This Profile To...", install: true, uninstall: true, multiple: true) {
+        section {
+           	href "pSend", title: "Send Messages... "//, description: pSendComplete(), state: pSendSettings(),
+   				image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"   			
+			href "pConfig", title: "Audio Message Options..."//, description: pConfigComplete(), state: pConfigSettings(),
+            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"             
+            href "pScenes", title: "Create Scenes... "//, description: pScenesComplete(), state: pScenesSettings(),
+            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Plus.png" 
+			href "pActions", title: "Execute Actions when Profile runs..."//, description: pActionsComplete(), state: pActionsSettings(),
+            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+            href "pRestrict", title: "With These General Profile Restrictions"//, description: pRestrictComplete(), state: pRestrictSettings(),
+            	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png" 
+		}
+        section ("Name and/or Remove this Profile") {
+ 		   	label title:"              Rename Profile ", required:false, defaultValue: "New Control and Messaging Profile"  
+        }    
+	}
+}
+page name: "pSend"
+    def pSend(){
+        dynamicPage(name: "pSend", title: "", uninstall: false){
+             section ("Speakers", hideWhenEmpty: true){
+                input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false,
+                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
+                input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true,    
+                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
+                if (sonosDevice) {
+                    input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+                    input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
+                }  
+            }
+            section ("Text Messages" ) {
+            	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true,    
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+                if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+           			input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true,      
+                        image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+                if (sendText){      
+                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122;8046663344"
+                    input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
+                }
+            }    
+            section ("Push Messages") {
+            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false,
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false, submitOnChange: true,
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png"
+            }        
+    	}                 
+    } 
+page name: "pActions"
+    def pActions() {
+            dynamicPage(name: "pActions", title: "Select Devices to use with this profile",install: false, uninstall: false) {
+                 section ("AppLink actions") {
+                 	 input "appLink", "enum", title: "Trigger These appLink Actions", required: false, multiple: true, options: parent.appLinkHandler(value: "list")
+                     }
+                 section ("Light Switches", hideWhenEmpty: true){
+                    input "switches", "capability.switch", title: "Select Lights and Switches...", multiple: true, required: false, submitOnChange: true
+                        if (switches) input "switchCmd", "enum", title: "What do you want to do with these switches?", options:["on":"Turn on","off":"Turn off","toggle":"Toggle","delay":"Delay"], multiple: false, required: false, submitOnChange:true
+                        if (switchCmd) {
+                        input "sSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
+                        input "sSecondsOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
+                        }
+                        if (switchCmd) input "otherSwitch", "capability.switch", title: "...and these other switches?", multiple: true, required: false, submitOnChange: true
+                        if (otherSwitch) input "otherSwitchCmd", "enum", title: "What do you want to do with these other switches?", options: ["on1":"Turn on","off1":"Turn off","toggle1":"Toggle","delay1":"Delay"], multiple: false, required: false, submitOnChange: true
+                        if (otherSwitchCmd) {
+                        input "sSecondsOn1", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
+                        input "sSecondsOff1", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
+                    	}
+                    }
+        		section ("Colored lights", hideWhenEmpty: true){
+            		input "hues", "capability.colorControl", title: "Select These Colored Lights...", multiple: true, required: false, submitOnChange:true
+            			if (hues) {
+                        	input "hueCmd", "enum", title: "What do you want to do with these color bulbs?", options:["on":"Turn on","off":"Turn off","setColor":"Set Color"], multiple: false, required: false, submitOnChange:true
+							if (hueCmd == "setColor") input "color", "enum", title: "Hue Color?", required: false, multiple:false, options: parent.fillColorSettings().name
+							input "lightLevel", "enum", title: "Light Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
+        					}
+						}
+                section ("Dimmers", hideWhenEmpty: true){
+                    input "dimmers", "capability.switchLevel", title: "Select Dimmers...", multiple: true, required: false , submitOnChange:true
+                        if (dimmers) input "dimmersCmd", "enum", title: "Command To Send To Dimmers", options:["set":"Set level","delay2":"Delay","off":"Turn off"], multiple: false, required: false, submitOnChange:true
+                        if (dimmersCmd) input "dimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true
+                            if (dimmersCmd) {
+                        		input "sSecondsOn2", "number", title: "Turn on in Seconds?", defaultValue: none, required: false, submitOnChange: true
+                        		input "sSecondsOff2", "number", title: "Turn off in Seconds?", defaultValue: none, required: false, submitOnChange: true
+                        		}	
+                        if (dimmersLVL) input "otherDimmers", "capability.switchLevel", title: "Control These Other Dimmers...", multiple: true, required: false , submitOnChange:true
+                        if (otherDimmers) input "otherDimmersCmd", "enum", title: "Command To Send To Other Dimmers", options:["set":"Set level","delay3":"Delay","off":"Turn off"], multiple: false, required: false, submitOnChange:true
+                        if (otherDimmersCmd) input "otherDimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true
+                			if (otherDimmersCmd) {
+                        		input "sSecondsOn3", "number", title: "Turn on in Seconds?", defaultValue: none, required: false, submitOnChange: true
+                        		input "sSecondsOff3", "number", title: "Turn off in Seconds?", defaultValue: none, required: false, submitOnChange: true
+                        		}
+                    		}
+                section ("Flash These Switches") {
+					input "flashSwitches", "capability.switch", title: "Select Flashers", multiple: true, required: false, submitOnChange:true
+					if (flashSwitches) {
+					input "Fcolor", "enum", title: "Flasher Color?", required: false, multiple:false, options: ["Red","Green","Blue","Yellow","Orange","Purple","Pink"]
+ 					input "FlashLevel", "enum", title: "Light Flash Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
+                    input "numFlashes", "number", title: "This number of times (default 3)", required: false, submitOnChange:true
+                    input "onFor", "number", title: "On for (default 1 second)", required: false, submitOnChange:true
+					input "offFor", "number", title: "Off for (default 1 second)", required: false, submitOnChange:true
+					}
+                }
+			}
+        }
+page name: "pConfig"
+    def pConfig(){
+        dynamicPage(name: "pConfig", title: "Configure Global Profile Options...", uninstall: false) {
+            section ("Voice Message Options and Alexa Responses") {
+            input "MsgOpt", "bool", title: "I want to use these configuration options...", defaultValue: false, submitOnChange: true,
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
+                if (MsgOpt) {
+					input "ShowPreMsg", "bool", title: "Pre-Message (plays on Audio Playback Device before message)", defaultValue: false, submitOnChange: true
+                        if (ShowPreMsg) input "PreMsg", "text", title: "Pre-Message...", defaultValue: none, submitOnChange: true, required: false 
+                    input "Acustom", "bool", title: "Custom Response from Alexa...", defaultValue: false, submitOnChange: true
+                        if (Acustom) input "outputTxt", "text", title: "Input custom phrase...", required: false, defaultValue: "Message sent,   ", submitOnChange: true
+                    input "Arepeat", "bool", title: "Alexa repeats message to sender when sent...", defaultValue: false, submitOnChange: true
+                        if (Arepeat) {			
+                        if (Arepeat && Acustom){
+                            paragraph "NOTE: only one custom Alexa response can"+
+                            " be delivered at once. Please only enable Custom Response OR Repeat Message"
+                            }				
+                        }
+                    input "AfeedBack", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options...", defaultValue: false, submitOnChange: true
+                    input "disableTts", "bool", title: "Disable All spoken notifications (No voice output from the speakers or Alexa)", required: false, submitOnChange: true  
+                    input "ContCmds", "bool", title: "Allow Alexa to prompt for additional commands after message is delivered...", defaultValue: false, submitOnChange: true
+                    input "ContCmdsR", "bool", title: "Allow Alexa to prompt for additional commands after Repeat command is given...", defaultValue: false, submitOnChange: true
+                    }
+                }            	
+	        }
+    	}
+page name: "pRestrict"
+	def pRestrict() {
+    	dynamicPage(name:"pRestrict", title: "Using these General Profile Restrictions", uninstall: false) {
+        	 section ("Mode Restrictions") {
+                input "modes", "mode", title: "Only when mode is", multiple: true, required: false, submitOnChange: true,
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                }        
+            section ("Days - Audio only on these days"){	
+                input "runDay", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
+                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                }
+            section ("Time - Audio only during these times"){
+                href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null,
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                }
+			}
+		}         
+page name: "certainTime"
+    def certainTime() {
+        dynamicPage(name:"certainTime",title: "Only during a certain time", uninstall: false) {
+            section("Beginning at....") {
+                input "startingX", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
+                if(startingX in [null, "A specific time"]) input "starting", "time", title: "Start time", required: false, submitOnChange: true
+                else {
+                    if(startingX == "Sunrise") input "startSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                    else if(startingX == "Sunset") input "startSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                }
+            }
+            section("Ending at....") {
+                input "endingX", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
+                if(endingX in [null, "A specific time"]) input "ending", "time", title: "End time", required: false, submitOnChange: true
+                else {
+                    if(endingX == "Sunrise") input "endSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                    else if(endingX == "Sunset") input "endSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                }
+            }
+        }
+    }          
+page name: "pScenes"    
+    def pScenes() {
+        dynamicPage (name: "pScenes", title: "", install: true, uninstall: false) {
+        	if (childApps.size()) { 
+            	section(childApps.size()==1 ? "One Scene configured" : childApps.size() + " Scenes configured" )
+            }
+            if (childApps.size()) {  
+            	section("Scenes",  uninstall: false){
+                	app(name: "scenes", appName: "Scenes", namespace: "EchoLabs", title: "Create a new scene for this Profile", multiple: true,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Scenes",  uninstall: false){
+            		paragraph "NOTE: Looks like you have no Scenes yet, please make sure you have installed the Scenes Smart App Add-on before creating a new Scene!"
+            		app(name: "scenes", appName: "Scenes", namespace: "EchoLabs", title: "Create a new scene for this Profile", multiple: true,  uninstall: false)
+        		}
+            }
+		}
+	}
