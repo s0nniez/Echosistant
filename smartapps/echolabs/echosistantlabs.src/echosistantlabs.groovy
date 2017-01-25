@@ -477,6 +477,7 @@ def processBegin(){
                 def savedData = state.lastAction
                 outputTxt = savedData
                 pPendingAns = "feedback"
+                state.pContCmdsR = null
 				return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
        }
@@ -490,8 +491,6 @@ def processBegin(){
             }
         }        
      }   
-    //state.pContCmdsR = null
-    //state.lastAction = null
 	  if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
       "; data sent: pContinue = '${state.pContCmds}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
 	}
@@ -533,8 +532,9 @@ def feedbackHandler() {
     
 	try {
     
+    if (fDevice == "undefined" || fQuery == "undefined" || fOperand == "undefined" || fCommand == "undefined") {
+
     fOperand = fOperand == "switches" ? "lights" : fOperand
-    
     if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about"  ) {
     	def dMatch = deviceMatchHandler(fDevice)
 		if (dMatch?.deviceMatch == null) { 				
@@ -890,7 +890,10 @@ def feedbackHandler() {
 
 		}
 	}
-
+	}
+        outputTxt = "Sorry, I didn't get that, "
+        state.pTryAgain = true
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	} catch (e) {
 		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
@@ -1405,7 +1408,6 @@ def controlDevices() {
         def ctGroup = params.cGroup       
 		def pintentName = params.intentName
         def String outputTxt = (String) null 
-        //this is used to activate Lambda "Try Again" response
 		def pPIN = false
         def String deviceType = (String) null
         def String command = (String) null
@@ -1420,12 +1422,16 @@ def controlDevices() {
                              "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (pintentName) = '${pintentName}'"
 	try {	
     
-    if (pintentName == "main") {	
+    if (pintentName == "main") {
+        ctPIN = ctPIN == "?" ? "undefined" : ctPIN
         if (ctNum == "undefined" || ctNum =="?") {ctNum = 0 } 
         if (ctCommand =="?") {ctCommand = "undefined"} 
-			ctNum = ctNum as int
+        ctNum = ctNum as int
+
+    	if (ctCommand == "undefined" || ctNum == "undefined" || ctPIN == "undefined" || ctDevice == "undefined" || ctUnit == "undefined" || ctGroup == "undefined") {
+        
         if (ctUnit =="?" || ctUnit == "undefined") {
-			def String unit =  (String) "undefined"
+            def String unit =  (String) "undefined"
         }    
         else {
         	if (ctNum>0){
@@ -1789,7 +1795,10 @@ def controlDevices() {
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
-    
+    	outputTxt = "Sorry, I didn't get that, "
+		state.pTryAgain = true
+		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+    }
     	} catch (e) {
 		log.error "Oh no, something went wrong. If this happens again, please reach out for help!"
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
