@@ -21,7 +21,7 @@ definition(
     author			: "JH/BD",
 	description		: "EchoSistant Add-on",
 	category		: "My Apps",
-    parent			: "Clone:Clone",
+    parent			: "EchoLabs:EchoSistantLabs",
 	iconUrl			: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png",
 	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
