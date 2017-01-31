@@ -1787,14 +1787,16 @@ def controlDevices() {
                         }
                        	if (deviceMatch == null && settings.cSwitch?.size()>0 && state.pinTry == null) {
                             deviceMatch = cSwitch.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
-                        	dType = "s"
+							if (debug) log.debug "Found a switch: '${deviceMatch}'"
+                            dType = "s"
                         }
 						if (deviceMatch == null && settings.cMiscDev?.size()>0 && state.pinTry == null) {
                             deviceMatch = cMiscDev.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
-                        	//dType = "sec" 
+                        	if (debug) log.debug "Found a pin protected switch: '${deviceMatch}'"
+                            //dType = "sec" 
                     		// CHECK FOR ENABLED PIN
-                            if(cPIN && state.usePIN_SHM == true && deviceMatch) {
-                            	if (debug) log.debug "Found a pin protected switch: '${deviceMatch}'"
+                            if(cPIN && state.usePIN_S == true && deviceMatch) {
+                            	if (debug) log.debug "PIN enabled for Switch '${deviceMatch}'"
 								device = deviceMatch.label
                        	 		if (command == "disable" || command == "deactivate"|| command == "stop") {command = "off"}
                         		if (command == "enable" || command == "activate"|| command == "start") {command = "on"}	                        
