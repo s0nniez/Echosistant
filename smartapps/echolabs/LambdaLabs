@@ -34,7 +34,7 @@ exports.handler = function( event, context ) {
     var STappID = 'xxx-51c0-439d-9cab-xxx';
     var STtoken = 'xxx-1323-40d9-aae7-xxx';
     var url='https://graph.api.smartthings.com:443/api/smartapps/installations/' + STappID + '/' ;
-        //---------------------------------------------------------------------------------------
+       //---------------------------------------------------------------------------------------
         var cardName ="";
         var areWeDone = true;
 //-------- Validation process and begining interaction with SmartThings app-------------------- 
@@ -111,6 +111,18 @@ exports.handler = function( event, context ) {
                     process = true;
                     cardName = "EchoSistant Control";
                 }
+//-------- Security Control Type Request------------------------------------------------------------------
+                else if (intentName == "security"){           
+                    var sCommand = event.request.intent.slots.cCommand.value;
+                    var sNum = event.request.intent.slots.cNum.value;
+                    var sPIN = event.request.intent.slots.cPIN.value;
+                    var sType = event.request.intent.slots.sType.value;
+                    var sControl = event.request.intent.slots.sControl.value;
+                    url += 's?sControl=' + sControl + '&sCommand=' + sCommand + '&sType=' + sType + '&sNum=' + sNum + '&sPIN=' + sPIN + '&intentName=' + intentName;    
+                    process = true;
+                    cardName = "EchoSistant Security";
+                }
+
 //-------- Profile Control Type Request------------------------------------------------------------------
                 else if (intentName == "profile"){           
                     var pCommand = event.request.intent.slots.cCommand.value;
@@ -191,6 +203,10 @@ exports.handler = function( event, context ) {
                             areWeDone=false;                            
                         }
                         else if (pContCmds === true && pContCmdsR == "act"){
+                            //just wait
+                            areWeDone=false;                            
+                        } 
+                        else if (pContCmds === true && pContCmdsR == "stayORleave"){
                             //just wait
                             areWeDone=false;                            
                         } 
