@@ -134,6 +134,16 @@ page name: "mRooms"
             	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
 				}
 			}
+        if (coreOn) {   
+            section ("CoRE Pistons") {
+            	href "mCoRE", title: "Manage your CoRE Pistons",
+               	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+				}
+            }
+//            section ("Button Controller Plus") {
+//            	href "mButton", title: "Program your Button Controllers",
+//               	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+//			}
     	}   
 	}
 page name: "mSupport"  
@@ -144,6 +154,7 @@ page name: "mSupport"
             	input "controlOn", "bool", title: "Is the Control & Messaging Module Installed?", required: true, defaultValue: false
                 input "notifyOn", "bool", title: "Is the Notifications Module Installed? ", required: true, defaultValue: false
  				input "securityOn", "bool", title: "Is the Security Suite Module Installed?", required: true, defaultValue: false
+                input "coreOn", "bool", title: "Is the CoRE Piston Management Module Installed?", required: true, defaultValue: false
                 }
                 section ("Amazon AWS Skill Details") {
 					href "SkillDetails", title: "Tap to view setup data for the AWS Main Intent Skill...", description: "",
@@ -197,7 +208,45 @@ page name: "mSHMSec"
 				}
 			}
         }
-    }     
+    } 
+/*page name: "mButton"    
+    def mButton() {
+        dynamicPage (name: "mButton", title: "", install: true, uninstall: false) {
+        	if (childApps.size()) { 
+            	section(childApps.size()==1 ? "One Button Controller configured" : childApps.size() + " Room configured" )
+            }
+            if (childApps.size()) {  
+            	section("Rooms",  uninstall: false){
+                	app(name: "Buttons", appName: "Button Controller+", namespace: "EchoLabs", title: "Program a new Button Controller", multiple: true,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Rooms",  uninstall: false){
+            		paragraph "NOTE: Looks like you haven't created any Rooms yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
+            		app(name: "Buttons", appName: "Button Controller+", namespace: "EchoLabs", title: "Program a new Button Controller", multiple: true,  uninstall: false)
+        		}
+            }
+       }
+} */
+page name: "mCoRE"    
+    def mCoRE() {
+        dynamicPage (name: "mCoRE", title: "", install: true, uninstall: false) {
+        	if (childApps.size()) { 
+            	section(childApps.size()==1 ? "One Room configured" : childApps.size() + " Room configured" )
+            }
+            if (childApps.size()) {  
+            	section("Rooms",  uninstall: false){
+                	app(name: "Pistons", appName: "CoRE", namespace: "EchoLabs", title: "Create a new piston", multiple: true,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Rooms",  uninstall: false){
+            		paragraph "NOTE: Looks like you haven't created any Rooms yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
+            		app(name: "Pistons", appName: "CoRE", namespace: "EchoLabs", title: "Create a new piston", multiple: true,  uninstall: false)
+        		}
+            }
+       }
+}       
 page name: "mControlProfile"    
     def mControlProfile() {
         dynamicPage (name: "mControlProfile", title: "", install: true, uninstall: false) {
@@ -206,13 +255,13 @@ page name: "mControlProfile"
             }
             if (childApps.size()) {  
             	section("Rooms",  uninstall: false){
-                	app(name: "rooms", appName: "Rooms", namespace: "EchoLabs", title: "Create a new Room", multiple: true,  uninstall: false)
+                	app(name: "rooms", appName: "MessagingAndControl", namespace: "EchoLabs", title: "Create a new Room", multiple: true,  uninstall: false)
             	}
             }
             else {
             	section("Rooms",  uninstall: false){
             		paragraph "NOTE: Looks like you haven't created any Rooms yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-            		app(name: "room", appName: "Rooms", namespace: "EchoLabs", title: "Create a new Room", multiple: true,  uninstall: false)
+            		app(name: "room", appName: "MessagingAndControl", namespace: "EchoLabs", title: "Create a new Room", multiple: true,  uninstall: false)
         		}
             }
        }
@@ -225,13 +274,13 @@ page name: "mNotifyProfile"
             }
             if (childApps.size()) {  
             	section("Notification Profile",  uninstall: false){
-                	app(name: "profile", appName: "NotificationProfile", namespace: "Clone", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
+                	app(name: "profile", appName: "NotificationProfile", namespace: "EchoLabs", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
             	}
             }
             else {
             	section("Profiles",  uninstall: false){
             		paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-            		app(name: "profile", appName: "NotificationProfile", namespace: "Clone", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
+            		app(name: "profile", appName: "NotificationProfile", namespace: "EchoLabs", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
         		}
             }
        }
@@ -244,13 +293,13 @@ page name: "mSecuritySuite"
             }
             if (childApps.size()) {  
             	section("Security Suite",  uninstall: false){
-                	app(name: "profile", appName: "SecuritySuite", namespace: "Clone", title: "Configure Security Suite", multiple: false,  uninstall: false)
+                	app(name: "profile", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
             	}
             }
             else {
             	section("Profiles",  uninstall: false){
             		paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-            		app(name: "profile", appName: "SecuritySuite", namespace: "Clone", title: "Configure Security Suite", multiple: false,  uninstall: false)
+            		app(name: "profile", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
         		}
             }
        }
@@ -1842,7 +1891,7 @@ def controlDevices() {
 		}
         
 		log.warn "Begining searching for devices to control with : '${deviceType}', command= '${command}'"
-            if (deviceType == "volume" || deviceType == "general" || deviceType == "light") {      
+            if (deviceType == "volume" || deviceType == "general" || deviceType == "light" || deviceType == "Security") {      
                     def deviceMatch = null
                     def dType = null
                         if (settings.cSpeaker?.size()>0) {
@@ -1871,14 +1920,15 @@ def controlDevices() {
                     if (deviceMatch && dType == "s") {
                         if (debug) log.debug "Found a device: '${deviceMatch}'"
                         device = deviceMatch
-                        if (command == "disable" | command == "deactivate"|| command == "stop") {command = "off"}
-                        if (command == "enable" | command == "activate"|| command == "start") {command = "on"}    
+                        if (command == "disarm" || command == "disable" | command == "deactivate"|| command == "stop") {command = "off"}
+                        if (command == "arm" || command == "enable" | command == "activate"|| command == "start") {command = "on"}    
                     	if (ctNum > 0 && ctUnit == "minutes") {
                         	device = device.label
                             delay = true
                             data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
                             runIn(ctNum*60, controlHandler, [data: data])
-                            if (command == "on" || command == "off" ) {outputTxt = "Ok, turning " + ctDevice + " " + command + ", in " + numText}
+                            if (command == "arm") {outputTxt = "Ok, arming " + ctDevice + " " + command + ", in " + numText}
+                            else if (command == "on" || command == "off" ) {outputTxt = "Ok, turning " + ctDevice + " " + command + ", in " + numText}
                             else if (command == "decrease") {outputTxt = "Ok, decreasing the " + ctDevice + " level in " + numText}
                             else if (command == "increase") {outputTxt = "Ok, increasing the " + ctDevice + " level in " + numText}
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
@@ -1887,7 +1937,9 @@ def controlDevices() {
                         	delay = false
                         	data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
                             outputTxt = controlHandler(data)
-                            if (command == "decrease" || command == "increase" ) {state.pContCmdsR = "level"}
+                            if (command == "arm") {outputTxt = "Ok, arming " + ctDevice}
+                            if (command == "disarm") {outputTxt = "Ok, disarming " + ctDevice}
+                            else if (command == "decrease" || command == "increase" ) {state.pContCmdsR = "level"}
                             if (debug) log.debug "Sending params to Lambda: pContCmds: '${state.pContCmds}', pContCmdsR: '${state.pContCmdsR}', pTryAgain: '${state.pTryAgain}' "
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                   		}
