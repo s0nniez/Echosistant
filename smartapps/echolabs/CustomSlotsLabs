@@ -87,6 +87,20 @@ on
 off
 settings
 batteries
+weather
+current weather
+weather alerts
+alerts
+weather conditions
+current temperature
+temperature inside
+indoor temperature
+temperature outside
+outdoor temperature
+security
+smart home monitor
+home monitor
+alarm
 
 LIST_OF_UNITS
 
@@ -110,6 +124,8 @@ text
 feedback
 hour
 hours
+schedule
+number
 
 
 LIST OF GROUPS
@@ -122,6 +138,8 @@ devices
 fans
 thermostats
 locks
+switches
+security
 
 LIST_OF_QUERIES
 
@@ -137,3 +155,22 @@ is there
 are there
 did I
 get
+
+LIST_OF_SYSTEM_CONTROLS
+
+stay
+away
+off
+I'm back
+I'm home
+We're back
+We're home
+staying
+leaving
+
+LIST_OF_TYPES
+
+mode
+security
+routine
+modes
