@@ -47,6 +47,10 @@
                 {
                     "name": "cCommand",
                     "type": "LIST_OF_COMMANDS"
+                },
+                {
+                    "name": "cPIN",
+                    "type": "AMAZON.NUMBER"
                 }
             ]
         },
@@ -75,6 +79,31 @@
                 }
             ]
         },
+        {
+            "intent": "security",
+            "slots": [
+                {
+                    "name": "sControl",
+                    "type": "LIST_OF_SYSTEM_CONTROLS"
+                },
+                {
+                    "name": "cCommand",
+                    "type": "LIST_OF_COMMANDS"
+                },
+                {
+                    "name": "cPIN",
+                    "type": "AMAZON.NUMBER"
+                },
+                {
+                    "name": "cNum",
+                    "type": "AMAZON.NUMBER"
+                },
+                {
+                    "name": "sType",
+                    "type": "LIST_OF_TYPES"
+                }
+            ]
+        },     
         {
             "intent": "AMAZON.StopIntent"
         },
