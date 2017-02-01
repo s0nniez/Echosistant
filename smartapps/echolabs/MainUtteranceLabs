@@ -15,6 +15,14 @@ security {sControl}
 security to {cCommand} the {sType}
 security to {cCommand} the {sType} {sControl}
 security to {cCommand} {sType} {sControl} in {cNum}
+security what's my {sType} {sControl}
+security what is my {sType} {sControl}
+security what's the {sType} {sControl}
+security what is the {sType} {sControl}
+security about the {sType} {sControl}
+security get the {sControl} of my {sType} 
+
+
 
 main {cPIN}
 main {cUnit}
