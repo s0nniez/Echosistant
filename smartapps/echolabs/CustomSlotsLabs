@@ -101,6 +101,8 @@ security
 smart home monitor
 home monitor
 alarm
+temperature is inside
+temperature is outside
 
 LIST_OF_UNITS
 
@@ -157,16 +159,9 @@ did I
 get
 
 LIST_OF_SYSTEM_CONTROLS
-
-stay
-away
-off
-I'm back
-I'm home
-We're back
-We're home
-staying
-leaving
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PLEASE COPY/PASTE FROM SMART APP!!!!!!!!!!!!!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 LIST_OF_TYPES
 
