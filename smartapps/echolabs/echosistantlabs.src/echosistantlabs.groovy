@@ -91,10 +91,8 @@ page name: "mainParentPage"
                         href "mDashboard", title: "Dashboard"// description: mDashboardD(), state: mDashboardS()
                             //image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
                     }
-                        href "mBonus", title: "                    The Current Mode is \n" +
-                        "					                        ${location.currentMode} \n" +
-
-                            "       Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}", description: ""
+                        href "mBonus", title: "The Current Mode is: ${location.currentMode}" + "\n"  +
+                        "Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}", description: none
 			}
 		}
 	}           
@@ -250,12 +248,12 @@ page name: "mIntent"
                     }
                }
             }
-	page name: "mProfiles"    
-        def mProfiles() {	
-            dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
-                    //if (childApps.size()) { 
-                    //        section(childApps.size()==1 ? "One Profile configured" : childApps.size() + " Profiles configured" )
-                    //}
+        page name: "mMainProfile"    
+            def mMainProfile() {
+                dynamicPage (name: "mMainProfile", title: "", install: true, uninstall: false) {
+//                    if (childApps.size()) { 
+//                            section(childApps.size()==1 ? "One Profile configured" : childApps.size() + " Profiles configured" )
+//                    }
                     if (childApps.size()>0) {  
                         section("Message and Control Profiles",  uninstall: false){
                             app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "View and Create Message & Control Profiles...", multiple: true,  uninstall: false)
@@ -265,8 +263,19 @@ page name: "mIntent"
                         section("Profiles",  uninstall: false){
                             paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Profiles Smart App Add-on before creating a new Profile!"
                             app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "Create a new Profile", multiple: true,  uninstall: false)
-                        }
-                    }          			
+						}
+					}
+				}
+            } 
+	page name: "mProfiles"    
+        def mProfiles() {
+            dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
+                    if (childApps.size()) { 
+                        section(childApps.size()==1 ? "One Notification configured" : childApps.size() + " Notifications configured" )
+                    }
+				section ("Messaging and Control Profiles") {
+                	href "mMainProfile", title: "View and Create Messaging and Control Profiles...", description: none
+                    }
 
 				if (notifyOn) {
         			section ("Manage Notifications") {
@@ -275,7 +284,7 @@ page name: "mIntent"
 				}
 			}            
 		}
-	}        
+	}       
 page name: "mSettings"  
 	def mSettings(){
         dynamicPage(name: "mSettings", uninstall: true) {
