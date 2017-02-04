@@ -113,12 +113,6 @@ page name: "mIntent"
             	href "mSecurity", title: "Home Security control options"//, description: mSecurityD(), state: mSecurityS(),
                 //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
             }
-     		if (notifyOn) {
-        		section ("Manage Notifications") {
-  					href "mNotifyProfile", title: "View and Create Notification Profiles..."
-            		//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
-				}
-			}            
 		}
 	}
     page name: "mDevices"    
@@ -198,15 +192,11 @@ page name: "mIntent"
                             if (cLock) 				{input "uPIN_L", "bool", title: "Enable PIN for Locks?", default: false}
                     }
                 }
-                if (securityOn) {
-                	section ("Configure Security Suite", hideWhenEmpty: true) {
-                		input "cSec", "capability.lockCodes", title: "Select Locks/Keypads", multiple: true, required: false, submitOnChange: true
-                   	}
                     section ("Access Security Suite") {
                         href "mSecuritySuite", title: "Tap to configure your Home Security Suite module", description: ""
                        // ,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
                     } 
-                }        	
+                        	
                 section ("Smart Home Monitor Status Change Feedback", hideWhenEmpty: true) { //hideable: true, hidden: true
                     input "fSecFeed", "bool", title: "Activate SHM status change announcements.", default: false, submitOnChange: true
                     if (fSecFeed) {    
@@ -221,7 +211,7 @@ page name: "mIntent"
                         }
                     }
                 }
-        }
+        	}
 		page name: "mSecuritySuite"    
                     def mSecuritySuite() {
                         dynamicPage (name: "mSecuritySuite", title: "", install: true, uninstall: false) {
@@ -267,29 +257,36 @@ page name: "mIntent"
                     //        section(childApps.size()==1 ? "One Profile configured" : childApps.size() + " Profiles configured" )
                     //}
                     if (childApps.size()>0) {  
-                        section("Profiles",  uninstall: false){
-                            app(name: "rooms", appName: "Profiles", namespace: "EchoLabs", title: "Create a new Profile", multiple: true,  uninstall: false)
+                        section("Message and Control Profiles",  uninstall: false){
+                            app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "View and Create Message & Control Profiles...", multiple: true,  uninstall: false)
                         }
                     }
                     else {
                         section("Profiles",  uninstall: false){
                             paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Profiles Smart App Add-on before creating a new Profile!"
-                            app(name: "profile", appName: "Profiles", namespace: "EchoLabs", title: "Create a new Profile", multiple: true,  uninstall: false)
+                            app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "Create a new Profile", multiple: true,  uninstall: false)
                         }
                     }          			
-                }
-    	}
+
+				if (notifyOn) {
+        			section ("Manage Notifications") {
+  						href "mNotifyProfile", title: "View and Create Notification Profiles...", description: none
+            			//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+				}
+			}            
+		}
+	}        
 page name: "mSettings"  
 	def mSettings(){
         dynamicPage(name: "mSettings", uninstall: true) {
                 section("Debugging") {
                     input "debug", "bool", title: "Enable Debug Logging", default: false, submitOnChange: true 
                     }
-//                section ("Apache License"){
-//                    input "ShowLicense", "bool", title: "Show License", default: false, submitOnChange: true
-//                    def msg = textLicense()
-//                        if (ShowLicense) paragraph "${msg}"
-//                    }
+                section ("Apache License"){
+                    input "ShowLicense", "bool", title: "Show License", default: false, submitOnChange: true
+                    def msg = textLicense()
+                        if (ShowLicense) paragraph "${msg}"
+                    }
                 section ("Show Security Tokens") {
                 	paragraph ("Log into the IDE on your computer and navigate to the Live Logs tab. Leave that window open, come back here, and open this section")
                     input "ShowTokens", "bool", title: "Show Security Tokens", default: false, submitOnChange: true
@@ -408,7 +405,6 @@ page name: "mSupport"
         dynamicPage(name: "mSupport", uninstall: false) {
         	section ("EchoSistant Modules") {
             	paragraph "For the notifications and room feedback to be operational, they must be installed in the ST IDE and the toggles below must be activated"
-            	input "controlOn", "bool", title: "Is the Control & Messaging Module Installed?", required: true, defaultValue: false
                 input "notifyOn", "bool", title: "Is the Notifications Module Installed? ", required: true, defaultValue: false
  				input "securityOn", "bool", title: "Is the Security Suite Module Installed?", required: true, defaultValue: false
                 }
@@ -3240,6 +3236,20 @@ private def textAppName() {
 }	
 private def textVersion() {
 	def text = "4.0"
+}
+private def textLicense() {
+	def text =
+	"Licensed under the Apache License, Version 2.0 (the 'License'); "+
+	"you may not use this file except in compliance with the License. "+
+	"You may obtain a copy of the License at"+
+	" \n"+
+	" http://www.apache.org/licenses/LICENSE-2.0"+
+	" \n"+
+	"Unless required by applicable law or agreed to in writing, software "+
+	"distributed under the License is distributed on an 'AS IS' BASIS, "+
+	"WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. "+
+	"See the License for the specific language governing permissions and "+
+	"limitations under the License."
 }
 /***********************************************************************************************************************
  		UI - SKILL DETAILS
