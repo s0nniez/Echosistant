@@ -2399,6 +2399,102 @@ def controlProfiles() {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
 }
+/************************************************************************************************************
+   PROFILE CONTROL HANDLER
+************************************************************************************************************/
+
+
+
+/************************************************************************************************************
+   TEXT TO SPEECH PROCESS - Lambda via page t
+************************************************************************************************************/
+def processTts() {
+		//LAMBDA VARIABLES
+		def ptts = params.ttstext
+		def pttx = params.ttstext 
+        def pintentName = params.intentName
+        //OTHER VARIABLES
+        def String outputTxt = (String) null 
+        def String command = (String) null
+		def String numText = (String) null
+        def String result = (String) null
+        def delay = false
+        def pPIN = false
+        def data
+        	if (debug) log.debug "Message received from Lambda with: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
+        def dataSet = [ptts:ptts,pttx:pttx,pintentName:pintentName] 
+		
+        def repeat = "repeat last message"
+		def whatsUP = "what's up"
+        	log.debug "repeat = ${repeat}"
+        def play = "play message"
+			log.debug "play = ${play}"
+		def record = ptts.replace("record a message", "")
+			log.debug "record = ${record}"
+		def recordingNow = ptts.startsWith("record a message")
+			log.debug "recordingNow = ${recordingNow}"
+      
+        if (ptts==repeat || ptts == play  || ptts == whatsUP) {
+						childApps.each { child ->
+    						def cLast = child.label.toLowerCase()
+            				if (cLast == pintentName.toLowerCase()) {
+                                def cLastMessage 
+                       			def cLastTime
+                                if (ptts == repeat || ptts == whatsUP) {
+                                	outputTxt = child.getLastMessage()
+                                }
+                                else outputTxt = "Your last recording was, " + state.recording
+                                if (debug) log.debug "Profile matched is ${cLast}, last profile message was ${outputTxt}" 
+                			}
+               			}
+        }    
+		else {
+			if (ptts){
+     		state.lastMessage = ptts
+			state.lastIntent = pintentName
+			state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)                   
+				childApps.each {child ->
+					if (recordingNow == false) child.profileEvaluate(dataSet)
+                        }
+					//Preparing Alexa Response
+                    childApps.each { child ->
+    					def cm = child.label
+            			if (cm.toLowerCase() == pintentName.toLowerCase()) {
+                        	def cAcustom = child.Acustom
+							def cArepeat = child.Arepeat
+							def cAfeedBack = child.AfeedBack
+                        	def AprofileMsg = child.AprofileMsg
+                        		pContCmds = child.ContCmds
+							if (recordingNow == true) {
+								state.recording = record
+								outputTxt = "Ok, message recorded. To play it later, just say: play message to this profile"
+        					}
+							if (AprofileMsg == true) {
+								outputTxt = child.AprofileMsgTxt
+								log.info "The child profile message has initiated and the message is: '${child.AprofileMsgTxt}'"
+							}
+							else if (cAfeedBack != true) {
+								if (cAcustom != false) {
+									outputTxt = child.outputTxt
+							}
+							else {
+								if (cArepeat == !false || cArepeat == null ) {
+									outputTxt = "I have delivered the following message to '${cm}',  " + ptts
+									if (debug) log.debug "Alexa verbal response = '${outputTxt}'"
+								}
+								else {
+									outputTxt = "Message sent to ${pintentName}, " 
+									if (debug) log.debug "Alexa verbal response = '${outputTxt}'"
+           						}
+                            }
+                            }
+           				}  
+                  	}
+				}
+      	}
+        if (debug) log.debug "Alexa response sent to Lambda = '${outputTxt}', '${pContCmds}' "
+		return ["outputTxt":outputTxt, "pContCmds":pContCmds]
+}
 /***********************************************************************************************************
 		SMART HOME MONITOR STATUS AND KEYPAD HANDLER
 ***********************************************************************************************************/

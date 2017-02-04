@@ -101,18 +101,18 @@ page name: "pConfig"
     def pConfig(){
         dynamicPage(name: "pConfig", title: "", uninstall: false) {
             section ("Alexa Responses") {
-            		input "AcustResp", "bool", title: "Custom Response from Alexa...", required: false, defaultValue: false, submitOnChange: true
-                    if (AcustResp) {
-                    input "pAcustResp", "text", title: "Custom Response from Alexa...", required: false, defaultValue: none
+            		input "pCustResp", "bool", title: "Custom Response from Alexa...", required: false, defaultValue: false, submitOnChange: true
+                    if (pCustResp) {
+                    input "pAlexaCustResp", "text", title: "Custom Response from Alexa...", required: false, defaultValue: none
                     }
-                    input "pArepeat", "bool", title: "Alexa repeats the message to the sender as the response...", defaultValue: false, submitOnChange: true
-                        if (pArepeat) {			
-                        	if (pArepeat && pAcustResp){
+                    input "pAlexaRepeat", "bool", title: "Alexa repeats the message to the sender as the response...", defaultValue: false, submitOnChange: true
+                        if (pAlexaRepeat) {			
+                        	if (pAlexaRepeat && pAlexaCustResp){
                            		paragraph 	"NOTE: only one custom Alexa response can"+
                             				" be delivered at once. Please only enable Custom Response OR Repeat Message"
                             }				
                         }
-                    input "pContCmds", "bool", title: "Allow Alexa to prompt for additional commands after a message is sent to a remote speaker", defaultValue: false, submitOnChange: true
+                    input "pContCmdsProfile", "bool", title: "Allow Alexa to prompt for additional commands after a message is sent to a remote speaker", defaultValue: false, submitOnChange: true
              }
              section ("Remote Speaker Settings") {
                 	input "pRunMsg", "Text", title: "Play this predetermined message when this profile executes...", required: false
@@ -120,8 +120,8 @@ page name: "pConfig"
              }
              section ("Sound Cancellation") {
                     //formerly pAfeedBack // pDisableAlexa = state.pMuteAlexa
-					input "pDisableAlexa", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options...", defaultValue: false, submitOnChange: true
-                    input "pDisableALL", "bool", title: "Disable All spoken notifications (No voice output from the Remote Speakers or Alexa)", required: false, submitOnChange: true  
+					input "pDisableAlexaProfile", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options...", defaultValue: false, submitOnChange: true
+                    input "pDisableALLProfile", "bool", title: "Disable All spoken notifications (No voice output from the Remote Speakers or Alexa)", required: false, submitOnChange: true  
              }
 		}             
 	}             
@@ -243,31 +243,33 @@ page name: "pDeviceControl"
     page name: "pGroups"
         def pGroups() {
             dynamicPage(name: "pGroups", title: "Allow Devices to be used by this Profile",install: false, uninstall: false) {
-                section ("Use These Lights (switches and dimmers)", hideWhenEmpty: true){
+                section ("Group These Lights (switches and dimmers)", hideWhenEmpty: true){
                         input "gSwitches", "capability.switch", title: "Group Lights and Switches...", multiple: true, required: false, submitOnChange: true
                         if (gSwitches) {
                             paragraph "You can now control this group by speaking commands to Alexa:  \n" +
                             " E.G: Alexa tell Main Skill, to turn on/off the lights in the Profile Name"
                         }
-                        input "gHues", "capability.colorControl", title: "Use These Colored Lights...", multiple: true, required: false, submitOnChange: true
+                        input "gHues", "capability.colorControl", title: "Group These Colored Lights...", multiple: true, required: false, submitOnChange: true
                         if (gSwitches) {
                             paragraph "You can now control this group by speaking commands to Alexa:  \n" +
                             " E.G: Alexa tell Main Skill, to set the lights to red in the Profile Name"
                         }
                 }       
                section ("Climate Control", hideWhenEmpty: true){ 
-                 	input "sTstat", "capability.thermostat", title: "Use These Thermostat(s)...", multiple: true, required: false
-                    input "sRoomTemp", "capability.temperatureMeasurement", title: "Use These Device(s) to Report the Room Temperature...", multiple: true, required: false
-                    input "sVent", "capability.switchLevel", title: "Use These Smart Vent(s)...", multiple: true, required: false
+                 	//input "sTstat", "capability.thermostat", title: "Use These Thermostat(s)...", multiple: true, required: false
+                    //input "sRoomTemp", "capability.temperatureMeasurement", title: "Use These Device(s) to Report the Room Temperature...", multiple: true, required: false
+                    input "sVent", "capability.switchLevel", title: "Group These Smart Vent(s)...", multiple: true, required: false
                 }                
+                /*
                 section ("Sensors", hideWhenEmpty: true) {
                  	input "sMotion", "capability.motionSensor", title: "Use These Motion Sensor(s)...", multiple: true, required: false
                     input "sContact", "capability.contactSensor", title: "Use These Contact Sensor(s)...", multiple: true, required: false      
             		input "sWater", "capability.waterSensor", title: "Use These Water Sensor(s)...", multiple: true, required: false                       
                 }
+                */
                 section ("Media" , hideWhenEmpty: true){
-                    input "sSpeaker", "capability.musicPlayer", title: "Use These Media Player Type Device(s)...", required: false, multiple: true
-                    input "sSynth", "capability.speechSynthesis", title: "Use These Speech Synthesis Capable Device(s)", multiple: true, required: false
+                    //input "sSpeaker", "capability.musicPlayer", title: "Use These Media Player Type Device(s)...", required: false, multiple: true
+                    //input "sSynth", "capability.speechSynthesis", title: "Use These Speech Synthesis Capable Device(s)", multiple: true, required: false
                     input "sMedia", "capability.mediaController", title: "Use These Media Controller(s)", multiple: true, required: false
                 }             
             }
