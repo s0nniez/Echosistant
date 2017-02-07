@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
+ *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
  *		2/2/2017		Version:4.0 R.4.2.17		Added Profile control
  *		1/31/2017		Version:4.0 R.4.2.16		Added modes and routines control
  *		1/31/2017		Version:4.0 R.4.2.15		Added Security, modes and routines control
@@ -93,7 +94,7 @@ page name: "mainParentPage"
                     }
                         href "mBonus", title: "The Current Mode is: ${location.currentMode}" + "\n"  +
                         "Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}", description: none
-			}
+            }
 		}
 	}           
 page name: "mIntent"
@@ -213,9 +214,6 @@ page name: "mIntent"
 		page name: "mSecuritySuite"    
                     def mSecuritySuite() {
                         dynamicPage (name: "mSecuritySuite", title: "", install: true, uninstall: false) {
-                            //if (childApps.size()) { 
-                            //     section(childApps.size()==1 ? "Security configured" : childApps.size() + " Room configured" )
-                            // }
                             if (childApps.size()) {  
                                 section("Security Suite",  uninstall: false){
                                     app(name: "profile", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
@@ -229,12 +227,23 @@ page name: "mIntent"
                             }
                        }
                     }
-        page name: "mNotifyProfile"    
+	page name: "mProfiles"    
+        def mProfiles() {
+            dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
+				section ("Messaging and Control Profiles") {
+                	href "mMainProfile", title: "View and Create Messaging and Control Profiles...", description: none
+                    }
+				if (notifyOn) {
+        			section ("Manage Notifications") {
+  						href "mNotifyProfile", title: "View and Create Notification Profiles...", description: none
+            			//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
+				}
+			}            
+		}
+	}
+	page name: "mNotifyProfile"    
             def mNotifyProfile() {
                 dynamicPage (name: "mNotifyProfile", title: "", install: true, uninstall: false) {
-                    //if (childApps.size()) { 
-                    //    section(childApps.size()==1 ? "One Notification configured" : childApps.size() + " Notifications configured" )
-                    //}
                     if (childApps.size()) {  
                         section("Notifications",  uninstall: false){
                             app(name: "notification", appName: "NotificationProfile", namespace: "EchoLabs", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
@@ -246,45 +255,24 @@ page name: "mIntent"
                             app(name: "notification", appName: "NotificationProfile", namespace: "EchoLabs", title: "Create a new Notifications Profile", multiple: true,  uninstall: false)
                         }
                     }
-               }
-            }
+             	}
+        }
         page name: "mMainProfile"    
             def mMainProfile() {
                 dynamicPage (name: "mMainProfile", title: "", install: true, uninstall: false) {
-//                    if (childApps.size()) { 
-//                            section(childApps.size()==1 ? "One Profile configured" : childApps.size() + " Profiles configured" )
-//                    }
                     if (childApps.size()>0) {  
                         section("Message and Control Profiles",  uninstall: false){
-                            app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "View and Create Message & Control Profiles...", multiple: true,  uninstall: false)
+                            app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "Create a New Message & Control Profile", multiple: true,  uninstall: false)
                         }
                     }
                     else {
                         section("Profiles",  uninstall: false){
                             paragraph "NOTE: Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Profiles Smart App Add-on before creating a new Profile!"
-                            app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "Create a new Profile", multiple: true,  uninstall: false)
+                            app(name: "Profiles", appName: "Profiles", namespace: "EchoLabs", title: "Create a New Message & Control Profile", multiple: true,  uninstall: false)
 						}
 					}
 				}
-            } 
-	page name: "mProfiles"    
-        def mProfiles() {
-            dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
-                    if (childApps.size()) { 
-                        section(childApps.size()==1 ? "One Notification configured" : childApps.size() + " Notifications configured" )
-                    }
-				section ("Messaging and Control Profiles") {
-                	href "mMainProfile", title: "View and Create Messaging and Control Profiles...", description: none
-                    }
-
-				if (notifyOn) {
-        			section ("Manage Notifications") {
-  						href "mNotifyProfile", title: "View and Create Notification Profiles...", description: none
-            			//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"            			
-				}
-			}            
-		}
-	}       
+            }        
 page name: "mSettings"  
 	def mSettings(){
         dynamicPage(name: "mSettings", uninstall: true) {
@@ -355,7 +343,7 @@ page name: "mSettings"
                     section ("LIST_OF_SYSTEM_CONTROLS") { 
                         def DeviceList = getControlDetails()
                             paragraph ("${DeviceList}")
-                            log.info "\nLIST_OF_DEVICES \n${DeviceList}"
+                            log.info "\nLLIST_OF_SYSTEM_CONTROLS \n${DeviceList}"
                                 }
                             }
                         }
@@ -650,7 +638,8 @@ def processBegin(){
         state.lambdaReleaseDt = versionDate
         state.lambdatextVersion = versionTxt
     def versionSTtxt = textVersion() 
-    def pPendingAns = false    
+    def pPendingAns = false 
+    def pContinue = false 
     def String outputTxt = (String) null 
     	state.pTryAgain = false
 	
@@ -743,7 +732,7 @@ def processBegin(){
 				return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
        }
-       if( state.pContCmdsR == "caps"){
+       if(state.pContCmdsR == "caps"){
             if (state.lastAction != null) {
                 outputTxt = state.lastAction
                 pPendingAns = "caps"
@@ -752,12 +741,24 @@ def processBegin(){
                 return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
         }        
-     }   
-	  if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
-      "; data sent: pContinue = '${state.pContCmds}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
+     }
+     if (!event.startsWith("AMAZON") || event != "main" || event != "security" || event != "feedback" || event != "profile"){
+		childApps.each {child ->
+			if (child.label.toLowerCase() == event.toLowerCase()) { 
+                pContinue = child?.checkState()   
+            }
+       }
+     }
+     
+    pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
+	log.warn "pContinue is ${pContinue}"
+
+	if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
+      "; data sent: pContinue = '${pContinue}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
 	}
-    return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-	
+    
+    //return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt] //added condition to sync with child settings 2/7/17
+    return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	
     } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
@@ -1261,7 +1262,7 @@ def controlDevices() {
                              "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (pintentName) = '${pintentName}'"
 	
     state.pTryAgain = false 
-    try {	
+//    try {	
     
     if (pintentName == "main") {
         ctPIN = ctPIN == "?" ? "undefined" : ctPIN
@@ -1403,14 +1404,13 @@ def controlDevices() {
                     			if (ctNum > 0 && ctUnit == "minutes") {
                             		runIn(ctNum*60, controlHandler, [data: data])
                             		if (command == "on" || command == "off" ) {outputTxt = "Ok, turning " + ctDevice + " " + command + ", in " + numText}
-                            		else if (command == "decrease") {outputTxt = "Ok, decreasing the " + ctDevice + " level in " + numText}
-                            		else if (command == "increase") {outputTxt = "Ok, increasing the " + ctDevice + " level in " + numText}
                             		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     			}
                         		else {
                         			delay = true
                         			data = [type: "cSwitch", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
-                            		outputTxt = controlHandler(data)                                
+                            		outputTxt = controlHandler(data)
+									return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 								}
                 			} 
                         }
@@ -1424,10 +1424,19 @@ def controlDevices() {
                     }
                     if (deviceMatch && dType == "m") {
 						device = deviceMatch
-						delay = false
+						if (ctNum > 0) {
+                            delay = true
+							data = [type: "cHarmony", command: command, device: device, unit: activityId, num: ctNum, delay: delay]
+                            runIn(ctNum*60, controlHandler, [data: data])
+							result = "Ok, starting activity on " + deviceD
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    	}
+                        else{                        
+                        delay = false
 						data = [type: "cHarmony", command: command, device: device, unit: activityId, num: ctNum, delay: delay]
 						outputTxt = controlHandler(data)
 						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    	}
                     }
                     if (deviceMatch && dType == "s") {
                         device = deviceMatch
@@ -1685,16 +1694,17 @@ def controlDevices() {
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     }
-   
+/*   
        } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
+*/
 }
 /************************************************************************************************************
-   DEVICE CONTROL HANDLER
+   DEVICE AND PROFILE CONTROL HANDLER
 ************************************************************************************************************/      
 def controlHandler(data) {   
     def deviceType = data.type
@@ -1710,7 +1720,7 @@ def controlHandler(data) {
                             "(unitU) = '${unitU}', (numN) = '${numN}', (delayD) = '${delayD}'"  
 
 	state.pTryAgain = false
-	try {
+	//try {
 	if (deviceType == "cSwitch" || deviceType == "cMiscDev"  ) {
     	if (deviceCommand == "on" || deviceCommand == "off") {
             if (delayD == true ) {
@@ -2019,7 +2029,6 @@ def controlHandler(data) {
             return result
     	}
     	else {
-			//Harmony supported commands: [startActivity, activityoff, alloff]			
             if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on" || deviceCommand == "off") {
                 if(deviceType == "cHarmony") {
                     if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on"){
@@ -2030,7 +2039,7 @@ def controlHandler(data) {
                         return result
                     }
                     else{
-                        def currState = deviceMatch.currentState("currentActivity").value 
+                        def currState = deviceD.currentState("currentActivity").value 
                 		if (currState != "--"){
                         	deviceCommand =  "alloff"
                         	deviceD."${deviceCommand}"()
@@ -2056,12 +2065,110 @@ def controlHandler(data) {
             }
        }
     }
+    if (deviceType == "cProfiles") {
+		childApps.each { child ->
+        	def cMatch = child.label
+            if (cMatch == deviceD) {
+                def pintentName = cMatch
+                def ptts = "Running Profile as requested by the main intent"
+                def pDataSet = [ptts:ptts, pintentName:pintentName] 
+                if (deviceCommand == "run"){
+                	child.profileEvaluate(pDataSet)
+                }
+                else if (deviceCommand == "on" || deviceCommand == "off") {
+            		child?.gSwitches."${deviceCommand}"()
+					result = "Ok, turning " + child.label + " lights " + deviceCommand  
+				}
+				else if (deviceCommand == "energize" || deviceCommand == "relax" || deviceCommand == "read" || deviceCommand == "concentrate") {
+					def color = deviceCommand == "read" ? "Warm White" : deviceCommand == "concentrate" ? "Daylight White" : deviceCommand == "relax" ? "Very Warm White" : deviceCommand == "energize" ? "White" : "undefined"
+                    if (color != "undefined"){
+                		def hueSetVals = getColorName("${color}",level)
+                    	child?.gHues.setColor(hueSetVals)
+						result = "Ok, changing your bulbs to " + deviceCommand + " scene "               
+                	}
+                }
+				else if (deviceCommand == "blue" || deviceCommand == "red" || deviceCommand == "yellow" || deviceCommand == "green") {
+					//set lights to blue in the  living room
+                    def hueSetVals = getColorName("${deviceCommand}",level)
+                    child?.gHues.setColor(hueSetVals)
+					result = "Ok, changing your colored bulbs to " + deviceCommand                
+                }
+                else if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "setLevel" || deviceCommand == "set") {
+                    child?.gSwitches.each {s -> 
+                    	def	currLevel = s?.latestValue("level")
+                    	def currState = s?.latestValue("switch") 
+                        if (currLevel) {
+                        def newLevel = cLevel*10
+                        if (unitU == "percent") newLevel = numN     
+            			if (deviceCommand == "increase") {
+            				if (unitU == "percent") {
+                				newLevel = numN
+                			}   
+                			else {
+                				if (currLevel == null){
+                    				s?.on()
+                    				result = "Ok, turning " + child.label + " lights on"   
+                    			}
+                    			else {
+                					newLevel =  currLevel + newLevel
+            						newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+            					}
+                			}
+            			}
+            			if (deviceCommand == "decrease") {
+            				if (unitU == "percent") {
+                				newLevel = numN
+                			}   
+                			else {
+                				if (currLevel == null) {
+                    				s?.off()
+                    				result = "Ok, turning " + child.label + " lights off"                   
+                    			}
+                    			else {
+                					newLevel =  currLevel - newLevel
+            						newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+                    			}
+                			}            
+            			}
+            			if (deviceCommand == "setLevel") {
+            				if (unitU == "percent") {
+                				newLevel = numN
+                			}   
+                			else {
+                				newLevel =  numN*10
+            					newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+                			}            
+            			}
+            			if (newLevel > 0 && currState == "off") {
+            				s?.on()
+            				s?.setLevel(newLevel)
+            			}
+            			else {                                    
+            				if (newLevel == 0 && currState == "on") {
+                            	s?.off()
+                            }
+                			else {
+                            	s?.setLevel(newLevel)
+                            }
+            			} 
+    				}
+                    else if  (deviceCommand == "increase" && currState == "off") {s.on()}
+                    else if (deviceCommand == "decrease" && currState == "on") {s.off()}
+                }
+    			result = "Ok, adjusting the lights in the  " + child.label
+            }
+    	}
+    }
+    return result
+    }
+    /*
     } catch (Throwable t) {
         log.error t
         result = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return result
-	}	
+	}
+    */
 }
 /************************************************************************************************************
    SECURITY CONTROL - from Lambda via page s
@@ -2291,13 +2398,13 @@ def controlProfiles() {
         def delay = false
         def data
         prProfile = prProfile.replaceAll("[^a-zA-Z0-9 ]", "")
-
+		prProfile = prProfile.replace(" ", "") 
         if (debug) log.debug	"Received Lambda request to control Profiles with settings:" +
         					  	" (prCommand)= ${prCommand}',(prNum) = '${prNum}', (prProfile) = '${prProfile}',"+
                                 " (prUnit) = '${prUnit}', (prPIN) = '${prPIN}',  (pintentName) = '${pintentName}'"   
 
 	state.pTryAgain = false
-    try {
+    //try {
     if (pintentName == "profile") {         
         if (prProfile != "undefined"){
         	def profile = childApps.find {c -> c.label.toLowerCase() == prProfile.toLowerCase()}             
@@ -2346,46 +2453,37 @@ def controlProfiles() {
                             if (debug) log.debug "Received command data for Profile Control: deviceType= '${deviceType}', command= '${command}' "+
                                                                 " _____>>>>> STARTING MAIN PROFILE CONTROL PROCESS <<<<<< ______"
                         }
-                	}      
-                    command = commandLVL != " " ?  commandLVL : command //== "on" || command == "off" ? command : command=  
-                    if (debug) log.debug "Profile new command = ${command}"  
+                	}              
                     if (command != "undefined" && command != "run") {
-                        if (ctNum > 0 && ctUnit == "MIN") {
-                            runIn(ctNum*60, controlHandler, [data: [type: "cProfiles", command: command, device: profileMatch, unit: ctUnit, num: ctNum]])
+                        if (prNum > 0 && prUnit == "minutes") {
+                            delay = true
+                            runIn(prNum*60, controlHandler, [data: [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]])
                             if (command == "decrease") {outputTxt = "Ok, decreasing the " + profileMatch + " lights level in " + numText}
                             else if (command == "increase") {outputTxt = "Ok, increasing the " + profileMatch + " lights level in " + numText}
                             else if (command == "on" || command == "off" ) {outputTxt = "Ok, turning " + profileMatch + " lights " + command + ", in " + numText}
+							return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                         }
-                        else {
-                            data = [type: "cProfiles", command: command, device: profileMatch, unit: ctUnit, num: ctNum]
-                            controlHandler(data)
-                            if (debug) log.debug "Processing control handler with: '${data}'"
-                            if (command == "on" || command == "on" ) {outputTxt = "Ok, turning " + profileMatch + " lights " + command}
-                            if (ctUnit == "PERC"){outputTxt = "Ok, setting " + profileMatch + " lights to " + numText}
-                            else{
-                                if (commandLVL == "setLevel" && ctUnit == "unknown") {
-                                    def num = ctNum > 10 ? ctNum : ctNum*10 as int
-                                    outputTxt = "Ok, setting the " + profileMatch + " to " + num + " percent"
-                                }
-                                if (commandLVL == "decrease") {outputTxt = "Ok, decreasing the " + profileMatch + " level " + numText}
-                                if (commandLVL == "increase") {outputTxt = "Ok, increasing the " + profileMatch + " level " + numText}
-                                if (commandLVL == "decrease" && ctCommand == "mute") {outputTxt = "Ok, muting the noise in the" + profileMatch}
-                                }
-                        }
+						else {
+							delay = false
+                            data = [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]
+                            outputTxt = controlHandler(data)
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+						}                     
                     }
                     else {
                         if (command == "run") {
-                            if (debug) log.debug "Profile run command = '${ctCommand}'"
-
-                            if (ctNum > 0 && ctUnit == "MIN") {
-                                    runIn(ctNum*60, controlHandler, [data: [type: "cProfiles", command: command, device: profileMatch, unit: ctUnit, num: ctNum]])
-                                    outputTxt = "Ok, running profile actions, for " + ctProfile + ", in " + numText
-
+                            if (ctNum > 0 && ctUnit == "minutes") {
+                            	delay = true
+                                runIn(ctNum*60, controlHandler, [data: [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]])
+                                outputTxt = "Ok, running profile actions, for " + profileMatch + ", in " + numText
+								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                             }
                             else {
-                                data = [type: "cProfiles", command: command, device: profileMatch, unit: ctUnit, num: ctNum]
+                                delay = false
+                                data = [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]
                                 controlHandler(data)                
-                                outputTxt = "Ok, running profile actions, for " + ctProfile
+                                outputTxt = "Ok, running profile actions, for " + profileMatch
+								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                             }
                         }
                     }
@@ -2401,108 +2499,72 @@ def controlProfiles() {
             }
        	}
 	}
-	} catch (Throwable t) {
+	/*
+    } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
+    */
 }
-/************************************************************************************************************
-   PROFILE CONTROL HANDLER
-************************************************************************************************************/
-
-
-
 /************************************************************************************************************
    TEXT TO SPEECH PROCESS - Lambda via page t
 ************************************************************************************************************/
 def processTts() {
 		//LAMBDA VARIABLES
-		def ptts = params.ttstext
-		def pttx = params.ttstext 
+		def ptts = params.ttstext 
         def pintentName = params.intentName
         //OTHER VARIABLES
+        def String profileMatch = (String) null
         def String outputTxt = (String) null 
-        def String command = (String) null
-		def String numText = (String) null
-        def String result = (String) null
-        def delay = false
+ 		def pContCmds = false
+        def String pContCmdsR = (String) null
+        def pTryAgain = false
         def pPIN = false
-        def data
         	if (debug) log.debug "Message received from Lambda with: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
-        def dataSet = [ptts:ptts,pttx:pttx,pintentName:pintentName] 
+        def dataSet = [:] 
 		
-        def repeat = "repeat last message"
-		def whatsUP = "what's up"
-        	log.debug "repeat = ${repeat}"
-        def play = "play message"
-			log.debug "play = ${play}"
-		def record = ptts.replace("record a message", "")
-			log.debug "record = ${record}"
-		def recordingNow = ptts.startsWith("record a message")
-			log.debug "recordingNow = ${recordingNow}"
-      
-        if (ptts==repeat || ptts == play  || ptts == whatsUP) {
-						childApps.each { child ->
-    						def cLast = child.label.toLowerCase()
-            				if (cLast == pintentName.toLowerCase()) {
-                                def cLastMessage 
-                       			def cLastTime
-                                if (ptts == repeat || ptts == whatsUP) {
-                                	outputTxt = child.getLastMessage()
-                                }
-                                else outputTxt = "Your last recording was, " + state.recording
-                                if (debug) log.debug "Profile matched is ${cLast}, last profile message was ${outputTxt}" 
-                			}
-               			}
-        }    
-		else {
-			if (ptts){
-     		state.lastMessage = ptts
-			state.lastIntent = pintentName
-			state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)                   
-				childApps.each {child ->
-					if (recordingNow == false) child.profileEvaluate(dataSet)
-                        }
-					//Preparing Alexa Response
-                    childApps.each { child ->
-    					def cm = child.label
-            			if (cm.toLowerCase() == pintentName.toLowerCase()) {
-                        	def cAcustom = child.Acustom
-							def cArepeat = child.Arepeat
-							def cAfeedBack = child.AfeedBack
-                        	def AprofileMsg = child.AprofileMsg
-                        		pContCmds = child.ContCmds
-							if (recordingNow == true) {
-								state.recording = record
-								outputTxt = "Ok, message recorded. To play it later, just say: play message to this profile"
-        					}
-							if (AprofileMsg == true) {
-								outputTxt = child.AprofileMsgTxt
-								log.info "The child profile message has initiated and the message is: '${child.AprofileMsgTxt}'"
-							}
-							else if (cAfeedBack != true) {
-								if (cAcustom != false) {
-									outputTxt = child.outputTxt
-							}
-							else {
-								if (cArepeat == !false || cArepeat == null ) {
-									outputTxt = "I have delivered the following message to '${cm}',  " + ptts
-									if (debug) log.debug "Alexa verbal response = '${outputTxt}'"
-								}
-								else {
-									outputTxt = "Message sent to ${pintentName}, " 
-									if (debug) log.debug "Alexa verbal response = '${outputTxt}'"
-           						}
-                            }
-                            }
-           				}  
-                  	}
-				}
-      	}
-        if (debug) log.debug "Alexa response sent to Lambda = '${outputTxt}', '${pContCmds}' "
-		return ["outputTxt":outputTxt, "pContCmds":pContCmds]
+        if(ptts == "no" || ptts == "yes"){
+        	if(ptts == "no"){
+                outputTxt = "ok, I am here if you need me"
+                pContCmds = false
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+        	}
+			else {
+                outputTxt = "ok, please continue, "
+                pContCmds = false
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+        	}        
+        }
+        else{
+            childApps.each {child ->
+                if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
+                    if (debug) log.debug "Found a profile: '${pintentName}'"
+                    pintentName = child.label
+                    //recording last message
+                    state.lastMessage = ptts
+                    state.lastIntent = pintentName
+                    state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
+                    dataSet = [ptts:ptts, pintentName:pintentName] 
+                    def pResponse = child.profileEvaluate(dataSet)
+                    
+                    outputTxt = pResponse?.outputTxt
+                    pContCmds = pResponse?.pContCmds
+                    pContCmdsR = pResponse?.pContCmdsR
+                    pTryAgain = pResponse?.pTryAgain
+                }
+            }
+            if (outputTxt?.size()>0){
+                if (debug) log.debug "Alexa response sent to Lambda = '${outputTxt}', '${pContCmds}' "
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            }
+            else {
+                outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + pintentName + " or the command may not be supported"
+                pTryAgain = true
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            }
+    	}
 }
 /***********************************************************************************************************
 		SMART HOME MONITOR STATUS AND KEYPAD HANDLER
@@ -2953,10 +3015,9 @@ private pinHandler(pin, command, num, unit) {
 	}        
     if (pin == cPIN || command == cPIN || pinNum == cPIN || unit == cPIN ) {
 		def data = state.savedPINdata != null ? state.savedPINdata : lastAction
-        def pNum = data.num
-        def pUnit = data.unit
         state.pTryAgain = false
-            if (data == "disablelocks" || data == "disablethermostats" || data == "disabledoors" || data == "disableswitches" || data == "disablesecurity"){ 
+        state.pinTry = null
+            if (data == "disablelocks" || data == "disablethermostats" || data == "disabledoors" || data == "disableswitches" || data == "disablesecurity" || data == "disablemodes"){ 
                 if 		(data == "disablelocks")		{state.usePIN_L = false}
                 else if (data == "disablethermostats") 	{state.usePIN_T = false}
                 else if (data == "disabledoors") 		{state.usePIN_D = false}  
@@ -2967,6 +3028,8 @@ private pinHandler(pin, command, num, unit) {
             	return result
             }
             else {
+				def pNum = data.num
+        		def pUnit = data.unit           
                 if(state.pContCmdsR == "security"){
                     result = securityHandler(data)
                     return result
@@ -3067,10 +3130,22 @@ private getCommand(command, unit) {
                 command = "increase"
                 deviceType = "general"
             }
-            if (command == "set" || command == "set level") {
+            if (command == "set" || command == "set level"){
                 command = "setLevel"
                 deviceType = "general"
             }
+    		if (command == "reading" || command == "read" || command == "studying"){ 
+            	command = "read" 
+                deviceType = "general"
+            }
+    		if (command == "cleaning" || command == "working" || command == "concentrating" || command == "concentrate"){ 
+    			command = "concentrate"
+                deviceType = "general"
+           	}
+    		if (command == "relax" || command == "relaxing" || command == "chilling"){
+            	command = "relax"
+                deviceType = "general"
+            }              
         }
 	//case "Temperature Commands":  
         if (command == "colder" || command =="not cold enough" || command =="too hot" || command == "too warm") {
@@ -3153,7 +3228,7 @@ private getCustomCmd(command, unit, group, num) {
         result = scheduleHandler(unit)
       	}
 		return result
-    }
+    } 
     if (command == "cancel" || command == "stop" || command == "disable" || command == "deactivate" || command == "unschedule" || command == "disarm") {
     	if (unit == "reminder" || unit == "reminders" || unit == "timer" || unit == "timers" || unit.contains ("reminder") || unit.contains ("timer") || unit.contains ("schedule") ) {
         	if (unit.contains ("reminder") || unit.contains ("schedule")) {
@@ -3161,7 +3236,7 @@ private getCustomCmd(command, unit, group, num) {
                 	if (state.scheduledHandler == "filters") {
                     	unschedule(filtersHandler)
                         state.scheduledHandler = null
-		                result = "Ok, canceling reminder for " + state.scheduledHandler
+		                result = "Ok, canceling reminder"
                     }
                     else {
                     result = "Sorry, I couldn't find any scheduled reminders"// for " + state.scheduledHandler
@@ -3319,6 +3394,169 @@ def text = "It's time to replace your HVAC filters"
 if (state.filterNotif == "flash") {text = "flashing lights"}
 if(state.filterNotif == "text")  {text = "sending text"}
 if(state.filterNotif == "audio")  {text = "pushed audio message"}
+}
+/************************************************************************************************************
+   Custom Color Filter
+************************************************************************************************************/       
+private getColorName(cName, level) {
+    for (color in fillColorSettings()) {
+		if (color.name.toLowerCase() == cName.toLowerCase()) {
+        	int hueVal = Math.round(color.h / 3.6)
+            int hueLevel = !level ? color.l : level
+			def hueSet = [hue: hueVal, saturation: color.s, level: hueLevel]
+            log.warn "hueSet = ${hueSet}"
+            return hueSet
+		}
+	}
+	if (debug) log.debug "Color Match Not Found"
+}
+
+def fillColorSettings() {
+	return [
+		[ name: "Soft White",				rgb: "#B6DA7C",		h: 83,		s: 44,		l: 67,	],
+		[ name: "Warm White",				rgb: "#DAF17E",		h: 51,		s: 20,		l: 100,	],
+        [ name: "Very Warm White",			rgb: "#DAF17E",		h: 51,		s: 60,		l: 51,	],
+		[ name: "Daylight White",			rgb: "#CEF4FD",		h: 191,		s: 9,		l: 99,	],
+		[ name: "Cool White",				rgb: "#F3F6F7",		h: 187,		s: 19,		l: 100,	],
+		[ name: "White",					rgb: "#FFFFFF",		h: 0,		s: 0,		l: 100,	],
+		[ name: "Alice Blue",				rgb: "#F0F8FF",		h: 208,		s: 100,		l: 97,	],
+		[ name: "Antique White",			rgb: "#FAEBD7",		h: 34,		s: 78,		l: 91,	],
+		[ name: "Aqua",						rgb: "#00FFFF",		h: 180,		s: 100,		l: 50,	],
+		[ name: "Aquamarine",				rgb: "#7FFFD4",		h: 160,		s: 100,		l: 75,	],
+		[ name: "Azure",					rgb: "#F0FFFF",		h: 180,		s: 100,		l: 97,	],
+		[ name: "Beige",					rgb: "#F5F5DC",		h: 60,		s: 56,		l: 91,	],
+		[ name: "Bisque",					rgb: "#FFE4C4",		h: 33,		s: 100,		l: 88,	],
+		[ name: "Blanched Almond",			rgb: "#FFEBCD",		h: 36,		s: 100,		l: 90,	],
+		[ name: "Blue",						rgb: "#0000FF",		h: 240,		s: 100,		l: 50,	],
+		[ name: "Blue Violet",				rgb: "#8A2BE2",		h: 271,		s: 76,		l: 53,	],
+		[ name: "Brown",					rgb: "#A52A2A",		h: 0,		s: 59,		l: 41,	],
+		[ name: "Burly Wood",				rgb: "#DEB887",		h: 34,		s: 57,		l: 70,	],
+		[ name: "Cadet Blue",				rgb: "#5F9EA0",		h: 182,		s: 25,		l: 50,	],
+		[ name: "Chartreuse",				rgb: "#7FFF00",		h: 90,		s: 100,		l: 50,	],
+		[ name: "Chocolate",				rgb: "#D2691E",		h: 25,		s: 75,		l: 47,	],
+		[ name: "Coral",					rgb: "#FF7F50",		h: 16,		s: 100,		l: 66,	],
+		[ name: "Corn Flower Blue",			rgb: "#6495ED",		h: 219,		s: 79,		l: 66,	],
+		[ name: "Corn Silk",				rgb: "#FFF8DC",		h: 48,		s: 100,		l: 93,	],
+		[ name: "Crimson",					rgb: "#DC143C",		h: 348,		s: 83,		l: 58,	],
+		[ name: "Cyan",						rgb: "#00FFFF",		h: 180,		s: 100,		l: 50,	],
+		[ name: "Dark Blue",				rgb: "#00008B",		h: 240,		s: 100,		l: 27,	],
+		[ name: "Dark Cyan",				rgb: "#008B8B",		h: 180,		s: 100,		l: 27,	],
+		[ name: "Dark Golden Rod",			rgb: "#B8860B",		h: 43,		s: 89,		l: 38,	],
+		[ name: "Dark Gray",				rgb: "#A9A9A9",		h: 0,		s: 0,		l: 66,	],
+		[ name: "Dark Green",				rgb: "#006400",		h: 120,		s: 100,		l: 20,	],
+		[ name: "Dark Khaki",				rgb: "#BDB76B",		h: 56,		s: 38,		l: 58,	],
+		[ name: "Dark Magenta",				rgb: "#8B008B",		h: 300,		s: 100,		l: 27,	],
+		[ name: "Dark Olive Green",			rgb: "#556B2F",		h: 82,		s: 39,		l: 30,	],
+		[ name: "Dark Orange",				rgb: "#FF8C00",		h: 33,		s: 100,		l: 50,	],
+		[ name: "Dark Orchid",				rgb: "#9932CC",		h: 280,		s: 61,		l: 50,	],
+		[ name: "Dark Red",					rgb: "#8B0000",		h: 0,		s: 100,		l: 27,	],
+		[ name: "Dark Salmon",				rgb: "#E9967A",		h: 15,		s: 72,		l: 70,	],
+		[ name: "Dark Sea Green",			rgb: "#8FBC8F",		h: 120,		s: 25,		l: 65,	],
+		[ name: "Dark Slate Blue",			rgb: "#483D8B",		h: 248,		s: 39,		l: 39,	],
+		[ name: "Dark Slate Gray",			rgb: "#2F4F4F",		h: 180,		s: 25,		l: 25,	],
+		[ name: "Dark Turquoise",			rgb: "#00CED1",		h: 181,		s: 100,		l: 41,	],
+		[ name: "Dark Violet",				rgb: "#9400D3",		h: 282,		s: 100,		l: 41,	],
+		[ name: "Deep Pink",				rgb: "#FF1493",		h: 328,		s: 100,		l: 54,	],
+		[ name: "Deep Sky Blue",			rgb: "#00BFFF",		h: 195,		s: 100,		l: 50,	],
+		[ name: "Dim Gray",					rgb: "#696969",		h: 0,		s: 0,		l: 41,	],
+		[ name: "Dodger Blue",				rgb: "#1E90FF",		h: 210,		s: 100,		l: 56,	],
+		[ name: "Fire Brick",				rgb: "#B22222",		h: 0,		s: 68,		l: 42,	],
+		[ name: "Floral White",				rgb: "#FFFAF0",		h: 40,		s: 100,		l: 97,	],
+		[ name: "Forest Green",				rgb: "#228B22",		h: 120,		s: 61,		l: 34,	],
+		[ name: "Fuchsia",					rgb: "#FF00FF",		h: 300,		s: 100,		l: 50,	],
+		[ name: "Gainsboro",				rgb: "#DCDCDC",		h: 0,		s: 0,		l: 86,	],
+		[ name: "Ghost White",				rgb: "#F8F8FF",		h: 240,		s: 100,		l: 99,	],
+		[ name: "Gold",						rgb: "#FFD700",		h: 51,		s: 100,		l: 50,	],
+		[ name: "Golden Rod",				rgb: "#DAA520",		h: 43,		s: 74,		l: 49,	],
+		[ name: "Gray",						rgb: "#808080",		h: 0,		s: 0,		l: 50,	],
+		[ name: "Green",					rgb: "#008000",		h: 120,		s: 100,		l: 25,	],
+		[ name: "Green Yellow",				rgb: "#ADFF2F",		h: 84,		s: 100,		l: 59,	],
+		[ name: "Honeydew",					rgb: "#F0FFF0",		h: 120,		s: 100,		l: 97,	],
+		[ name: "Hot Pink",					rgb: "#FF69B4",		h: 330,		s: 100,		l: 71,	],
+		[ name: "Indian Red",				rgb: "#CD5C5C",		h: 0,		s: 53,		l: 58,	],
+		[ name: "Indigo",					rgb: "#4B0082",		h: 275,		s: 100,		l: 25,	],
+		[ name: "Ivory",					rgb: "#FFFFF0",		h: 60,		s: 100,		l: 97,	],
+		[ name: "Khaki",					rgb: "#F0E68C",		h: 54,		s: 77,		l: 75,	],
+		[ name: "Lavender",					rgb: "#E6E6FA",		h: 240,		s: 67,		l: 94,	],
+		[ name: "Lavender Blush",			rgb: "#FFF0F5",		h: 340,		s: 100,		l: 97,	],
+		[ name: "Lawn Green",				rgb: "#7CFC00",		h: 90,		s: 100,		l: 49,	],
+		[ name: "Lemon Chiffon",			rgb: "#FFFACD",		h: 54,		s: 100,		l: 90,	],
+		[ name: "Light Blue",				rgb: "#ADD8E6",		h: 195,		s: 53,		l: 79,	],
+		[ name: "Light Coral",				rgb: "#F08080",		h: 0,		s: 79,		l: 72,	],
+		[ name: "Light Cyan",				rgb: "#E0FFFF",		h: 180,		s: 100,		l: 94,	],
+		[ name: "Light Golden Rod Yellow",	rgb: "#FAFAD2",		h: 60,		s: 80,		l: 90,	],
+		[ name: "Light Gray",				rgb: "#D3D3D3",		h: 0,		s: 0,		l: 83,	],
+		[ name: "Light Green",				rgb: "#90EE90",		h: 120,		s: 73,		l: 75,	],
+		[ name: "Light Pink",				rgb: "#FFB6C1",		h: 351,		s: 100,		l: 86,	],
+		[ name: "Light Salmon",				rgb: "#FFA07A",		h: 17,		s: 100,		l: 74,	],
+		[ name: "Light Sea Green",			rgb: "#20B2AA",		h: 177,		s: 70,		l: 41,	],
+		[ name: "Light Sky Blue",			rgb: "#87CEFA",		h: 203,		s: 92,		l: 75,	],
+		[ name: "Light Slate Gray",			rgb: "#778899",		h: 210,		s: 14,		l: 53,	],
+		[ name: "Light Steel Blue",			rgb: "#B0C4DE",		h: 214,		s: 41,		l: 78,	],
+		[ name: "Light Yellow",				rgb: "#FFFFE0",		h: 60,		s: 100,		l: 94,	],
+		[ name: "Lime",						rgb: "#00FF00",		h: 120,		s: 100,		l: 50,	],
+		[ name: "Lime Green",				rgb: "#32CD32",		h: 120,		s: 61,		l: 50,	],
+		[ name: "Linen",					rgb: "#FAF0E6",		h: 30,		s: 67,		l: 94,	],
+		[ name: "Maroon",					rgb: "#800000",		h: 0,		s: 100,		l: 25,	],
+		[ name: "Medium Aquamarine",		rgb: "#66CDAA",		h: 160,		s: 51,		l: 60,	],
+		[ name: "Medium Blue",				rgb: "#0000CD",		h: 240,		s: 100,		l: 40,	],
+		[ name: "Medium Orchid",			rgb: "#BA55D3",		h: 288,		s: 59,		l: 58,	],
+		[ name: "Medium Purple",			rgb: "#9370DB",		h: 260,		s: 60,		l: 65,	],
+		[ name: "Medium Sea Green",			rgb: "#3CB371",		h: 147,		s: 50,		l: 47,	],
+		[ name: "Medium Slate Blue",		rgb: "#7B68EE",		h: 249,		s: 80,		l: 67,	],
+		[ name: "Medium Spring Green",		rgb: "#00FA9A",		h: 157,		s: 100,		l: 49,	],
+		[ name: "Medium Turquoise",			rgb: "#48D1CC",		h: 178,		s: 60,		l: 55,	],
+		[ name: "Medium Violet Red",		rgb: "#C71585",		h: 322,		s: 81,		l: 43,	],
+		[ name: "Midnight Blue",			rgb: "#191970",		h: 240,		s: 64,		l: 27,	],
+		[ name: "Mint Cream",				rgb: "#F5FFFA",		h: 150,		s: 100,		l: 98,	],
+		[ name: "Misty Rose",				rgb: "#FFE4E1",		h: 6,		s: 100,		l: 94,	],
+		[ name: "Moccasin",					rgb: "#FFE4B5",		h: 38,		s: 100,		l: 85,	],
+		[ name: "Navajo White",				rgb: "#FFDEAD",		h: 36,		s: 100,		l: 84,	],
+		[ name: "Navy",						rgb: "#000080",		h: 240,		s: 100,		l: 25,	],
+		[ name: "Old Lace",					rgb: "#FDF5E6",		h: 39,		s: 85,		l: 95,	],
+		[ name: "Olive",					rgb: "#808000",		h: 60,		s: 100,		l: 25,	],
+		[ name: "Olive Drab",				rgb: "#6B8E23",		h: 80,		s: 60,		l: 35,	],
+		[ name: "Orange",					rgb: "#FFA500",		h: 39,		s: 100,		l: 50,	],
+		[ name: "Orange Red",				rgb: "#FF4500",		h: 16,		s: 100,		l: 50,	],
+		[ name: "Orchid",					rgb: "#DA70D6",		h: 302,		s: 59,		l: 65,	],
+		[ name: "Pale Golden Rod",			rgb: "#EEE8AA",		h: 55,		s: 67,		l: 80,	],
+		[ name: "Pale Green",				rgb: "#98FB98",		h: 120,		s: 93,		l: 79,	],
+		[ name: "Pale Turquoise",			rgb: "#AFEEEE",		h: 180,		s: 65,		l: 81,	],
+		[ name: "Pale Violet Red",			rgb: "#DB7093",		h: 340,		s: 60,		l: 65,	],
+		[ name: "Papaya Whip",				rgb: "#FFEFD5",		h: 37,		s: 100,		l: 92,	],
+		[ name: "Peach Puff",				rgb: "#FFDAB9",		h: 28,		s: 100,		l: 86,	],
+		[ name: "Peru",						rgb: "#CD853F",		h: 30,		s: 59,		l: 53,	],
+		[ name: "Pink",						rgb: "#FFC0CB",		h: 350,		s: 100,		l: 88,	],
+		[ name: "Plum",						rgb: "#DDA0DD",		h: 300,		s: 47,		l: 75,	],
+		[ name: "Powder Blue",				rgb: "#B0E0E6",		h: 187,		s: 52,		l: 80,	],
+		[ name: "Purple",					rgb: "#800080",		h: 300,		s: 100,		l: 25,	],
+		[ name: "Red",						rgb: "#FF0000",		h: 0,		s: 100,		l: 50,	],
+		[ name: "Rosy Brown",				rgb: "#BC8F8F",		h: 0,		s: 25,		l: 65,	],
+		[ name: "Royal Blue",				rgb: "#4169E1",		h: 225,		s: 73,		l: 57,	],
+		[ name: "Saddle Brown",				rgb: "#8B4513",		h: 25,		s: 76,		l: 31,	],
+		[ name: "Salmon",					rgb: "#FA8072",		h: 6,		s: 93,		l: 71,	],
+		[ name: "Sandy Brown",				rgb: "#F4A460",		h: 28,		s: 87,		l: 67,	],
+		[ name: "Sea Green",				rgb: "#2E8B57",		h: 146,		s: 50,		l: 36,	],
+		[ name: "Sea Shell",				rgb: "#FFF5EE",		h: 25,		s: 100,		l: 97,	],
+		[ name: "Sienna",					rgb: "#A0522D",		h: 19,		s: 56,		l: 40,	],
+		[ name: "Silver",					rgb: "#C0C0C0",		h: 0,		s: 0,		l: 75,	],
+		[ name: "Sky Blue",					rgb: "#87CEEB",		h: 197,		s: 71,		l: 73,	],
+		[ name: "Slate Blue",				rgb: "#6A5ACD",		h: 248,		s: 53,		l: 58,	],
+		[ name: "Slate Gray",				rgb: "#708090",		h: 210,		s: 13,		l: 50,	],
+		[ name: "Snow",						rgb: "#FFFAFA",		h: 0,		s: 100,		l: 99,	],
+		[ name: "Spring Green",				rgb: "#00FF7F",		h: 150,		s: 100,		l: 50,	],
+		[ name: "Steel Blue",				rgb: "#4682B4",		h: 207,		s: 44,		l: 49,	],
+		[ name: "Tan",						rgb: "#D2B48C",		h: 34,		s: 44,		l: 69,	],
+		[ name: "Teal",						rgb: "#008080",		h: 180,		s: 100,		l: 25,	],
+		[ name: "Thistle",					rgb: "#D8BFD8",		h: 300,		s: 24,		l: 80,	],
+		[ name: "Tomato",					rgb: "#FF6347",		h: 9,		s: 100,		l: 64,	],
+		[ name: "Turquoise",				rgb: "#40E0D0",		h: 174,		s: 72,		l: 56,	],
+		[ name: "Violet",					rgb: "#EE82EE",		h: 300,		s: 76,		l: 72,	],
+		[ name: "Wheat",					rgb: "#F5DEB3",		h: 39,		s: 77,		l: 83,	],
+		[ name: "White Smoke",				rgb: "#F5F5F5",		h: 0,		s: 0,		l: 96,	],
+		[ name: "Yellow",					rgb: "#FFFF00",		h: 60,		s: 100,		l: 50,	],
+		[ name: "Yellow Green",				rgb: "#9ACD32",		h: 80,		s: 61,		l: 50,	],
+	]
 }
 /***********************************************************************************************************************
     MISC. - LAST MESSAGE HANDLER
