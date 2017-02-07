@@ -1,6 +1,8 @@
 /**
  *  EchoSistant - Lambda Code
  *
+ *  Version 4.1.10 -2/07/2017 Completed 4.0 Engine
+ *  Version 4.1.9 - 1/27/2017 Added security intent
  *  Version 4.1.7 - 1/24/2017 Added responses for feedback module
  *  Version 4.1.5 - 1/15/2017 Added responses for pending relay action
  *  Version 4.1.4 - 1/14/2017 More response fixes
@@ -31,10 +33,10 @@
 exports.handler = function( event, context ) {
     var https = require( 'https' );
     // Paste app code here between the breaks------------------------------------------------
-    var STappID = 'xxx-51c0-439d-9cab-xxx';
-    var STtoken = 'xxx-1323-40d9-aae7-xxx';
+    var STappID = '11dd514a-0f76-4c9c-a9d1-xxx';
+    var STtoken = '5088e4de-4a9f-47fa-809a-xxx';
     var url='https://graph.api.smartthings.com:443/api/smartapps/installations/' + STappID + '/' ;
-       //---------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------
         var cardName ="";
         var areWeDone = true;
 //-------- Validation process and begining interaction with SmartThings app-------------------- 
@@ -49,7 +51,7 @@ exports.handler = function( event, context ) {
         https.get( beginURL, function( response ) {
         response.on( 'data', function( data ) {
             var startJSON = JSON.parse(data);
-            var pMuteAlexa = startJSON.pContinue; //setting global variable if continuation is allowed for either control or tts
+            var pMuteAlexa = startJSON.pContinue; //setting global variable if Alexa feedback is allowed
             var verST = startJSON.versionSTtxt;
             var pPendingAns = startJSON.pPendingAns;
             var text = startJSON.outputTxt;
@@ -129,8 +131,9 @@ exports.handler = function( event, context ) {
                     var pProfile = event.request.intent.slots.pProfile.value;
                     var pNum = event.request.intent.slots.cNum.value;
                     var pUnit = event.request.intent.slots.cUnit.value;
-
-                    url += 'p?pCommand=' + pCommand + '&pNum=' + pNum + '&pUnit=' + pUnit + '&intentName=' + intentName;
+                    var pPIN = event.request.intent.slots.cPIN.value;
+                    var pGroup = event.request.intent.slots.cGroup.value;
+                    url += 'p?pCommand=' + pCommand + '&pNum=' + pNum + '&pPIN=' + pPIN + '&pProfile=' + pProfile + '&pGroup=' + pGroup + '&pUnit=' + pUnit + '&intentName=' + intentName;
                     process = true;
                     cardName = "EchoSistant Profile Control";
                 }
@@ -147,7 +150,7 @@ exports.handler = function( event, context ) {
                     cardName = "EchoSistant Feedback";
                 }
 //-------- TTS Type Request------------------------------------------------------------------
-                else if (intentName != "main") {
+                else if (intentName != "main" || intentName != "security" || intentName != "feedback" || intentName != "profile") {
                     var ttstext = event.request.intent.slots.ttstext.value;
                     url += 't?ttstext=' + ttstext + '&intentName=' + intentName;
                     process = true;
@@ -217,6 +220,10 @@ exports.handler = function( event, context ) {
                             //just wait
                             areWeDone=false;
                         }
+                        else if (pContCmdsR == "reminder"){
+                            //just wait
+                            areWeDone=false;
+                        }                        
                         else if (pPIN === true){
                             //just wait
                             areWeDone=false;
