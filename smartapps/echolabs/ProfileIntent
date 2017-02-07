@@ -1,0 +1,13 @@
+{
+  "intents": [
+    {
+      "intent": "bedroom",
+      "slots": [
+         {
+			"name": "ttstext",
+			"type": "LIST_OF_WORDS"
+        }
+        ]
+    }
+        ]
+}
