@@ -22,8 +22,6 @@ security what is the {sType} {sControl}
 security about the {sType} {sControl}
 security get the {sControl} of my {sType} 
 
-
-
 main {cPIN}
 main {cUnit}
 main is {cCommand} {cDevice}
@@ -51,7 +49,6 @@ main turn {cCommand} the {cDevice} in {cNum} {cUnit}
 main turn {cCommand} the {cDevice} in {cNum} {cUnit}
 main turn {cCommand} {cDevice} in {cNum} {cUnit}
 main turn {cCommand} {cDevice} in {cNum} {cUnit}
-
 main make the {cDevice} {cCommand}
 main make it {cCommand} {cDevice}
 main make the {cDevice} {cCommand} in {cNum} {cUnit}
@@ -62,7 +59,6 @@ main make it {cCommand} the {cDevice} in {cNum} {cUnit}
 main make it {cCommand} the {cDevice} in {cNum} {cUnit}
 main make it {cCommand} {cDevice} in {cNum} {cUnit}
 main make it {cCommand} {cDevice} in {cNum} {cUnit}
-
 main {cCommand} last message
 main {cCommand} temperature {cDevice}
 main {cCommand} temperature {cDevice} to {cNum} {cUnit}
@@ -77,14 +73,6 @@ main to {cCommand} the {cUnit} for {cGroup}
 main to {cCommand} the {cUnit} number for {cGroup}
 main to {cCommand} the {cGroup}
 main to {cCommand} the {cGroup} in {cNum} {cUnit}
-
-profile {cCommand} {pProfile}
-profile {cCommand} {pProfile} in  in {cNum} {cUnit}
-profile is {cCommand} in the {pProfile}
-profile make the {pProfile} lights {cCommand}
-profile turn the {pProfile} lights {cCommand} in {cNum} {cUnit}
-profile {cCommand} the {pProfile} lights to {cNum}
-profile the {pProfile} lights are {cCommand}
 
 feedback {fQuery} the status of {cDevice}
 feedback {fQuery} is the status of {cDevice}
@@ -124,3 +112,11 @@ feedback {fQuery} any one at the {cDevice}
 feedback {fQuery} any motion at the {cDevice}
 feedback {cDevice} is {fOperand}
 feedback {fQuery} was {cDevice} last {fOperand}
+
+profile {cCommand} {pProfile}
+profile {cCommand} {pProfile} in {cNum} {cUnit}
+profile is {cCommand} in the {pProfile}
+profile make the {pProfile} {cGroup} {cCommand}
+profile turn the {pProfile} {cGroup} {cCommand} in {cNum} {cUnit}
+profile {cCommand} the {pProfile} {cGroup} to {cNum}
+profile the {pProfile} {cGroup} are {cCommand}
