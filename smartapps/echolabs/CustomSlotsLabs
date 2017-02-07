@@ -56,6 +56,17 @@ deactivate
 replace
 replaced
 try again
+switch
+all off
+reading
+working
+relax
+relaxing
+chilling
+energize
+cleaning
+concentrate
+concentrating
 
 LIST OF OPERANDS
 
@@ -129,7 +140,6 @@ hours
 schedule
 number
 
-
 LIST OF GROUPS
 
 lights
@@ -142,6 +152,7 @@ thermostats
 locks
 switches
 security
+activities
 
 LIST_OF_QUERIES
 
@@ -158,14 +169,20 @@ are there
 did I
 get
 
-LIST_OF_SYSTEM_CONTROLS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-PLEASE COPY/PASTE FROM SMART APP!!!!!!!!!!!!!
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 LIST_OF_TYPES
 
 mode
 security
 routine
 modes
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PLEASE COPY/PASTE FROM SMARTHING SMART APP - LIVE LOGGING !!!!!!!!!!!!!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LIST_OF_SYSTEM_CONTROLS
+
+LIST_OF_DEVICES
+
+LIST_OF_PROFILES
+
+
