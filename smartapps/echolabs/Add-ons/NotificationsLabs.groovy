@@ -96,17 +96,14 @@ page name: "mainProfilePage"
         section ("and these output methods...") {    
 			input "sonos", "capability.musicPlayer", title: "On this Sonos type music player", required: false, multiple: true, submitOnChange: true
             if (sonos) {
-			input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: true
-			href "chooseTrack", title: "Or play this music or radio station", description: song ? state.selectedSong?.station : "Tap to set", state: song ? "complete" : "incomplete"
 			input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
 				}
 			input "speechSynth", "capability.speechSynthesis", title: "Speech Synthesis Device (may not work)", required: false, multiple: true, submitOnChange: true
-          	href "SMS", title: "Send Push Messages..."
+          	href "SMS", title: "Send SMS & Push Messages...", description: pSendComplete(), state: pSendSettings()
                         }
         section ("Using these Restrictions") {
-            href "pRestrict", title: "Use these restrictions... "//, 
-//   			image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"   			
-				}
+            href "pRestrict", title: "Use these restrictions...", description: pRestComplete(), state: pRestSettings()
+            }
             section ("Name and/or Remove this Profile") {
  		   	label title:"              Rename Profile ", required:false, defaultValue: "Notification Profile"  
         	} 
@@ -115,15 +112,22 @@ page name: "mainProfilePage"
 page name: "SMS"
     def SMS(){
         dynamicPage(name: "SMS", title: "Send SMS and/or Push Messages...", uninstall: false) {
-        section ("Time Stamps") {     	
-            input "timeStamp", "bool", title: "Add time stamp to Text and Push Messages", required: false, defaultValue: false
-			}
         section ("Push Messages") {
             input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false,
                 image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png"
-            }        
+            input "timeStamp", "bool", title: "Add time stamp to Push Messages", required: false, defaultValue: false  
+            }
+        section ("Text Messages" ) {
+           	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true,    
+               	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+            if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+        		input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true,      
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+            if (sendText){      
+                paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122;8046663344"
+                input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
+                }
+            }    
         }        
     }
 page name: "pRestrict"
@@ -139,7 +143,7 @@ page name: "pRestrict"
                     image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
             }
             section ("Time - Audio only during these times"){
-                href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null,
+                href "certainTime", title: "Only during a certain time", description: pTimeComplete(), state: pTimeSettings(),
                 image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
             }   
 	    }
@@ -201,14 +205,8 @@ def subscribeToEvents() {
     if (myLocks) {subscribe(myLocks, "lock.locked", alertsHandler)}
     if (myLocks) {subscribe(myLocks, "lock.unlocked", alertsHandler)}
     if (myPresence) {subscribe(myPresence, "presenceSensor", alertsHandler)}
-      
-//    if (cWeather) {
-//    	subscribe(audioTextWeather, "WeatherAlerts", WeatherAlerts)} 
-//	loadText()
+    if (cWeather) {subscribe(audioTextWeather, "WeatherAlerts", WeatherAlerts)} 
 	}
-}
-def scheduledTimeHandler() {
-	takeAction(evt)
 }
 private dayString(Date date) {
 	def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
@@ -220,12 +218,9 @@ private dayString(Date date) {
 	}
 	df.format(date)
 }
-
-
 /***********************************************************************************************************************
     CUSTOM SOUNDS HANDLER
 ***********************************************************************************************************************/
-
 private takeAction(evt) {
 def CustomMessage = message
 	log.trace "takeAction()"
@@ -377,31 +372,40 @@ private void sendtxt(message) {
 def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
     if (debug) log.debug "Request to send sms received with message: '${message}'"
     if (sendContactText) {
-    	sendNotificationToContacts(message, recipients)
-            if (debug) log.debug "Sending sms to selected reipients"
+       log.debug "Sending sms to selected reipients"
     } 
-    else {
-        if (push && timeStamp) {
-            sendPush (message + " at " + stamp)
-            	if (debug) log.debug "Sending push message to selected reipients with timestamp"
+    if (push && !timeStamp) {
+	    sendPush message
         }
-        else {
-        if (push) {
-        sendPush message
+	if (push && timeStamp) {
+     	sendPush (message + " at " + stamp)
+       	log.debug "Sending push message to selected reipients with timestamp"
         }
-     }
-     if (notify && timeStamp) {
-        	sendNotificationEvent(message + " at " + stamp)
-             	if (debug) log.debug "Sending notification to mobile app with timestamp"
-				}
-                else {
-                if (notify) {
-                sendNotificationEvent (message)
-                if (debug) log.debug "Sending notification to mobile app with timestamp"
-                	}
-                }
-            }	    
+	if (sms || sendContactText) {
+        sendText(sms, message)
+        log.debug "Processing message for selected phones"
 		}
+	}
+private void sendText(number, message) {
+    if (sms) {
+        def phones = sms.split("\\;")
+        for (phone in phones) {
+            sendSms(phone, message)
+            log.debug "Sending sms to selected phones"
+        	}
+    	}        
+	}	    
+/************************************************************************************************************
+   Time of Day Scheduler Handler
+************************************************************************************************************/
+def scheduledTimeHandler() {
+	sendtxt(message)
+    takeAction()
+    if (sendText) {
+    	sendtxt(message)
+        log.info "Sending a text message"
+        }
+    }
 /************************************************************************************************************
    Alerts Handler
 ************************************************************************************************************/
@@ -413,20 +417,21 @@ def alertsHandler(evt) {
     log.debug "Received event name ${evt.name} with value:  ${evt.value}, from: ${evt.device}"
 
 	if (getDayOk()==true && getModeOk()==true && getTimeOk()==true) {
-        if (timeOfDay) {
-        	takeAction(evt)
-            }
+	def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
         if (eVal == "present" || eVal == "open" || eVal == "locked" || eVal == "active" || eVal == "on") {
-        if (message) {
         	takeAction(evt)
+        	if (push && timeStamp) {
+     		sendPush (message + " at " + stamp)
+       		log.info "Sending push message to selected reipients with timestamp"
+			}
+            else if (push) {
+            	sendPush message
             }
-            else {
-            takeAction(evt)
+            if (sendText) {
+            	sendtxt(message)
+                log.info "Sending a text message"
             }
-        if (push) {
-        	sendtxt(message)
-            }
-        }  
+        }
 	}        
 }
 /************************************************************************************************************
@@ -450,3 +455,33 @@ page name: "severeWeatherAlertsPage"
 		}
 	}
 } 
+/************************************************************************************************************
+   Page status and descriptions 
+************************************************************************************************************/       
+def pSendSettings() {def result = ""
+    if (sendContactText || sendText || push) {
+    	result = "complete"}
+   		result}
+def pSendComplete() {def text = "Tap here to configure settings" 
+    if (sendContactText || sendText || push) {
+    	text = "Configured"}
+    	else text = "Tap to Configure"
+		text}
+def pRestSettings() {def result = ""
+    if (modes || days) {
+    	result = "complete"}
+   		result}
+def pRestComplete() {def text = "Tap here to configure settings" 
+    if (modes || days) {
+    	text = "Configured"}
+    	else text = "Tap to Configure"
+		text}     
+def pTimeSettings() {def result = ""
+    if (startingX || endingX) {
+    	result = "complete"}
+   		result}
+def pTimeComplete() {def text = "Tap here to configure settings" 
+    if (startingX || endingX) {
+    	text = "Configured"}
+    	else text = "Tap to Configure"
+		text}                
