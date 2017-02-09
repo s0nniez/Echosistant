@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
+ *		2/9/2017		Version:4.0 R.4.2.22		Enabled Error Trapping
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
  *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
  *		2/2/2017		Version:4.0 R.4.2.17		Added Profile control
@@ -103,22 +104,18 @@ page name: "mIntent"
     	dynamicPage (name: "mIntent", title: "", install: false, uninstall: false) {
 			section("Devices used by EchoSistant") {
 	            href "mDevices", title: "Select Devices" // description: mDevicesD(), state: mDevicesS()
-                //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"    
 			}               
             section ("System and Device Control Defaults") {
                 href "mDefaults", title: "Change Defaults" // description: mDefaultsD(), state: mDefaultsS()
-                //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
 			}
             section ("Manage Home Security") {
             	href "mSecurity", title: "Home Security control options"//, description: mSecurityD(), state: mSecurityS(),
-                //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
             }
 		}
 	}
     page name: "mDevices"    
         def mDevices(){
             dynamicPage(name: "mDevices", title: "",install: false, uninstall: false) {
-                // DEVICE categories: cSwitch,cVent,cFan,cTstat,cDoor,cRelay,cContactRelay,cLock,cMotion,cContact,cWater,cPresence,cSpeaker,cSynth,cMedia,cBattery 
                 section ("Select devices", hideWhenEmpty: true){ }
                 section ("Lights and Switches", hideWhenEmpty: true){  
                     input "cSwitch", "capability.switch", title: "Allow These Switch(es)...", multiple: true, required: false, submitOnChange: true                   
@@ -210,16 +207,13 @@ page name: "mIntent"
                 }
                     section ("Access Security Suite") {
                         href "mSecuritySuite", title: "Tap to configure your Home Security Suite module", description: ""
-                       // ,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
                     } 
                         	
-                section ("Smart Home Monitor Status Change Feedback", hideWhenEmpty: true){
+                section ("Smart Home Monitor Status Change Feedback", hideWhenEmpty: true, hideable: true, hidden: true){
                     input "fSecFeed", "bool", title: "Activate SHM status change announcements.", default: false, submitOnChange: true
                     if (fSecFeed) {    
                         input "shmSynthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false
-                        //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
                         input "shmSonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
-                        //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
                         }
                         if (shmSonosDevice) {
                             input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
@@ -301,21 +295,16 @@ page name: "mSettings"
                     def msg = textLicense()
                         if (ShowLicense) paragraph "${msg}"
                     }
-                section ("Show Security Tokens") {
+                section ("Security Token", hideable: true, hidden: true) {
                 	paragraph ("Log into the IDE on your computer and navigate to the Live Logs tab. Leave that window open, come back here, and open this section")
-                    input "ShowTokens", "bool", title: "Show Security Tokens", default: false, submitOnChange: true
-                    if (ShowTokens) paragraph "The Security Tokens are now displayed in the Live Logs section of the IDE"
-    				if (ShowTokens) log.trace "STappID = '${app.id}' , STtoken = '${state.accessToken}'"
-                    if (ShowTokens) paragraph 	"Access token:\n"+
+                    paragraph "The Security Tokens are now displayed in the Live Logs section of the IDE"
+    				log.trace "STappID = '${app.id}' , STtoken = '${state.accessToken}'"
+                    paragraph 	"Access token:\n"+
                                                 "${state.accessToken}\n"+
                                                 "Application ID:\n"+
                                                 "${app.id}"
-                    }
-               section ("Revoke/Renew Access Token & Application ID"){
                     href "tokens", title: "Revoke/Reset Security Access Token", description: none
-                    def msg = state.accessToken != null ? state.accessToken : "Could not create Access Token. OAuth may not be enabled. "+
-                    "Go to the SmartApp IDE settings to enable OAuth."	
-					}
+                }
                 section("Tap below to remove the ${textAppName()} application.  This will remove ALL Profiles and the App from the SmartThings mobile App."){
                 }	
 			}             
@@ -424,19 +413,18 @@ page name: "mSupport"
                 }
                 section ("Amazon AWS Skill Details") {
 					href "mSkill", title: "Tap to view setup data for the AWS Main Intent Skill...", description: ""
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/echosistant_About.png"
             		}
                 section ("Directions, How-to's, and Troubleshooting") { 
- 					href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png"
+ 					href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
+                		image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/wiki.png"
                 	}   
             	section ("AWS Lambda website") {
-            		href url:"https://aws.amazon.com/lambda/", title: "Tap to go to the AWS Lambda Website", description: none
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_aws.png"
+            		href url:"https://aws.amazon.com/lambda/", title: "Tap to go to the AWS Lambda Website", description: none,
+                		image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_aws.png"
                 	}
             	section ("Amazon Developer website") {    
-   					href url:"https://developer.amazon.com/", title: "Tap to go to Amazon Developer website", description: none
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Skills.png"
+   					href url:"https://developer.amazon.com/", title: "Tap to go to Amazon Developer website", description: none,
+                		image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Skills.png"
 					}
                 section ("Developers", hideWhenEmpty: true){  
             		paragraph ("You can reach out to the Echosistant Developers with the following information: \n" + 
@@ -456,7 +444,6 @@ page name: "mBonus"
         if (activateDashboard) {
 		section ("Configure the DashBoard") {
         	href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
-            //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"
 			}
         }
 	}
@@ -533,7 +520,6 @@ page name: "mDashConfig"
         if (mLocalWeather) {
 		section ("Local Weather Information") {
             href "mWeatherConfig", title: "Tap here to configure Weather information on Dashboard", description: "", state: complete
-            //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"
 			}
         }            
 		section ("Thermoststats") {
@@ -765,7 +751,7 @@ def processBegin(){
             }
        }
      }
-     
+    //if Alexa is muted from the child, then mute the parent too
     pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
 	if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
       "; data sent: pContinue = '${pContinue}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
@@ -789,7 +775,8 @@ def feedbackHandler() {
     def fDevice = params.fDevice
    	def fQuery = params.fQuery
     def fOperand = params.fOperand 
-    def fCommand = params.fCommand 	
+    def fCommand = params.fCommand 
+    def fIntentName = params.intentName
     def pPIN = false
     //OTHER 
     def String deviceType = (String) null
@@ -802,16 +789,23 @@ def feedbackHandler() {
     	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
     if (debug){
     	log.debug 	"Feedback data: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
-    				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}'"}
-	
+    				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
+	def fProcess = true
     state.pTryAgain = false
-	try {
+try {
 		
         fOperand = fOperand == "lights on" ? "lights" : fOperand == "switches on" ? "lights" : fOperand == "switches" ? "lights" : fOperand
         fCommand = fOperand == "lights on" ? "on" : fOperand == "switches on" ? "on" : fCommand
     
     if (fDevice == "undefined" && fQuery == "undefined" && fOperand == "undefined" && fCommand == "undefined"  && fProfile == "undefined") {
-        if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about"  ) {
+		outputTxt = "Sorry, I didn't get that, "
+        state.pTryAgain = true
+        state.pContCmdsR = "clear"
+        state.lastAction = null
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+	}    
+    else {
+    	if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about"  ) {
             def dMatch = deviceMatchHandler(fDevice)
             if (dMatch?.deviceMatch == null) { 				
                 outputTxt = "Sorry, I couldn't find any details about " + fDevice
@@ -867,7 +861,8 @@ def feedbackHandler() {
                         }
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                     }
-					if (fProfile != "undefined") {
+					//to do expand feedback on Profile
+                    if (fProfile != "undefined") {
                         def rSearch = profileMatchHandler(fProfile)
                             if (rSearch == null) { 
                                 outputTxt = "Sorry I couldn't find any details about " + fProfile
@@ -881,7 +876,9 @@ def feedbackHandler() {
                 	}
                 }
         }
+        // (fOperand != "undefined" || fQuery != "about")
         else {
+//>>> Temp >>>>      
             if(fOperand == "temperature") {
                 if(cTstat){
                     cTstat.find {s -> 
@@ -947,6 +944,7 @@ def feedbackHandler() {
                     else {outputTxt = "Sorry, I couldn't quite get that, what device would you like to use to get the indoor temperature?"}
                 }
             }
+//>>> Temp >>>>>
             if (fOperand == "temperature inside" || fOperand == "indoor temperature" || fOperand == "temperature is inside"){
                 if(cIndoor){
                     def sensors = cIndoor.size()
@@ -960,6 +958,7 @@ def feedbackHandler() {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }                            
             }
+//>>> Temp >>>>
             if (fOperand == "temperature outside" || fOperand == "outdoor temperature" || fOperand == "temperature is outside"){
                 if(cOutDoor){
                     def sensors = cOutDoor.size()
@@ -974,25 +973,29 @@ def feedbackHandler() {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]		
                 }                            
             }
-            if (fOperand == "weather" || fOperand == "weather conditions" || fOperand == "current weather"){
+//>>> Weather >>>>
+			if (fOperand == "weather" || fOperand == "weather conditions" || fOperand == "current weather"){
                     outputTxt = mGetWeather()
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
             }
+            if (fOperand == "weather alert" || fOperand == "alerts" || fOperand == "weather alerts"){
+                    outputTxt = mGetWeatherAlerts()
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
+            }            
+//>>> Mode >>>>
             if (fOperand == "mode" ){
                     outputTxt = "The Current Mode is " + location.currentMode      
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
             }
+//>>> Security >>>>
             //TO DO: restrict security based on command
             if (fOperand == "security" || fOperand == "smart home monitor" || fOperand == "alarm" ){
                     def sSHM = location.currentState("alarmSystemStatus")?.value       
                     sSHM = sSHM == "off" ? "disabled" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Stay" : "unknown"
                     outputTxt = "Your Smart Home Monitor Status is " +  sSHM
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
-            }        
-            if (fOperand == "weather alert" || fOperand == "alerts" || fOperand == "weather alerts"){
-                    outputTxt = mGetWeatherAlerts()
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
             }
+//>>> Lights >>>>            
             if (fOperand == "lights" && fCommand != "undefined") { 
                 if(cSwitch){
                     def devList = []
@@ -1042,8 +1045,8 @@ def feedbackHandler() {
                     }     
                 }
             }
+//>>> Doors >>>>            
             if(fOperand.contains("doors")) { // && fCommand != "undefined") { removed 1/23/2017
-                //if(cContact){
                     def devList = []
                     if (cContact.latestValue("contact").contains(fCommand) || cDoor.latestValue("door").contains(fCommand)) {
                         cContact.each { deviceName ->
@@ -1104,9 +1107,10 @@ def feedbackHandler() {
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
             }
+//>>> Battery Level >>>>                        
             if(fOperand == "batteries") {
-            def cap = "bat"
-            def devList = getCapabilities(cap)
+            	def cap = "bat"
+            	def devList = getCapabilities(cap)
                 if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fCommand == "low" || fQuery == "give" || fQuery == "get") {
                         if (devList.listSize > 0) {
                             if (devList.listSize == 1) {
@@ -1135,9 +1139,10 @@ def feedbackHandler() {
                         } 
                     }
             }
-            if(fOperand == "inactive" || fOperand.contains("inactive") ) { //devices inactive
-            def cap = "act"
-            def devList = getCapabilities(cap)
+//>>> Inactive Devices >>>>                               
+            if(fOperand == "inactive" || fOperand.contains("inactive") ||  fCommand == "inactive" ) { //devices inactive
+            	def cap = "act"
+            	def devList = getCapabilities(cap)
                 if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fQuery == "give" || fQuery == "get") {
                         if (devList.listSize > 0) {
                             if (devList.listSize == 1) {
@@ -1166,6 +1171,7 @@ def feedbackHandler() {
                         } 
                     }
             }       
+//>>> Settings >>>>                                    
             if(fOperand == "settings") {
                 def pCmds = state.pContCmds == true ? "enabled" : "disabled"
                 def pCmdsR = state.pContCmdsR //last continuation response
@@ -1196,6 +1202,7 @@ def feedbackHandler() {
                 outputTxt = pMute + " and the conversational module is " + pCmds + ". The pin number is active for: " +  activePin + " and inactive for: " + inactivePin
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             }
+//>>> Presence >>>>                                    
             if (fQuery == "who" ) {
                 if(cPresence){
                         def devListP = []
@@ -1243,6 +1250,7 @@ def feedbackHandler() {
                     }
                 }
             }
+//>>> Events >>>>                                    
             if (fQuery.contains ("when")) {
             	fCommand = fCommand == "changed" ? "change" : fCommand
             	if (fCommand == "change" && state.filterNotif !=null ) {
@@ -1255,22 +1263,19 @@ def feedbackHandler() {
                 	outputTxt = deviceM + " was last " + fOperand + " " + deviceData.tText
                 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             	}
-            }
+            }     
+			def hText = fDevice != "undefined" ? " a device named " + fDevice :  fProfile != "undefined" ? "a profile named " + fProfile : " something " 
+        	outputTxt = "Sorry, I heard that you were looking for feedback on  " + hText + " but Echosistant wasn't able to help, "
+			state.pTryAgain = true
+            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
         }
-
-		outputTxt = "Sorry, I didn't get that, "
-        state.pTryAgain = true
-        state.pContCmdsR = "clear"
-        state.lastAction = null
-        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-
     } 
-    }catch (Throwable t) {
+}catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-	}
+}
 }
 /************************************************************************************************************
    DEVICE CONTROL - from Lambda via page c
@@ -1283,7 +1288,7 @@ def controlDevices() {
         def ctDevice = params.cDevice
         def ctUnit = params.cUnit
         def ctGroup = params.cGroup       
-		def pintentName = params.intentName
+		def ctIntentName = params.intentName
         //OTHER VARIABLES
         def String outputTxt = (String) null 
 		def pPIN = false
@@ -1297,12 +1302,12 @@ def controlDevices() {
     	//state.pContCmdsR = "undefined" // 1/30/2017
         if (debug) log.debug "Received Lambda request to control devices with settings:" +
         					 " (ctCommand)= ${ctCommand}',(ctNum) = '${ctNum}', (ctPIN) = '${ctPIN}', "+
-                             "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (pintentName) = '${pintentName}'"
-	
+                             "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (ctIntentName) = '${ctIntentName}'"
+	def ctProcess = true	
     state.pTryAgain = false 
-//    try {	
+try {	
     
-    if (pintentName == "main") {
+    if (ctIntentName == "main") {
         ctPIN = ctPIN == "?" ? "undefined" : ctPIN
         if (ctNum == "undefined" || ctNum =="?") {ctNum = 0 } 
         if (ctCommand =="?") {ctCommand = "undefined"} 
@@ -1368,7 +1373,7 @@ def controlDevices() {
             	if (debug) log.debug "Received command data: deviceType= '${deviceType}', command= '${command}' _____>>>>> STARTING MAIN PROCESS <<<<<< ______"
         	}
 		}
-        
+//>>> MAIN PROCESS STARTS <<<<        
         if (deviceType == "volume" || deviceType == "general" || deviceType == "light") {      
                     def deviceMatch = null
                     def activityId = null
@@ -1492,7 +1497,8 @@ def controlDevices() {
                   		}
                     }         
         }
-        else if (deviceType == "temp") {
+// >>>> THERMOSTAT CONTROL <<<<
+		else if (deviceType == "temp") {
                 if (settings.cTstat?.size() > 0) {           
                     def deviceMatch = cTstat.find {t -> t.label.toLowerCase() == ctDevice.toLowerCase()}
                     if (deviceMatch) {
@@ -1526,7 +1532,8 @@ def controlDevices() {
                    }
                 }
          }
-        else if (deviceType == "lock") {
+// >>>> LOCKS CONTROL <<<<
+		else if (deviceType == "lock") {
             if (settings.cLock?.size()>0) {   
                 def deviceMatch = cLock.find {l -> l.label.toLowerCase() == ctDevice.toLowerCase()}             
                 if (deviceMatch) {
@@ -1561,6 +1568,7 @@ def controlDevices() {
                 }
             }
         }
+// >>>> FANS CONTROL <<<<        
         else if (deviceType == "fan") {
             if (settings.cFan?.size()>0) {     
                 def deviceMatch = cFan.find {f -> f.label.toLowerCase() == ctDevice.toLowerCase()}
@@ -1583,6 +1591,7 @@ def controlDevices() {
                 }
             }
         }
+// >>>> DOORS CONTROL <<<<        
         else if (deviceType == "door") {
             if (settings.cDoor?.size()>0) {          
                 def deviceMatch = cDoor.find {d -> d.label.toLowerCase() == ctDevice.toLowerCase()}
@@ -1634,6 +1643,7 @@ def controlDevices() {
                 	}
                 }
             }
+// >>>> RELAYS CONTROL <<<<            
 			if (cRelay !=null) {
             //this is needed for Garage Doors that are set up as relays
                 def deviceMatch = cRelay.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
@@ -1689,6 +1699,7 @@ def controlDevices() {
                      }
                 }
             }
+// >>>> VENTS CONTROL <<<<            
             if (settings.cVent?.size()>0) {
             //this is needed to enable open/close command for Vents group
                 def deviceMatch = cVent.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
@@ -1716,7 +1727,9 @@ def controlDevices() {
 				}
 			}
 		}
-		outputTxt = "I wish I could help, but EchoSistant couldn't find the device named '${ctDevice}' or the command may not be supported"
+		log.warn "ctDevice = ${ctDevice}, ctCommand = ${ctCommand}"
+        def hText = ctDevice != "undefined" && ctCommand != "undefined" ? ctCommand + " the " + ctDevice :  ctDevice != "undefined" ? " control " + ctDevice : ctCommand != "undefined" ? ctCommand + " something" : "control something" 
+        outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
@@ -1724,14 +1737,14 @@ def controlDevices() {
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     }
-/*   
+  
        } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
-*/
+
 }
 /************************************************************************************************************
    DEVICE AND PROFILE CONTROL HANDLER
@@ -1750,7 +1763,6 @@ def controlHandler(data) {
                             "(unitU) = '${unitU}', (numN) = '${numN}', (delayD) = '${delayD}'"  
 
 	state.pTryAgain = false
-	//try {
 	if (deviceType == "cSwitch" || deviceType == "cMiscDev"  ) {
     	if (deviceCommand == "on" || deviceCommand == "off") {
             if (delayD == true ) {
@@ -2193,14 +2205,6 @@ def controlHandler(data) {
     }
     return result
     }
-    /*
-    } catch (Throwable t) {
-        log.error t
-        result = "Oh no, something went wrong. If this happens again, please reach out for help!"
-        state.pTryAgain = true
-        return result
-	}
-    */
 }
 /************************************************************************************************************
    SECURITY CONTROL - from Lambda via page s
@@ -2227,8 +2231,9 @@ def controlSecurity() {
         
         if (debug) log.debug "Received Lambda security request with settings:" +
         					 " (sCommand)= ${command},(sNum) = '${num}', (sPIN) = '${sPIN}', (sType) = '${type}', (sControl) = '${control}',(pintentName) = '${pintentName}'"
-	state.pTryAgain = false
-	try {	
+	def sProcess = true
+    state.pTryAgain = false
+try {	
 	if (pintentName == "security") {    
         def modes = location.modes.name
     	def currMode = location.currentMode
@@ -2373,8 +2378,13 @@ def controlSecurity() {
 			}
          	if (outputTxt != null) {
             	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-           } 
+           }   
     	}
+		log.warn "type = ${type}, control = ${control}"
+        def hText = type != "undefined" ? "control " + type :  control != "undefined" ? "manage " + control +  " as a system control" : "manage your system controls" 
+        outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
+		state.pTryAgain = true
+		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]     
 	}
     } catch (Throwable t) {
         log.error t
@@ -2435,8 +2445,9 @@ def controlProfiles() {
         					  	" (prCommand)= ${prCommand}',(prNum) = '${prNum}', (prProfile) = '${prProfile}',"+
                                 " (prUnit) = '${prUnit}', (prPIN) = '${prPIN}',  (pintentName) = '${pintentName}'"   
 
-	state.pTryAgain = false
-    //try {
+	def pProcess = true
+    state.pTryAgain = false
+try {
     if (pintentName == "profile") {         
         if (prProfile != "undefined"){
         	def profile = childApps.find {c -> c.label.toLowerCase() == prProfile.toLowerCase()}             
@@ -2530,15 +2541,17 @@ def controlProfiles() {
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             }
        	}
+		def hText = "control a profile"
+        outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
+		state.pTryAgain = true
+		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]             
 	}
-	/*
     } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
-    */
 }
 /************************************************************************************************************
    TEXT TO SPEECH PROCESS - Lambda via page t
@@ -2556,7 +2569,9 @@ def processTts() {
         def pPIN = false
         	if (debug) log.debug "Message received from Lambda with: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
         def dataSet = [:] 
-		
+		def tProcess = true
+try {
+	if (pintentName != "undefined") {
         if(ptts == "no" || ptts == "yes"){
         	if(ptts == "no"){
                 outputTxt = "ok, I am here if you need me"
@@ -2596,7 +2611,18 @@ def processTts() {
                 pTryAgain = true
                 return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             }
+        def hText = "run a messaging and control profile"
+        outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
+		state.pTryAgain = true
+		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]               
     	}
+    }
+} catch (Throwable t) {
+	log.error t
+	outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
+	state.pTryAgain = true
+	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+}       
 }
 /***********************************************************************************************************
 		SMART HOME MONITOR STATUS AND KEYPAD HANDLER
