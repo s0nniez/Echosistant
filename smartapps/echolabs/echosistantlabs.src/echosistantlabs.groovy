@@ -631,7 +631,7 @@ def childUninstalled() {
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
 def processBegin(){
-    if (debug) log.debug "^^^^____Initial Commands Received from Lambda___^^^^"  
+    if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^"  
     def versionTxt  = params.versionTxt 		
     def versionDate = params.versionDate
     def releaseTxt = params.releaseTxt
@@ -788,7 +788,7 @@ def feedbackHandler() {
 	def data = [:]
     	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
     if (debug){
-    	log.debug 	"Feedback data: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
+    	log.debug 	"FEEDBACK DATA: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
 	def fProcess = true
     state.pTryAgain = false
@@ -819,7 +819,7 @@ try {
                 def dMainCap = dMatch?.mainCap
                 def dCapCount = getCaps(dDevice,dType, dMainCap, dState)
                 state.pContCmdsR = "caps"
-                outputTxt = "Sorry, I couldn't quite get that, but I found a matching device that has " + dCapCount + " capabilities. Would you like to hear more about this device?"         
+                outputTxt = "Sorry, I couldn't quite get that, but " + fDevice +  " has " + dCapCount + " capabilities. Would you like to hear more about this device?"         
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
             }
         }
@@ -1299,9 +1299,8 @@ def controlDevices() {
         def delay = false
         def data
         ctDevice = ctDevice.replaceAll("[^a-zA-Z0-9 ]", "")
-    	//state.pContCmdsR = "undefined" // 1/30/2017
-        if (debug) log.debug "Received Lambda request to control devices with settings:" +
-        					 " (ctCommand)= ${ctCommand}',(ctNum) = '${ctNum}', (ctPIN) = '${ctPIN}', "+
+        
+        if (debug) log.debug "CONTROL DATA: (ctCommand)= ${ctCommand}',(ctNum) = '${ctNum}', (ctPIN) = '${ctPIN}', "+
                              "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (ctIntentName) = '${ctIntentName}'"
 	def ctProcess = true	
     state.pTryAgain = false 
@@ -2226,11 +2225,10 @@ def controlSecurity() {
 			control = control.replaceAll("[^a-zA-Z0-9]", "")
         	sPIN = sPIN == "?" ? "undefined" : sPIN
         if (num == "undefined" || num =="?") {num = 0 } 
-        //if (ctCommand =="?") {ctCommand = "undefined"} 
         	num = num as int
         
-        if (debug) log.debug "Received Lambda security request with settings:" +
-        					 " (sCommand)= ${command},(sNum) = '${num}', (sPIN) = '${sPIN}', (sType) = '${type}', (sControl) = '${control}',(pintentName) = '${pintentName}'"
+        if (debug) log.debug "SYSTEM CONTROL DATA: (sCommand)= ${command},(sNum) = '${num}', (sPIN) = '${sPIN}'," +
+        					 " (sType) = '${type}', (sControl) = '${control}',(pintentName) = '${pintentName}'"
 	def sProcess = true
     state.pTryAgain = false
 try {	
@@ -2441,8 +2439,7 @@ def controlProfiles() {
         def data
         prProfile = prProfile.replaceAll("[^a-zA-Z0-9 ]", "")
 		prProfile = prProfile.replace(" ", "") 
-        if (debug) log.debug	"Received Lambda request to control Profiles with settings:" +
-        					  	" (prCommand)= ${prCommand}',(prNum) = '${prNum}', (prProfile) = '${prProfile}',"+
+        if (debug) log.debug	"CONTROL PROFILE DATA: (prCommand)= ${prCommand}',(prNum) = '${prNum}', (prProfile) = '${prProfile}',"+
                                 " (prUnit) = '${prUnit}', (prPIN) = '${prPIN}',  (pintentName) = '${pintentName}'"   
 
 	def pProcess = true
@@ -2567,7 +2564,7 @@ def processTts() {
         def String pContCmdsR = (String) null
         def pTryAgain = false
         def pPIN = false
-        	if (debug) log.debug "Message received from Lambda with: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
+        	if (debug) log.debug "TTS DATA: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
         def dataSet = [:] 
 		def tProcess = true
 try {
