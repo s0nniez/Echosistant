@@ -1,6 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
+ *		02/09/2017		Version:4.0 R.4.2.5		Final Release Version
  *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
  *		02/07/2017		Version:4.0 R.4.2.3		Completed 4.0 Engine Work
  *		02/05/2017		Release 4.1.2			New features: status updates, custom commands, message reminders  
@@ -47,21 +48,16 @@ preferences {
 def mainProfilePage() {	
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
         section("Audio and Text Message Settings") {
-           	href "pSend", title: "Send These Message Types"
-   				//image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"   			
-            href "pConfig", title: "Message Output Settings"
-            	//image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"             
+           	href "pSend", title: "Send These Message Types", description: pSendComplete(), state: pSendSettings()
+            href "pConfig", title: "Message Output Settings", description: pConfigComplete(), state: pConfigSettings()
         	}
         section ("Profile Actions - Execute when this Profile runs") {    
-            href "pActions", title: "Select Location and Device Actions..."//, description: pActionsComplete(), state: pActionsSettings(),
-            	//image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"   
-        }   
+            href "pActions", title: "Select Location and Device Actions...", description: pActionsComplete(), state: pActionsSettings()
+        	}   
        	section("Devices/Group Control Settings and Restrictions") {
-	    	href "pGroups", title: "Create Groups and Select Devices"
-                //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"     
-			href "pRestrict", title: "General Profile Restrictions" 
-            	//image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png" 
-		}
+	    	href "pGroups", title: "Create Groups and Select Devices", description: pGroupComplete(), state: pGroupSettings()
+			href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()
+			}
         section ("Name and/or Remove this Profile") {
  		   	label title:"              Rename Profile ", required:false, defaultValue: "New Profile"  
         }    
@@ -134,10 +130,8 @@ page name: "pActions"
         	def routines = location.helloHome?.getPhrases()*.label 
             if (routines) {routines.sort()}
             section ("Trigger these lights and/or execute these routines when the Profile runs...") {
-                href "pDeviceControl", title: "Select Devices..." //description: DevConDescr() , state: completeDevCon()
-                    //image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_devices.png"
+                href "pDeviceControl", title: "Select Devices...", description: pDevicesComplete() , state: pDevicesSettings()
                 input "pMode", "enum", title: "Choose Mode to change to...", options: location.modes.name.sort(), multiple: false, required: false 
-					//image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"
             	def actions = location.helloHome?.getPhrases()*.label 
                 if (actions) {
                     actions.sort()
@@ -159,7 +153,7 @@ page name: "pDeviceControl"
                     input "sSwitches", "capability.switch", title: "Select Lights and Switches...", multiple: true, required: false, submitOnChange: true
                         if (sSwitches) {
                         	input "sSwitchCmd", "enum", title: "Command To Send",
-                        					options:["on":"Turn on","off":"Turn off","toggle":"Toggle"], multiple: false, required: false, submitOnChange:true
+                        		options:["on":"Turn on","off":"Turn off","toggle":"Toggle"], multiple: false, required: false, submitOnChange:true
                         	input "delaySwitches", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true
                         	if (delaySwitches) {
                         		input "sSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
@@ -1216,3 +1210,63 @@ def fillColorSettings() {
 		[ name: "Yellow Green",				rgb: "#9ACD32",		h: 80,		s: 61,		l: 50,	],
 	]
 }
+/************************************************************************************************************
+   Page status and descriptions 
+************************************************************************************************************/       
+def pSendSettings() {def result = ""
+    if (synthDevice || sonosDevice || sendContactText || sendText || push) {
+    	result = "complete"}
+        result}
+def pSendComplete() {def text = "Tap here to Configure" 
+    if (synthDevice || sonosDevice || sendContactText || sendText || push) {
+    	text = "Configured"}
+        else text = "Tap here to Configure"
+    	text}
+def pConfigSettings() {def result = ""
+    if (pAlexaCustResp || pAlexaRepeat || pContCmdsProfile || pRunMsg || pPreMsg || pDisableAlexaProfile || pDisableALLProfile || pRunTextMsg || pPreTextMsg) {
+    	result = "complete"}
+        result}
+def pConfigComplete() {def text = "Tap here to Configure" 
+    if (pAlexaCustResp || pAlexaRepeat || pContCmdsProfile || pRunMsg || pPreMsg || pDisableAlexaProfile || pDisableALLProfile || pRunTextMsg || pPreTextMsg) {
+    	text = "Configured"}
+    	else text = "Tap here to Configure"
+		text}
+def pDevicesSettings() {def result = ""
+    if (sSwitches || sDimmers || sHues || sFlash) {
+    	result = "complete"}
+    	result}
+def pDevicesComplete() {def text = "Tap here to Configure" 
+    if (sSwitches || sDimmers || sHues || sFlash) {
+    	text = "Configured"}
+        else text = "Tap here to Configure"
+        text}
+def pActionsSettings(){def result = ""
+	def pDevicesProc = ""
+    if (sSwitches || sDimmers || sHues || sFlash) {
+    	result = "complete"
+        pDevicesProc = "complete"}
+    	result}
+def pActionsComplete() {def text = "Configured" 
+	def pDevicesComplete = pDevicesComplete()
+    if (pDevicesProc || pMode || pRoutine) {
+    	text = "Tap here to Configure"}
+        else text = "Tap here to Configure"
+        text}        
+def pRestrictSettings(){ def result = "" 
+	if (modes || runDay || hues ||startingX || endingX) {
+    	result = "complete"}
+        result}
+def pRestrictComplete() {def text = "Tap here to configure" 
+    if (modes || runDay || hues ||startingX || endingX) {
+    	text = "Configured"}
+    	else text = "Tap here to Configure"
+        text}
+def pGroupSettings() {def result = ""
+    if (gSwitches || gFans || gHues || sVent || sMedia || sSpeaker) {
+    	result = "complete"}
+    	result}
+def pGroupComplete() {def text = "Tap here to Configure" 
+    if (gSwitches || gFans || gHues || sVent || sMedia || sSpeaker) {
+    	text = "Configured"}
+        else text = "Tap here to Configure"
+        text}        
