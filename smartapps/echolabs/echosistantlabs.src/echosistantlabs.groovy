@@ -1,7 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
- *		2/9/2017		Version:4.0 R.4.2.23		Enabled Error Trapping, fixed security handler
+ *		2/9/2017		Version:4.0 R.4.2.24		Enabled Error Trapping, fixed security handler, added Profile fan control
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
  *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
  *		2/2/2017		Version:4.0 R.4.2.17		Added Profile control
@@ -2121,6 +2121,11 @@ def controlHandler(data) {
                 else if (deviceCommand == "on" || deviceCommand == "off") {
             		child?.gSwitches."${deviceCommand}"()
 					result = "Ok, turning " + child.label + " lights " + deviceCommand  
+				}
+				else if (deviceCommand == "on" || deviceCommand == "off" || deviceCommand == "stop" || deviceCommand == "start") {
+            		deviceCommand =  deviceCommand == "stop" ? "off" : deviceCommand == "start" ? "on" :  deviceCommand
+                    child?.gFans."${deviceCommand}"()
+					result = "Ok, turning " + child.label + " fan " + deviceCommand  
 				}
 				else if (deviceCommand == "energize" || deviceCommand == "relax" || deviceCommand == "read" || deviceCommand == "concentrate") {
 					def color = deviceCommand == "read" ? "Warm White" : deviceCommand == "concentrate" ? "Daylight White" : deviceCommand == "relax" ? "Very Warm White" : deviceCommand == "energize" ? "White" : "undefined"

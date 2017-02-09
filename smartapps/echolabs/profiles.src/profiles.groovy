@@ -1,7 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
- *		02/09/2017		Version:4.0 R.4.2.5		Final Release Version
+ *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version, added fan control
  *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
  *		02/07/2017		Version:4.0 R.4.2.3		Completed 4.0 Engine Work
  *		02/05/2017		Release 4.1.2			New features: status updates, custom commands, message reminders  
@@ -67,31 +67,25 @@ page name: "pSend"
     def pSend(){
         dynamicPage(name: "pSend", title: "", uninstall: false){
              section ("Speakers", hideWhenEmpty: true){
-                input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false,
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
-                input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true,    
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
+                input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false
+                input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
                 if (sonosDevice) {
                     input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
                     input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
                 }  
             }
             section ("Text Messages" ) {
-            	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true,    
-                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+            	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
                 if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-           			input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true,      
-                        image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
+           			input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
                 if (sendText){      
                     paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122;8046663344"
                     input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
                 }
             }    
             section ("Push Messages") {
-            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png"
+            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false
+            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false
             }        
     	}                 
     }   
@@ -107,16 +101,15 @@ page name: "pConfig"
                             				" be delivered at once. Please only enable Custom Response OR Repeat Message"
                             }				
                         }
-                    input "pContCmdsProfile", "bool", title: "Allow Alexa to prompt for additional commands after a message is sent to a remote speaker", defaultValue: false, submitOnChange: true
+                    input "pContCmdsProfile", "bool", title: "Allow Alexa to prompt for additional commands after a message is sent to a remote speaker", defaultValue: false
              }
              section ("Remote Speaker Settings") {
                 	input "pRunMsg", "Text", title: "Play this predetermined message when this profile executes...", required: false
                     input "pPreMsg", "text", title: "Play this message before your spoken message...", defaultValue: none, submitOnChange: true, required: false 
              }
              section ("Sound Cancellation") {
-                    //formerly pAfeedBack // pDisableAlexa = state.pMuteAlexa
-					input "pDisableAlexaProfile", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options", defaultValue: false, submitOnChange: true
-                    input "pDisableALLProfile", "bool", title: "Turn on to Disable Audio Messages on Remote Speaker", required: false, submitOnChange: true  
+					input "pDisableAlexaProfile", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options", defaultValue: false
+                    input "pDisableALLProfile", "bool", title: "Turn on to Disable Audio Messages on Remote Speaker", required: false
              }
              section ("Text and Push Notification Output") {
                 	input "pRunTextMsg", "Text", title: "Send this predetermined text when this profile executes...", required: false
@@ -137,10 +130,8 @@ page name: "pActions"
                     actions.sort()
                     log.trace actions
             	input "pRoutine", "enum", title: "Select a Routine to execute", required: false, options: actions, multiple: false, submitOnChange: true
-                //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"
                 if (pRoutine) {
                 input "pRoutine2", "enum", title: "Select a Second Routine to execute", required: false, options: actions, multiple: false
-                //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"
             		}
             	}
             }
@@ -270,17 +261,14 @@ page name: "pRestrict"
     def pRestrict(){
         dynamicPage(name: "pRestrict", title: "", uninstall: false) {
 			section ("Mode Restrictions") {
-                input "modes", "mode", title: "Only when mode is", multiple: true, required: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                input "modes", "mode", title: "Only when mode is", multiple: true, required: false
             }        
             section ("Days - Audio only on these days"){	
                 input "days", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
-                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             }
             section ("Time - Audio only during these times"){
-                href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
             }   
 	    }
 	}
@@ -372,7 +360,9 @@ def profileEvaluate(params) {
    	def String command = (String) null 	
     def lights = tts.contains("lights")
     	if(parent.debug) log.debug "lights = ${lights}"
-    def vents = tts.contains("vents")
+    def fans = tts.contains("fans")
+    	if(parent.debug) log.debug "fans = ${fans}"
+	def vents = tts.contains("vents")
     	if(parent.debug) log.debug "vents = ${vents}"
     def tv = tts.contains("TV")
     	if(parent.debug) log.debug "tv = ${tv}"
@@ -572,6 +562,19 @@ def profileEvaluate(params) {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
             }
+            if (fans == true) {
+    			command = tts.contains("on") ? "on" : tts.contains("start") ? "on" : tts.contains("off") ? "off" : tts.contains("stop") ? "off" : "undefined"
+            	if (command != "undefined" && gFans?.size()>0) {
+                	gSwitches?."${command}"()
+                    outputTxt = "Ok, turning the fan " + command
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            	}
+                else {
+					outputTxt = "Sorry, I couldn't find any fans"
+                    pTryAgain = true
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            	}
+            }            
 			if (read == true || concentrate == true || relax == true){
 				def color = read == true ? "Warm White" : concentrate == true ? "Daylight White" : relax == true ? "Very Warm White" : "undefined"
                 if(parent.debug) log.debug "color= ${color}"
