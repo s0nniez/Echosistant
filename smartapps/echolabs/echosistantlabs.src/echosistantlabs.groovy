@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
+ *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
  *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
  *		2/2/2017		Version:4.0 R.4.2.17		Added Profile control
  *		1/31/2017		Version:4.0 R.4.2.16		Added modes and routines control
@@ -80,17 +81,17 @@ page name: "mainParentPage"
     def mainParentPage() {	
        dynamicPage(name: "mainParentPage", title:"", install: true, uninstall:false) {
        		section ("") {
-                href "mIntent", title: "Main Home Control"// description: mIntentD(), state: mIntentS()
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png"    
-				href "mProfiles", title: "Configure Profiles"// description: mRoomsD(), state: mRoomsS()
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_msg.png"
-				href "mSettings", title: "General Settings" // description: mSettingsD(), state: mSettingsS()
-                	//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
-				href "mSupport", title: "Install and Support"// description: mSupportD(), state: mSupportS()
-					//,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"                               
+                href "mIntent", title: "Main Home Control", //description: mIntentD(), state: mIntentS(),
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"    
+				href "mProfiles", title: "Configure Profiles", //description: mRoomsD(), state: mRoomsS(),
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_msg.png"
+				href "mSettings", title: "General Settings", //description: mSettingsD(), state: mSettingsS(),
+                	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
+				href "mSupport", title: "Install and Support", //description: mSupportD(), state: mSupportS(),
+					image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_About.png"                               
                     if (activateDashboard) {
-                        href "mDashboard", title: "Dashboard"// description: mDashboardD(), state: mDashboardS()
-                            //image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
+                        href "mDashboard", title: "Dashboard", //description: mDashboardD(), state: mDashboardS(),
+                            image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Dash.png"
                     }
                         href "mBonus", title: "The Current Mode is: ${location.currentMode}" + "\n"  +
                         "Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}", description: none
@@ -157,8 +158,7 @@ page name: "mIntent"
                     section ("General Control") {            
                         input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
                         input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
-                        input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false
-						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                    
+                        input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false						
                     }
                     section ("Fan Control") {            
                         input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
@@ -170,6 +170,23 @@ page name: "mIntent"
                         input "cLowBattery", "number", title: "Alexa Provides Low Battery Feddback when the Bettery Level falls below (default is 25%)", defaultValue: 25, required: false
                         input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feddback when No Activity was Detected for (default is 24 hours) ", defaultValue: 24, required: false
                      }
+                    section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {            
+						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
+                        input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
+                        input "cFilterSonosDevice", "capability.musicPlayer", title: "Send Audio Notification when due, to this Sonos Type Device(s)", required: false, multiple: true   
+                        if (cFilterSonosDevice) {
+                            input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+                            input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
+                        }
+						if (location.contactBookEnabled){
+                        	input "recipients", "contact", title: "Send Text Notification when due, to this recipient(s) ", multiple: true, required: false
+           				}
+                        else {      
+                            input name: "sms", title: "Send Text Notification when due, to this phone(s) ", type: "phone", required: false
+                        		paragraph "You may enter multiple phone numbers separated by semicolon (E.G. 8045551122;8046663344)"
+                            input "push", "bool", title: "Send Push Notification too?", required: false, defaultValue: false
+                        }
+                     }                     
                 }
         }
         page name: "mSecurity"    
@@ -196,7 +213,7 @@ page name: "mIntent"
                        // ,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
                     } 
                         	
-                section ("Smart Home Monitor Status Change Feedback", hideWhenEmpty: true) { //hideable: true, hidden: true
+                section ("Smart Home Monitor Status Change Feedback", hideWhenEmpty: true){
                     input "fSecFeed", "bool", title: "Activate SHM status change announcements.", default: false, submitOnChange: true
                     if (fSecFeed) {    
                         input "shmSynthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false
@@ -204,10 +221,10 @@ page name: "mIntent"
                         input "shmSonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
                         //,image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Media.png"
                         }
-                    if (fSecFeed) {
-                        input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
-                        input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
-                        }
+                        if (shmSonosDevice) {
+                            input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+                            input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
+                            }
                     }
                 }
         	}
@@ -609,7 +626,6 @@ def initialize() {
             state.savedPINdata = null
             state.pinTry = null
         //Other Settings
-			state.changedFilters
             state.scheduledHandler
             state.filterNotif
             state.lastAction = null
@@ -751,8 +767,6 @@ def processBegin(){
      }
      
     pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
-	log.warn "pContinue is ${pContinue}"
-
 	if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
       "; data sent: pContinue = '${pContinue}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
 	}
@@ -790,10 +804,13 @@ def feedbackHandler() {
     	log.debug 	"Feedback data: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}'"}
 	
-    	state.pTryAgain = false
+    state.pTryAgain = false
 	try {
-    if (fDevice == "undefined" || fQuery == "undefined" || fOperand == "undefined" || fCommand == "undefined") {
-        fOperand = fOperand == "switches" ? "lights" : fOperand
+		
+        fOperand = fOperand == "lights on" ? "lights" : fOperand == "switches on" ? "lights" : fOperand == "switches" ? "lights" : fOperand
+        fCommand = fOperand == "lights on" ? "on" : fOperand == "switches on" ? "on" : fCommand
+    
+    if (fDevice == "undefined" && fQuery == "undefined" && fOperand == "undefined" && fCommand == "undefined"  && fProfile == "undefined") {
         if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about"  ) {
             def dMatch = deviceMatchHandler(fDevice)
             if (dMatch?.deviceMatch == null) { 				
@@ -830,25 +847,38 @@ def feedbackHandler() {
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR": state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
                 else {
-                    def rSearch = deviceMatchHandler(fDevice)
-                    if (debug) log.debug "Getting device details"
-                        if (rSearch?.deviceMatch == null) { 
-                            outputTxt = "Sorry I couldn't find any details about " + fDevice
-                            state.pTryAgain = true
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    if (fDevice != "undefined") {
+                        def rSearch = deviceMatchHandler(fDevice)
+                            if (rSearch?.deviceMatch == null) { 
+                                outputTxt = "Sorry I couldn't find any details about " + fDevice
+                                state.pTryAgain = true
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                            }
+                            else {
+                                deviceM = rSearch?.deviceMatch
+                                outputTxt = deviceM + " has been " + rSearch?.currState + " since " + rSearch?.tText
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                            }                  
+                        if (rSearch.deviceType == "cBattery") {
+                            outputTxt = "The battery level for " + deviceM + " is " + rSearch.currState + " and was last recorded " + rSearch.tText
                         }
-                        else {
-                            deviceM = rSearch?.deviceMatch
-                            outputTxt = deviceM + " has been " + rSearch?.currState + " since " + rSearch?.tText
+                        if (rSearch.deviceType == "cMedia") {
+                            outputTxt = rSearch.currState + " since " + rSearch.tText
+                        }
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                        }                  
-                    if (rSearch.deviceType == "cBattery") {
-                        outputTxt = "The battery level for " + deviceM + " is " + rSearch.currState + " and was last recorded " + rSearch.tText
                     }
-                    if (rSearch.deviceType == "cMedia") {
-                        outputTxt = rSearch.currState + " since " + rSearch.tText
-                    }
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+					if (fProfile != "undefined") {
+                        def rSearch = profileMatchHandler(fProfile)
+                            if (rSearch == null) { 
+                                outputTxt = "Sorry I couldn't find any details about " + fProfile
+                                state.pTryAgain = true
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                            }
+                            else {
+                                outputTxt = "There " + rSearch
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                            }                                          
+                	}
                 }
         }
         else {
@@ -1214,20 +1244,28 @@ def feedbackHandler() {
                 }
             }
             if (fQuery.contains ("when")) {
-                def deviceData = deviceMatchHandler(fDevice)
-                deviceM  = deviceData.deviceMatch  
-                outputTxt = deviceM + " was last " + fOperand + " " + deviceData.tText
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+            	fCommand = fCommand == "changed" ? "change" : fCommand
+            	if (fCommand == "change" && state.filterNotif !=null ) {
+                	outputTxt = state.filterNotif
+                	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                }
+                else {
+                	def deviceData = deviceMatchHandler(fDevice)
+                	deviceM  = deviceData.deviceMatch  
+                	outputTxt = deviceM + " was last " + fOperand + " " + deviceData.tText
+                	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+            	}
             }
         }
-	}
-        outputTxt = "Sorry, I didn't get that, "
+
+		outputTxt = "Sorry, I didn't get that, "
         state.pTryAgain = true
         state.pContCmdsR = "clear"
         state.lastAction = null
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 
-    } catch (Throwable t) {
+    } 
+    }catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
@@ -1282,14 +1320,6 @@ def controlDevices() {
         		ctUnit = getTxt.unit
         	}
         }   
-        if (ctUnit == "flash" || ctUnit == "text" || ctUnit == "audio") {
-			if (state.scheduledHandler == "filters" && state.pContCmdsR == "filters") {
-            	state.filterNotif = ctUnit
-                def getTxt = getUnitText(ctUnit, ctNum)  
-                outputTxt = "Ok, when you need to change your filters, I will " + getTxt.text
-         		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]               
-            }
-        }
         if (ctNum > 0 && ctDevice != "undefined" && ctCommand == "undefined") {
             ctCommand = "set"
         }
@@ -1934,16 +1964,18 @@ def controlHandler(data) {
 	}
     else if (deviceType == "cDoor" || deviceType == "cRelay" ) {
     	def cmd = deviceCommand
+        log.warn "pinTry = ${state.pinTry}"
         if (delayD == true || state.pinTry != null || state.pContCmdsR == "door" ) {  
             def deviceR = cRelay.find {r -> r.label.toLowerCase() == deviceD.toLowerCase()}
 			deviceD = cDoor.find {d -> d.label.toLowerCase() == deviceD.toLowerCase()}   
             if (deviceR) {deviceD = deviceR}
+            
         }
         if (deviceType == "cRelay") {
 		     cmd = "on"
         }
         state.pinTry = null
-   		deviceD."${cmd}"()
+        deviceD."${cmd}"()
         state.pContCmdsR = null //"reverse"
         if (deviceCommand == "open") {result = "Ok, opening the " + deviceD}
         if (deviceCommand == "close") {result = "Ok, closing the  " + deviceD}                   
@@ -2786,6 +2818,64 @@ private deviceMatchHandler(fDevice) {
      	}
 }
 /******************************************************************************
+	 FEEDBACK SUPPORT - PROFILE MATCH											
+******************************************************************************/
+private profileMatchHandler(fProfile) {
+
+    def String deviceType = (String) null
+    def String outputTxt = (String) null
+	 def String switchesOn = (String) null
+    def currState
+    def stateDate
+    def stateTime
+	def deviceMatch
+
+	state.pTryAgain = false
+		
+	childApps.each {child ->
+		if (child.label.toLowerCase() == fProfile.toLowerCase()) { 
+			if (debug) log.debug "Found a profile, generating feedback data: '${fProfile}'"
+			if (child?.gSwitches){
+				def devList = []
+				def fCommand = "on"
+				if (child?.gSwitches.latestValue("switch").contains(fCommand)) {
+					child?.gSwitches.each { deviceName ->
+						if (deviceName.latestValue("switch")=="${fCommand}") {
+							String device  = (String) deviceName
+							devList += device
+						}
+					}
+				}
+			} 
+			if (devList != null) {
+				if (devList.size() == 1) {
+					switchesOn = "is one switch on"                          			
+				}
+				else {
+					switchesOn = "are " + devList.size() + " switches on"
+				}
+			}
+			else switchesOn = "are no switches on"
+/*            
+            if (child?.sMedia){
+                deviceType = "cMedia"
+                currState = child?.sMedia.currentState("currentActivity").value 
+                currState = currState == "--" ? " all activities are off " : " The " + currState + " activity has been on"
+                stateDate = child?.sMedia.currentState("currentActivity").date
+                stateTime = child?.sMedia.currentState("currentActivity").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+            }                
+*/        
+        
+        }        
+    }
+	outputTxt  =  switchesOn //+ " and the Harmony Hub is " +  currState + " since " + Text
+   	return outputTxt  
+}
+
+
+
+/******************************************************************************
 	 FEEDBACK SUPPORT - DEVICE CAPABILITIES											
 ******************************************************************************/
 private getCaps(capDevice,capType, capMainCap, capState) {
@@ -3016,7 +3106,7 @@ private pinHandler(pin, command, num, unit) {
     if (pin == cPIN || command == cPIN || pinNum == cPIN || unit == cPIN ) {
 		def data = state.savedPINdata != null ? state.savedPINdata : lastAction
         state.pTryAgain = false
-        state.pinTry = null
+        //state.pinTry = null /// 2/8/2017
             if (data == "disablelocks" || data == "disablethermostats" || data == "disabledoors" || data == "disableswitches" || data == "disablesecurity" || data == "disablemodes"){ 
                 if 		(data == "disablelocks")		{state.usePIN_L = false}
                 else if (data == "disablethermostats") 	{state.usePIN_T = false}
@@ -3024,6 +3114,7 @@ private pinHandler(pin, command, num, unit) {
                 else if (data == "disableswitches") 	{state.usePIN_S = false} 
                 else if (data == "disablesecurity") 	{state.usePIN_SHM = false}
                 else if (data == "disablemodes") 		{state.usePIN_Mode = false} 
+                state.pinTry = null /// 2/8/2017
                 result = "Ok, pin number for " + data.replace("disable", "") + " has been disabled.  To activate it again, just say enable the PIN number for " + data.replace("disable", "")   
             	return result
             }
@@ -3032,19 +3123,22 @@ private pinHandler(pin, command, num, unit) {
         		def pUnit = data.unit           
                 if(state.pContCmdsR == "security"){
                     result = securityHandler(data)
+                    state.pinTry = null /// 2/8/2017
                     return result
                 }
                 if(state.pContCmdsR == "mode"){
                 	def cmd = state.savedPINdata.command
                 	location.setMode(cmd)
                 	result = "I changed your location mode to " + cmd
-                	return result
+                	state.pinTry = null /// 2/8/2017
+                    return result
                 }
                 if(state.pContCmdsR == "routine"){ 
                 	def cmd = state.savedPINdata.command
                 	location.helloHome?.execute(cmd)
                 	result = "I changed your location mode to " + cmd
-                	return result
+                	state.pinTry = null /// 2/8/2017
+                    return result
                 }
                 else {
                 	if (state.pContCmdsR == "cMiscDev" && pNum > 0 && pUnit == "minutes") {
@@ -3056,15 +3150,17 @@ private pinHandler(pin, command, num, unit) {
 						else if (data.command == "increase") {result = "Ok, increasing the " + data.device + " level in " + numText}                        
                     	state.pContCmdsR = "undefined"
                         state.savedPINdata = null
+                        state.pinTry = null /// 2/8/2017
                         return result
                 	}
                 	else {
                 	result = controlHandler(data)
+                    state.pinTry = null /// 2/8/2017
                     return result
                 	}
               	}
             }
-            state.pinTry = null
+            //state.pinTry = null /// 2/8/2017
             state.savedPINdata = null
             state.pContCmdsR = "undefined"
             return result
@@ -3236,13 +3332,19 @@ private getCustomCmd(command, unit, group, num) {
                 	if (state.scheduledHandler == "filters") {
                     	unschedule(filtersHandler)
                         state.scheduledHandler = null
-		                result = "Ok, canceling reminder"
+		                result = "Ok, canceling reminder to replace HVAC filters"
                     }
                     else {
+                    state.pTryAgain = true
                     result = "Sorry, I couldn't find any scheduled reminders"// for " + state.scheduledHandler
                     }
                     return result
             	}
+				else {
+                	state.pTryAgain = true
+					result = "Sorry, I couldn't find any scheduled reminders"// for " + state.scheduledHandler
+				}
+				return result
             }
             else {
                 if (unit.contains ("timer") || unit.contains ("delay")) {
@@ -3337,28 +3439,25 @@ private getCustomCmd(command, unit, group, num) {
 private getTimeVariable(date, type) {
 	def currTime
     def currDate
+    def currDateShort
     def String tText = (String) null    
     def String duration = (String) null
-    def today = new Date(now()).format("EEEE, MMMM dd, yyyy", location.timeZone)
-    def yesterday = new Date(today -0.1).format("EEEE, MMMM dd, yyyy", location.timeZone)
+    def today = new Date(now()).format("EEEE, MMMM d, yyyy", location.timeZone) // format("EEEE, MMMM d, yyyy") REMOVED YEAR 2/8/2017
+    def yesterday = new Date(today -0.1).format("EEEE, MMMM d, yyyy", location.timeZone)
 	def time = new Date(now()).format("h:mm aa", location.timeZone)
     
     currTime = new Date(date + location.timeZone.rawOffset).format("h:mm aa")                       
 	currDate = new Date(date + location.timeZone.rawOffset).format("EEEE, MMMM d, yyyy")
-	currDate = today == currDate ? "today" : yesterday == currDate ? "yesterday" : currDate
+	currDateShort = new Date(date + location.timeZone.rawOffset).format("EEEE, MMMM d")
+    currDate = today == currDate ? "today" : yesterday == currDate ? "yesterday" : currDateShort
 		def endTime = now() + location.timeZone.rawOffset
     	def startTime = new Date(date + location.timeZone.rawOffset)
     	startTime = startTime.getTime()
     int hours = (int)((endTime - startTime) / (1000 * 60 * 60) )
     int minutes = (int)((endTime - startTime) / ( 60 * 1000))
     duration = minutes < 60 ? minutes + " minutes" : hours + " hours"
-
-    //if (type == "cSwitch" || type == "cContact" || type == "cMotion") {
     tText = currDate + " at " + currTime
-    log.debug 	"Time Variables: type = ${type}, (currDate) = ${currDate}, (currTime) = ${currTime}, (tText) = ${tText},"+
-    			" (hours) = ${hours}, (minutes) = ${minutes}, (duration) = ${duration}"
   	return ["currTime":currTime, "currDate":currDate, "tText":tText, "duration": duration] 
-	//}
  
 }
 /***********************************************************************************************************************
@@ -3370,30 +3469,65 @@ private scheduleHandler(unit) {
     def cHour= rowDate.hours
 	def cMin = rowDate.minutes   
     def result
-    if (debug) log.debug "Received filter replacement request, scheduler data MIN = ${cMin} , HOUR = ${cHour}, DAY = ${cDay}   "
+    //if (debug) log.debug "Received filter replacement request, scheduler data MIN = ${cMin} , HOUR = ${cHour}, DAY = ${cDay}   "
     if (unit == "filters") {
     	if (debug) log.debug "Received filter replacement request"
         state.scheduledHandler = "filters"
         def xDays = settings.cFilterReplacement
-        runOnce(new Date() + xDays , "filtersHandler")
-        result = 	"Ok, I have scheduled a reminder to replace the filters in " + settings.cFilterReplacement + " days."+
-        			" How would you like me to notify you when it's time to change your filters?"+
-        			" You could say, text, audio or flash."
-        if (debug) log.debug result
-        state.pContCmdsR = "filters"
-    	return result
+        def tDays = new Date(now() + location.timeZone.rawOffset) + xDays 
+        def schTime = tDays.format("h:mm aa")                       
+		def schDate = tDays.format("EEEE, MMMM d")
+       		runOnce(new Date() + xDays , "filtersHandler")
+        	result = "Ok, scheduled reminder to replace the filters on " + schDate + " at " + schTime
+        	state.filterNotif = "The filters need to be changed on  ${schDate}"
+    		return result
     }
 }
 /***********************************************************************************************************************
     MISC. - FILTERS REMINDER
 ***********************************************************************************************************************/
 private filtersHandler() {
-def text = "It's time to replace your HVAC filters" 
+	
+    def tts = "It's time to replace your HVAC filters"
+	if (synthDevice) {
+    	synthDevice?.speak(tts) 
+    }
+    if (sonosDevice){
+    	state.sound = textToSpeech(tts instanceof List ? tts[0] : tts)
+        def currVolLevel = sonosDevice.latestValue("level")
+        def newVolLevel = volume //-(volume*10/100)
+        sonosDevice.setLevel(newVolLevel)
+        sonosDevice.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
+    }
+	if(recipients?.size()>0 || sms?.size()>0){        
+    	sendtxt(tts)
+    }
 
-//NEED A SWITCH FOR THIS
-if (state.filterNotif == "flash") {text = "flashing lights"}
-if(state.filterNotif == "text")  {text = "sending text"}
-if(state.filterNotif == "audio")  {text = "pushed audio message"}
+}
+/***********************************************************************************************************************
+    SMS HANDLER
+***********************************************************************************************************************/
+private void sendtxt(message) {
+
+    if (recipients?.size()>0) { 
+            sendNotificationToContacts(message, recipients)
+    } 
+    else {
+        if (push) { 
+                sendPush message
+        }
+        if (sms) {
+            processSms(sms, message)
+        }
+    }
+}
+private void processSms(number, message) {
+    if (sms) {
+        def phones = sms.split("\\;")
+        for (phone in phones) {
+            sendSms(phone, message)
+        }
+    }
 }
 /************************************************************************************************************
    Custom Color Filter
@@ -3566,6 +3700,73 @@ private getLastMessageMain() {
     return  outputTxt 
   	if (debug) log.debug "Sending last message to Lambda ${outputTxt} "
 }
+/***********************************************************************************************************************
+ 		WEATHER FEATURES
+ ***********************************************************************************************************************/
+
+def private mGetWeather(){
+	state.pTryAgain = false
+    def result ="Today's weather is not available at the moment, please try again later"
+	try {
+    	def weather = getWeatherFeature("forecast", settings.wZipCode)
+        
+        if(settings.wImperial){
+			result = "Today's forecast is " + weather.forecast.txt_forecast.forecastday[0].fcttext  + " Tonight it will be " + weather.forecast.txt_forecast.forecastday[1].fcttext 
+        }
+        else {
+    		result = "Today's forecast is " + weather.forecast.txt_forecast.forecastday[0].fcttext_metric + " Tonight it will be " + weather.forecast.txt_forecast.forecastday[1].fcttext_metric
+	   	}
+		
+        return result
+	}
+	catch (Throwable t) {
+		log.error t
+        state.pTryAgain = true
+        return result
+	}
+}
+def private mGetWeatherTemps(){
+	state.pTryAgain = false
+    def result ="Today's temperatures not available at the moment, please try again later"
+        try {
+            def weather = getWeatherFeature("forecast", settings.wZipCode)
+            def tHigh = weather.forecast.simpleforecast.forecastday[0].high.fahrenheit.toInteger()
+            def tLow = weather.forecast.simpleforecast.forecastday[0].low.fahrenheit.toInteger()
+            if(settings.wImperial){
+                result = "Today's low temperature is: " + tLow  + ", with a high of " + tHigh
+                return result
+            }
+            else {
+                def tHighC = weather.forecast.simpleforecast.forecastday[0].high.celsius.toInteger()
+                def tLowC = weather.forecast.simpleforecast.forecastday[0].low.celsius.toInteger()
+                result = "Today's low temperature is: " + tLowC  + ", with a high of " + tHighC
+                return result
+        	}
+        }
+        catch (Throwable t) {
+            log.error t
+            state.pTryAgain = true
+            return result
+        }
+	}
+def private mGetWeatherAlerts(){
+	def result ="There are no weather alerts for your area"
+        try {
+            def weather = getWeatherFeature("alerts", settings.wZipCode)
+            def alert = weather.alerts.description.toString()
+            def expire = weather.alerts.expires
+            def DT = weather.alerts.expires_epoch
+            if(alert){
+                result = alert  + " is in effect for your area, that expires at " + expire
+            }
+            else { result }
+        
+        }
+        catch (Throwable t) {
+            log.error t
+            return result
+        }
+}
 /*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 X 																											X
 X                       					UI FUNCTIONS													X
@@ -3660,71 +3861,11 @@ def DeviceDetails = []
         def dUniqueListString = dUniqueList.join("")
         return dUniqueListString
 }
+/************************************************************************************************************
+   Page status and descriptions 
+************************************************************************************************************/       
+//	Naming Conventions: 
+// 	description = pageName + D (E.G: description: mIntentD())
+// 	state = pageName + S (E.G: state: mIntentS(),
+/************************************************************************************************************/
 
-/***********************************************************************************************************************
- 		WEATHER FEATURES
- ***********************************************************************************************************************/
-
-def private mGetWeather(){
-	state.pTryAgain = false
-    def result ="Today's weather is not available at the moment, please try again later"
-	try {
-    	def weather = getWeatherFeature("forecast", settings.wZipCode)
-        
-        if(settings.wImperial){
-			result = "Today's forecast is " + weather.forecast.txt_forecast.forecastday[0].fcttext  + " Tonight it will be " + weather.forecast.txt_forecast.forecastday[1].fcttext 
-        }
-        else {
-    		result = "Today's forecast is " + weather.forecast.txt_forecast.forecastday[0].fcttext_metric + " Tonight it will be " + weather.forecast.txt_forecast.forecastday[1].fcttext_metric
-	   	}
-		
-        return result
-	}
-	catch (Throwable t) {
-		log.error t
-        state.pTryAgain = true
-        return result
-	}
-}
-def private mGetWeatherTemps(){
-	state.pTryAgain = false
-    def result ="Today's temperatures not available at the moment, please try again later"
-        try {
-            def weather = getWeatherFeature("forecast", settings.wZipCode)
-            def tHigh = weather.forecast.simpleforecast.forecastday[0].high.fahrenheit.toInteger()
-            def tLow = weather.forecast.simpleforecast.forecastday[0].low.fahrenheit.toInteger()
-            if(settings.wImperial){
-                result = "Today's low temperature is: " + tLow  + ", with a high of " + tHigh
-                return result
-            }
-            else {
-                def tHighC = weather.forecast.simpleforecast.forecastday[0].high.celsius.toInteger()
-                def tLowC = weather.forecast.simpleforecast.forecastday[0].low.celsius.toInteger()
-                result = "Today's low temperature is: " + tLowC  + ", with a high of " + tHighC
-                return result
-        	}
-        }
-        catch (Throwable t) {
-            log.error t
-            state.pTryAgain = true
-            return result
-        }
-	}
-def private mGetWeatherAlerts(){
-	def result ="There are no weather alerts for your area"
-        try {
-            def weather = getWeatherFeature("alerts", settings.wZipCode)
-            def alert = weather.alerts.description.toString()
-            def expire = weather.alerts.expires
-            def DT = weather.alerts.expires_epoch
-            if(alert){
-                result = alert  + " is in effect for your area, that expires at " + expire
-            }
-            else { result }
-        
-        }
-        catch (Throwable t) {
-            log.error t
-            return result
-        }
-}
