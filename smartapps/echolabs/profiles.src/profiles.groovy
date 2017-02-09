@@ -1,6 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
+ *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
  *		02/07/2017		Version:4.0 R.4.2.3		Completed 4.0 Engine Work
  *		02/05/2017		Release 4.1.2			New features: status updates, custom commands, message reminders  
  *		12/31/2016		Release 4.1.1			Split Child app from the Parent 
@@ -251,7 +252,12 @@ page name: "pDeviceControl"
                             paragraph "You can now control this group by speaking commands to Alexa:  \n" +
                             " E.G: Alexa tell Main Skill, to turn on/off the lights in the Profile Name"
                         }
-                        input "gHues", "capability.colorControl", title: "Group Colored Lights...", multiple: true, required: false, submitOnChange: true
+						input "gFans", "capability.switch", title: "Group Ceiling Fans...", multiple: true, required: false, submitOnChange: true
+                        if (gFans) {
+                            paragraph "You can now control this group by speaking commands to Alexa:  \n" +
+                            " E.G: Alexa tell Main Skill, to turn on/off the fan in the Profile Name"
+                        }
+						input "gHues", "capability.colorControl", title: "Group Colored Lights...", multiple: true, required: false, submitOnChange: true
                         if (gHues) {
                             paragraph "You can now control this group by speaking commands to Alexa:  \n" +
                             " E.G: Alexa tell Main Skill, to set the lights to red in the Profile Name"
@@ -724,10 +730,6 @@ if (parent.debug) log.debug "sendNotificationEvent sent to CoRE was '${app.label
             if (synthDevice) {
                 synthDevice?.speak(tts) 
                 if (parent.debug) log.debug "Sending message to Synthesis Devices"
-            }
-            if (mediaDevice) {
-                mediaDevice?.speak(tts) 
-                if (parent.debug) log.debug "Sending message to Media Devices"
             }
             if (tts) {
                 state.sound = textToSpeech(tts instanceof List ? tts[0] : tts)
