@@ -1,13 +1,18 @@
 /**
- *  EchoSistant - Security Suite Module
+ *  9 Feb 2017 		-	EchoSistant - Security Suite Module Version 1.0
+ *						This version of the User Lock Manager Code is included here as an
+ *						Add-on module to EchoSistant with the permission of Erik Thayer.
+ *						Modifications to the original code is made by Jason Headley with
+ *						the permission of Erik Thayer.  
+ *						Erik Thayer does NOT support this version of this code.
  *	24 Jan 2017		- 	Initial release of Security Suite
  
  *
 The MIT License (MIT)
 
-Copyright (c) 2015 Erik Thayer
+Copyright (c) 2017 Jason Headley - EchoSistant Security Module Code
+Copyright (c) 2015 Erik Thayer - Original Code
 The following code is modified from the original as produced by Erik Thayer.
-modified code Copyright (c) 2017 Jason Headley
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +39,9 @@ definition(
 	name			: "SecuritySuite",
     namespace		: "EchoLabs",
     author			: "JH/BD",
-	description		: "EchoSistant Security Add-on",
+	description		: "EchoSistant Add-on",
 	category		: "My Apps",
-    parent			: "EchoLabs:EchoSistantLabs",
+    parent			: "Clone:Clone",
 	iconUrl			: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png",
 	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
