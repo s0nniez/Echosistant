@@ -1,7 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
- *		2/9/2017		Version:4.0 R.4.2.22		Enabled Error Trapping
+ *		2/9/2017		Version:4.0 R.4.2.23		Enabled Error Trapping, fixed security handler
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
  *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
  *		2/2/2017		Version:4.0 R.4.2.17		Added Profile control
@@ -2228,7 +2228,7 @@ def controlSecurity() {
         	num = num as int
         
         if (debug) log.debug "SYSTEM CONTROL DATA: (sCommand)= ${command},(sNum) = '${num}', (sPIN) = '${sPIN}'," +
-        					 " (sType) = '${type}', (sControl) = '${control}',(pintentName) = '${pintentName}'"
+        					 " (type) = '${type}', (sControl) = '${control}',(pintentName) = '${pintentName}'"
 	def sProcess = true
     state.pTryAgain = false
 try {	
@@ -2238,76 +2238,78 @@ try {
     	def routines = location.helloHome?.getPhrases()*.label
     	def currentSHM = location.currentState("alarmSystemStatus")?.value
     	// HANDLING SHM
-        if (control == "status") {      
-                currentSHM = currentSHM == "off" ? "disabled" : currentSHM == "away" ? "Armed Away" : currentSHM == "stay" ? "Armed Stay" : "unknown"
-                outputTxt = "Your Smart Home Monitor Status is " +  currentSHM
-                state.pTryAgain = false
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        }
-        if (command == "cancel" || command == "stop" || command == "disable" || command == "deactivate" || command == "off" || command == "disarm") {
-            secCommand = currentSHM == "off" ? null : "off"
-                if (secCommand == "off"){
-                delay = false
-                data = [command: secCommand, delay: delay]
-                if(cPIN && state.usePIN_SHM == true){
-                    state.lastAction = data
-                    state.pContCmdsR = "security"
-                    //RUN PIN VALIDATION PROCESS
-                    def pin = "undefined"
-                    command = "validation"
-                    def unit = "security"
-                    outputTxt = pinHandler(pin, command, num, unit)
-                    pPIN = true
-                    if (state.pinTry == 3) {pPIN = false}
-                    log.warn "try# ='${state.pinTry}'"
+        if (type != "mode") { 
+            if (control == "status") {      
+                    currentSHM = currentSHM == "off" ? "disabled" : currentSHM == "away" ? "Armed Away" : currentSHM == "stay" ? "Armed Stay" : "unknown"
+                    outputTxt = "Your Smart Home Monitor Status is " +  currentSHM
+                    state.pTryAgain = false
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                }
-                else {               
-                    outputTxt = securityHandler(data)
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                }
-        	}
-            else {
-            outputTxt = "The Smart Home Monitor is already set to " + command
-            state.pContCmdsR = "undefined"
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        	}
-        }
-        if (command == "start" || command == "enable" || command == "activate" || command == "schedule" || command == "arm" || command == "on") {
-            if(control == "stay" || control == "away") {  
-                secCommand = control == "stay" ? "stay" : control == "away" ? "away" : control
-                def process = true
             }
-            else {
-                outputTxt = "Are you staying home or leaving?"
-                state.pContCmdsR = "stayORleave"
-                def process = false
-                state.lastAction = num
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-            }     
-		}	
-		if(process == true || control.contains("staying") || control == "leaving" || control == "stay" || control == "away") {
-			secCommand = control.contains("staying") ? "stay" : control == "leaving" ? "away" : control == "stay" ? "stay" : control == "away" ? "away" : secCommand
-			if (state.pContCmdsR == "stayORleave") {num = state.lastAction}           
-            if (num > 0) {               
-                def numText = getUnitText ("minute", num)
-                delay = true
-                data = [command: secCommand, delay: delay]
-                runIn(num*60, securityHandler, [data: data])
-                outputTxt = "Ok, changing the Smart Home Monitor to armed stay in " + numText.text
+            if (command == "cancel" || command == "stop" || command == "disable" || command == "deactivate" || command == "off" || command == "disarm") {
+                secCommand = currentSHM == "off" ? null : "off"
+                    if (secCommand == "off"){
+                    delay = false
+                    data = [command: secCommand, delay: delay]
+                    if(cPIN && state.usePIN_SHM == true){
+                        state.lastAction = data
+                        state.pContCmdsR = "security"
+                        //RUN PIN VALIDATION PROCESS
+                        def pin = "undefined"
+                        command = "validation"
+                        def unit = "security"
+                        outputTxt = pinHandler(pin, command, num, unit)
+                        pPIN = true
+                        if (state.pinTry == 3) {pPIN = false}
+                        log.warn "try# ='${state.pinTry}'"
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    }
+                    else {               
+                        outputTxt = securityHandler(data)
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    }
+                }
+                else {
+                outputTxt = "The Smart Home Monitor is already set to " + command
                 state.pContCmdsR = "undefined"
-                state.pTryAgain = false
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-			}            
-            else {
-            	delay = false
-                data = [command: secCommand, delay: delay]			
-                outputTxt = securityHandler(data)
-                state.pContCmdsR = "undefined"
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN] 
-           }
+                }
+            }
+            if (command == "start" || command == "enable" || command == "activate" || command == "schedule" || command == "arm" || command == "on") {
+                if(control == "stay" || control == "away") {  
+                    secCommand = control == "stay" ? "stay" : control == "away" ? "away" : control
+                    def process = true
+                }
+                else {
+                    outputTxt = "Are you staying home or leaving?"
+                    state.pContCmdsR = "stayORleave"
+                    def process = false
+                    state.lastAction = num
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                }     
+            }	
+            if(process == true || control.contains("staying") || control == "leaving" || control == "stay" || control == "away") {
+                secCommand = control.contains("staying") ? "stay" : control == "leaving" ? "away" : control == "stay" ? "stay" : control == "away" ? "away" : secCommand
+                if (state.pContCmdsR == "stayORleave") {num = state.lastAction}           
+                if (num > 0) {               
+                    def numText = getUnitText ("minute", num)
+                    delay = true
+                    data = [command: secCommand, delay: delay]
+                    runIn(num*60, securityHandler, [data: data])
+                    outputTxt = "Ok, changing the Smart Home Monitor to armed stay in " + numText.text
+                    state.pContCmdsR = "undefined"
+                    state.pTryAgain = false
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                }            
+                else {
+                    delay = false
+                    data = [command: secCommand, delay: delay]			
+                    outputTxt = securityHandler(data)
+                    state.pContCmdsR = "undefined"
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN] 
+               }
+            }
         }
-        if (type == "mode") {
+        else {
         	if(currMode != control){
                 modes?.find { m -> 
 					def mMatch = m.replaceAll("[^a-zA-Z0-9 ]", "")
