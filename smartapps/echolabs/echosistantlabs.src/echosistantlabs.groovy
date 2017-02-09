@@ -1,7 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
- *		2/9/2017		Version:4.0 R.4.2.24		Enabled Error Trapping, fixed security handler, added Profile fan control
+ *		2/9/2017		Version:4.0 R.4.2.25		More Error Trapping, fixed security handler, added Profile fan control
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
  *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
  *		2/2/2017		Version:4.0 R.4.2.17		Added Profile control
@@ -630,8 +630,7 @@ def childUninstalled() {
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
-def processBegin(){
-    if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^"  
+def processBegin(){ 
     def versionTxt  = params.versionTxt 		
     def versionDate = params.versionDate
     def releaseTxt = params.releaseTxt
@@ -641,17 +640,20 @@ def processBegin(){
         state.lambdatextVersion = versionTxt
     def versionSTtxt = textVersion() 
     def pPendingAns = false 
-    def pContinue = false 
+    def pContinue = state.pMuteAlexa 
     def String outputTxt = (String) null 
     	state.pTryAgain = false
 	
-    try {
+    if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^" 
+    if (debug) log.debug "Launch Data: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"
+try {
     if (event == "noAction") {//event == "AMAZON.NoIntent" removed 1/20/17
     	state.pinTry = null
         state.savedPINdata = null
         state.pContCmdsR = null // added 1/20/2017
         state.pTryAgain = false
     }
+// >>> NO Intent <<<<    
     if (event == "AMAZON.NoIntent"){
     	if(state.pContCmdsR == "level" || state.pContCmdsR == "repeat"){
             if (state.lastAction != null) {
@@ -686,6 +688,7 @@ def processBegin(){
         	state.pTryAgain = false
         }
     }
+// >>> YES Intent <<<<     
     if (event == "AMAZON.YesIntent") {
         if (state.pContCmdsR == "level" || state.pContCmdsR == "repeat") {
             state.pContCmdsR = null
@@ -709,7 +712,7 @@ def processBegin(){
                     pPendingAns = "pin"
                     if (state.pinTry == 3) {pPendingAns = "undefined"}
                     log.warn "try# ='${state.pinTry}'"
-					return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+					return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             	}
                 else {
                 outputTxt = controlHandler(savedData) 
@@ -722,44 +725,49 @@ def processBegin(){
                 def savedData = state.lastAction
                 outputTxt = getMoreFeedback(savedData) 
                 pPendingAns = "feedback"
-				return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+				return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
          }
-         if( state.pContCmdsR == "bat" || state.pContCmdsR == "act"){
+         if(state.pContCmdsR == "bat" || state.pContCmdsR == "act"){
             if (state.lastAction != null) {
                 def savedData = state.lastAction
                 outputTxt = savedData
                 pPendingAns = "feedback"
                 state.pContCmdsR = null
-				return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+				return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
        }
        if(state.pContCmdsR == "caps"){
-            if (state.lastAction != null) {
+            if (state.lastAction!= null) {
                 outputTxt = state.lastAction
                 pPendingAns = "caps"
 				state.pContCmdsR = null 
 				state.lastAction = null
-                return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+                return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
         }        
      }
-     if (!event.startsWith("AMAZON") || event != "main" || event != "security" || event != "feedback" || event != "profile"){
+// >>> Handling a Profile Intent <<<<      
+     if (!event.startsWith("AMAZON") && event != "main" && event != "security" && event != "feedback" && event != "profile" && event != "noAction"){
 		childApps.each {child ->
 			if (child.label.toLowerCase() == event.toLowerCase()) { 
                 pContinue = child?.checkState()   
             }
-       }
-     }
-    //if Alexa is muted from the child, then mute the parent too
-    pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
-	if (debug){log.debug "Initial data received: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
-      "; data sent: pContinue = '${pContinue}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
+       	}
+        //if Alexa is muted from the child, then mute the parent too / MOVED HERE ON 2/9/17
+        pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
+		return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	     
+	}
+	
+    return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	
+    
+    if (debug){
+    	log.debug "Begining Process data: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
+      	"; data sent: pContinue = '${pContinue}', pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', outputTxt = '${outputTxt}' ; "+
+        "other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
 	}
     
-    //return ["outputTxt":outputTxt, "pContinue":state.pMuteAlexa, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt] //added condition to sync with child settings 2/7/17
-    return ["outputTxt":outputTxt, "pContinue":pContinue, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	
-    } catch (Throwable t) {
+} catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
@@ -788,7 +796,7 @@ def feedbackHandler() {
 	def data = [:]
     	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
     if (debug){
-    	log.debug 	"FEEDBACK DATA: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
+    	log.debug 	"FEEDBACK data: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
 	def fProcess = true
     state.pTryAgain = false
@@ -805,7 +813,7 @@ try {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}    
     else {
-    	if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about"  ) {
+    	if (fDevice != "undefined" && fQuery != "undefined" && fOperand == "undefined" && fQuery != "about" && fQuery != "get" ) {
             def dMatch = deviceMatchHandler(fDevice)
             if (dMatch?.deviceMatch == null) { 				
                 outputTxt = "Sorry, I couldn't find any details about " + fDevice
@@ -819,64 +827,74 @@ try {
                 def dMainCap = dMatch?.mainCap
                 def dCapCount = getCaps(dDevice,dType, dMainCap, dState)
                 state.pContCmdsR = "caps"
-                outputTxt = "Sorry, I couldn't quite get that, but " + fDevice +  " has " + dCapCount + " capabilities. Would you like to hear more about this device?"         
+                outputTxt = "I couldn't quite get that, but " + fDevice +  " has " + dCapCount + " capabilities. Would you like to hear more about this device?"         
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
             }
         }
-        if (fOperand == "undefined" && fQuery == "about") {
-            def deviceMatch=cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
-                if(deviceMatch)	{
-                        deviceType = "cTstat"
-                        def currentMode = deviceMatch.latestValue("thermostatMode")
-                        def currentHSP = deviceMatch.latestValue("heatingSetpoint") 
-                        def currentCSP = deviceMatch.latestValue("coolingSetpoint") 
-                        def currentTMP = deviceMatch.latestValue("temperature")
-                        int temp = currentTMP
-                        int hSP = currentHSP
-                        int cSP = currentCSP
-                        stateDate = deviceMatch.currentState("temperature").date
-                        stateTime = deviceMatch.currentState("temperature").date.time
-                        def timeText = getTimeVariable(stateTime, deviceType)            
-                        outputTxt = "The " + fDevice + " temperature is " + temp + " degrees and the current mode is " + currentMode + " , with set points of " + cSP + " for cooling and " + hSP + " for heating"
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR": state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                }
-                else {
-                    if (fDevice != "undefined") {
-                        def rSearch = deviceMatchHandler(fDevice)
-                            if (rSearch?.deviceMatch == null) { 
-                                outputTxt = "Sorry I couldn't find any details about " + fDevice
-                                state.pTryAgain = true
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                            }
-                            else {
-                                deviceM = rSearch?.deviceMatch
-                                outputTxt = deviceM + " has been " + rSearch?.currState + " since " + rSearch?.tText
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                            }                  
-                        if (rSearch.deviceType == "cBattery") {
-                            outputTxt = "The battery level for " + deviceM + " is " + rSearch.currState + " and was last recorded " + rSearch.tText
-                        }
-                        if (rSearch.deviceType == "cMedia") {
-                            outputTxt = rSearch.currState + " since " + rSearch.tText
-                        }
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+        if (fOperand == "undefined" && fQuery != "undefined" && fQuery != "who" && !fQuery.contains ("when")) {
+			//if (fQuery == "get" || fQuery == "about"){ REMOVED 2/9/17        
+                def deviceMatch=cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                    if(deviceMatch)	{
+                            deviceType = "cTstat"
+                            def currentMode = deviceMatch.latestValue("thermostatMode")
+                            def currentHSP = deviceMatch.latestValue("heatingSetpoint") 
+                            def currentCSP = deviceMatch.latestValue("coolingSetpoint") 
+                            def currentTMP = deviceMatch.latestValue("temperature")
+                            int temp = currentTMP
+                            int hSP = currentHSP
+                            int cSP = currentCSP
+                            stateDate = deviceMatch.currentState("temperature").date
+                            stateTime = deviceMatch.currentState("temperature").date.time
+                            def timeText = getTimeVariable(stateTime, deviceType)            
+                            outputTxt = "The " + fDevice + " temperature is " + temp + " degrees and the current mode is " + currentMode + " , with set points of " + cSP + " for cooling and " + hSP + " for heating"
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR": state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
-					//to do expand feedback on Profile
-                    if (fProfile != "undefined") {
-                        def rSearch = profileMatchHandler(fProfile)
-                            if (rSearch == null) { 
-                                outputTxt = "Sorry I couldn't find any details about " + fProfile
-                                state.pTryAgain = true
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    else {
+                        if (fDevice != "undefined" || fProfile != "undefined" ) {
+                             if (fDevice != "undefined"){
+                                def rSearch = deviceMatchHandler(fDevice)
+                                    if (rSearch?.deviceMatch == null) { 
+                                        outputTxt = "Sorry, I couldn't find any details about " + fDevice
+                                        state.pTryAgain = true
+                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                                    }
+                                    else {
+                                        deviceM = rSearch?.deviceMatch
+                                        outputTxt = deviceM + " has been " + rSearch?.currState + " since " + rSearch?.tText
+                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                                    }                  
+                                if (rSearch.deviceType == "cBattery") {
+                                    outputTxt = "The battery level for " + deviceM + " is " + rSearch.currState + " and was last recorded " + rSearch.tText
+                                }
+                                if (rSearch.deviceType == "cMedia") {
+                                    outputTxt = rSearch.currState + " since " + rSearch.tText
+                                }
+                                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                             }
-                            else {
-                                outputTxt = "There " + rSearch
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                            }                                          
-                	}
-                }
+                            //to do expand feedback on Profile
+                            if (fProfile != "undefined") {
+                                def rSearch = profileMatchHandler(fProfile)
+                                    if (rSearch == null) { 
+                                        outputTxt = "Sorry I couldn't find any details about " + fProfile
+                                        state.pTryAgain = true
+                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                                    }
+                                    else {
+                                        outputTxt = "There " + rSearch
+                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                                    }                                          
+                            }
+                        }
+                        else {
+                            outputTxt = "Sorry, I didn't get that, "
+                            state.pTryAgain = true
+                            state.pContCmdsR = "clear"
+                            state.lastAction = null
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                        }
+					} 
+            //}  REMOVED 2/9/17  
         }
-        // (fOperand != "undefined" || fQuery != "about")
         else {
 //>>> Temp >>>>      
             if(fOperand == "temperature") {
@@ -1264,7 +1282,9 @@ try {
                 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             	}
             }     
-			def hText = fDevice != "undefined" ? " a device named " + fDevice :  fProfile != "undefined" ? "a profile named " + fProfile : " something " 
+			
+            
+            def hText = fDevice != "undefined" ? " a device named " + fDevice :  fProfile != "undefined" ? "a profile named " + fProfile : " something " 
         	outputTxt = "Sorry, I heard that you were looking for feedback on  " + hText + " but Echosistant wasn't able to help, "
 			state.pTryAgain = true
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
@@ -1726,7 +1746,6 @@ try {
 				}
 			}
 		}
-		log.warn "ctDevice = ${ctDevice}, ctCommand = ${ctCommand}"
         def hText = ctDevice != "undefined" && ctCommand != "undefined" ? ctCommand + " the " + ctDevice :  ctDevice != "undefined" ? " control " + ctDevice : ctCommand != "undefined" ? ctCommand + " something" : "control something" 
         outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
 		state.pTryAgain = true
@@ -2385,7 +2404,6 @@ try {
             	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
            }   
     	}
-		log.warn "type = ${type}, control = ${control}"
         def hText = type != "undefined" ? "control " + type :  control != "undefined" ? "manage " + control +  " as a system control" : "manage your system controls" 
         outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
 		state.pTryAgain = true
@@ -2926,8 +2944,12 @@ private getCaps(capDevice,capType, capMainCap, capState) {
                  if (a.name != null && a.name !=checkInterval && a.name !=polling  && a.name !=refresh && attrValue != null ) {
                     if (a.name == "temperature") 		{ result = "The " + attrName + " is " + attrValue + " degrees, " }
                     if (a.name == "motion") 			{ result = result + attrName + " is " + attrValue +", " }
+                    if (a.name == "contact") 			{ result = result + attrName + " is " + attrValue +", " }                    
                     if (a.name == "humidity") 			{ result = result + attrName + " is " + attrValue + ", " }
                     if (a.name == "illuminance") 		{ result = result + "lux level is " + attrValue + ", " }
+                    if (a.name == "water") 				{ result = result + attrName + " is " + attrValue +", " }                    
+                    if (a.name == "switch") 			{ result = result + attrName + " is " + attrValue +", " } 
+					if (a.name == "presence") 			{ result = result + attrName + " is " + attrValue + ", " }                    
                     if (a.name == "heatingSetpoint") 	{ result = result + "Heating Set Point is " + attrValue + " degrees, " }
                     if (a.name == "coolingSetpoint") 	{ result = result + "Cooling Set Point is" + attrValue + " degrees, " }
                     if (a.name == "thermostatMode") 	{ result = result + "The thermostat Mode is " + attrValue + ", " }
@@ -2937,8 +2959,9 @@ private getCaps(capDevice,capType, capMainCap, capState) {
             	}
            }
      }
-	state.lastAction = result
-	state.pContCmdsR = "caps"
+	result = result.replace("null", "")
+    state.lastAction = result
+    state.pContCmdsR = "caps"
     result = attr.size()
     return result
 }
@@ -3568,7 +3591,6 @@ private getColorName(cName, level) {
         	int hueVal = Math.round(color.h / 3.6)
             int hueLevel = !level ? color.l : level
 			def hueSet = [hue: hueVal, saturation: color.s, level: hueLevel]
-            log.warn "hueSet = ${hueSet}"
             return hueSet
 		}
 	}
