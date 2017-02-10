@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
+ *		2/9/2017		Version:4.0 R.4.2.26		Data configuration complete.  Final version ready for debugging and release
  *		2/9/2017		Version:4.0 R.4.2.25		More Error Trapping, fixed security handler, added Profile fan control
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
  *		2/7/2017		Version:4.0 R.4.2.20		Completed 4.0 Engine Work
@@ -82,16 +83,16 @@ page name: "mainParentPage"
     def mainParentPage() {	
        dynamicPage(name: "mainParentPage", title:"", install: true, uninstall:false) {
        		section ("") {
-                href "mIntent", title: "Main Home Control", //description: mIntentD(), state: mIntentS(),
+                href "mIntent", title: "Main Home Control", description: mIntentD(), state: mIntentS(),
                 	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Routines.png"    
-				href "mProfiles", title: "Configure Profiles", //description: mRoomsD(), state: mRoomsS(),
+				href "mProfiles", title: "Configure Profiles", description: mRoomsD(), state: mRoomsS(),
                 	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_msg.png"
-				href "mSettings", title: "General Settings", //description: mSettingsD(), state: mSettingsS(),
+				href "mSettings", title: "General Settings", description: mSettingsD(), state: mSettingsS(),
                 	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
-				href "mSupport", title: "Install and Support", //description: mSupportD(), state: mSupportS(),
+				href "mSupport", title: "Install and Support", description: mSupportD(), state: mSupportS(),
 					image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_About.png"                               
                     if (activateDashboard) {
-                        href "mDashboard", title: "Dashboard", //description: mDashboardD(), state: mDashboardS(),
+                        href "mDashboard", title: "Dashboard", description: mDashboardD(), state: mDashboardS(),
                             image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Dash.png"
                     }
                         href "mBonus", title: "The Current Mode is: ${location.currentMode}" + "\n"  +
@@ -103,13 +104,13 @@ page name: "mIntent"
     def mIntent() {
     	dynamicPage (name: "mIntent", title: "", install: false, uninstall: false) {
 			section("Devices used by EchoSistant") {
-	            href "mDevices", title: "Select Devices" // description: mDevicesD(), state: mDevicesS()
+	            href "mDevices", title: "Select Devices", description: mDevicesD(), state: mDevicesS()
 			}               
             section ("System and Device Control Defaults") {
-                href "mDefaults", title: "Change Defaults" // description: mDefaultsD(), state: mDefaultsS()
+                href "mDefaults", title: "Change Defaults", description: mDefaultsD(), state: mDefaultsS()
 			}
             section ("Manage Home Security") {
-            	href "mSecurity", title: "Home Security control options"//, description: mSecurityD(), state: mSecurityS(),
+            	href "mSecurity", title: "Home Security control options", description: mSecurityD(), state: mSecurityS()
             }
 		}
 	}
@@ -3920,4 +3921,124 @@ def DeviceDetails = []
 // 	description = pageName + D (E.G: description: mIntentD())
 // 	state = pageName + S (E.G: state: mIntentS(),
 /************************************************************************************************************/
+/************************************************************************************************************
+   Page status and descriptions 
+************************************************************************************************************/       
+/** Main Profiles Page **/
+def mIntentS(){
+	def result = ""
+    def IntentS = ""
+    if (cSwitch || cFan || cDoor || cRelay || cTstat || cIndoor || cOutDoor || cVent || cMotion || cContact || cWater || cPresence || cSpeaker || cSynth || cMedia || cBattery) {
+    	IntentS = "comp"
+        result = "complete"
+    }    	
+    	result
+}
+def mIntentD() {
+    def text = "Tap here to Configure"
+	def mIntentS = mIntentS()
+    if (mIntentS) 
+    {
+        text = "Configured"
+    }
+    else text = "Tap here to Configure"
+	    text
+}  
+/** Configure Profiles Pages **/
+def mRoomsS(){
+    def result = ""
+    if (childApps.size()) {
+    	result = "complete"	
+    }
+    result
+}
+def mRoomsD() {
+    def text = "No Profiles have been configured. Tap here to begin"
+    def ch = childApps.size()     
+    if (ch == 1) {
+        text = "One profile has been configured. Tap here to view and change"
+    }
+    else {
+    	if (ch > 1) {
+        text = "${ch} Profiles have been configured. Tap here to view and change"
+     	}
+    }
+    text
+}
+/** General Settings Page **/
+def mSettingsS() {
+    def result = ""
+    if (ShowLicense || debug) {
+    	result = "complete"	
+    }
+    result
+}
+def mSettingsD() {
+    def text = "Tap here to Configure"
+    if (ShowLicense || debug) { 
+            text = "Configured"
+    }
+    text
+}
+/** Install and Support Page **/
+def mSupportS() {
+    def result = ""
+    if (notifyOn || securityOn) {
+    	result = "complete"	
+    }
+    result
+}
+def mSupportD() {
+    def text = "There are no modules installed"
+    if (notifyOn || securityOn) { 
+            text = "Modules are Installed"
+    }
+    text
+}
+/** Dashboard **/
+mDashboardD
+def mDashboardS() {
+    def result = ""
+    if (mLocalWeather || mWeatherConfig || ThermoStat1 || ThermoStat2 || tempSens1 || tempSens2 || tempSens3 || tempSens4 || tempSens5) {
+    	result = "complete"	
+    }
+    result
+}
+def mDashboardD() {
+    def text = "The Dashboard is not Configured"
+    if (mLocalWeather || mWeatherConfig || ThermoStat1 || ThermoStat2 || tempSens1 || tempSens2 || tempSens3 || tempSens4 || tempSens5) { 
+            text = "Tap here to view the Dashboard"
+    }
+    text
+}
+/** Main Intent Page **/
+def mDevicesS() {def result = ""
+    if (cSwitch || cFan || cDoor || cRelay || cTstat || cIndoor || cOutDoor || cVent || cMotion || cContact || cWater || cPresence || cSpeaker || cSynth || cMedia || cBattery) {
+    	result = "complete"}
+   		result}
+def mDevicesD() {def text = "Tap here to configure settings" 
+    if (cSwitch || cFan || cDoor || cRelay || cTstat || cIndoor || cOutDoor || cVent || cMotion || cContact || cWater || cPresence || cSpeaker || cSynth || cMedia || cBattery) {
+    	text = "Configured"}
+    	else text = "Tap to Configure"
+		text}  
+def mDefaultsS() {def result = ""
+    if (cLevel || cVolLevel || cTemperature || cHigh || cMedium || cLow || cFanLevel || cLowBattery || cInactiveDev || cFilterReplacement || cFilterSynthDevice || cFilterSonosDevice) {
+    	result = "complete"}
+   		result}
+def mDefaultsD() {def text = "Tap here to configure settings" 
+    if (cLevel || cVolLevel || cTemperature || cHigh || cMedium || cLow || cFanLevel || cLowBattery || cInactiveDev || cFilterReplacement || cFilterSynthDevice || cFilterSonosDevice) {
+    	text = "Configured"}
+    	else text = "Tap to Configure"
+		text}         
+def mSecurityS() {def result = ""
+    if (cMiscDev || cRoutines || uPIN_SHM || uPIN_Mode || fSecFeed || shmSynthDevice || shmSonosDevice || volume || resumePlaying) {
+    	result = "complete"}
+   		result}
+def mSecurityD() {def text = "Tap here to configure settings" 
+    if (cMiscDev || cRoutines || uPIN_SHM || uPIN_Mode || fSecFeed || shmSynthDevice || shmSonosDevice || volume || resumePlaying) {
+    	text = "Configured"}
+    	else text = "Tap to Configure"
+		text}
+        
+      
 
