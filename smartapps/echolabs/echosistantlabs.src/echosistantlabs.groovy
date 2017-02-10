@@ -2140,7 +2140,7 @@ def controlHandler(data) {
                                     activityId = activity.id
 								}    	
                             }
-                        	deviceCommand = "endActivity"
+                        	deviceCommand = "activityoff"
                             //deviceCommand =  "alloff" // 2/10/2017 changed to turn off current activity to avoid turning OFF all hubs
                         	deviceD."${deviceCommand}"(activityId)
                             deviceD.refresh()
