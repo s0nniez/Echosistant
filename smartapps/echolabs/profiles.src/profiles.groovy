@@ -1,7 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
- *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version, added fan control
+ *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version
  *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
  *		02/07/2017		Version:4.0 R.4.2.3		Completed 4.0 Engine Work
  *		02/05/2017		Release 4.1.2			New features: status updates, custom commands, message reminders  
@@ -101,15 +101,15 @@ page name: "pConfig"
                             				" be delivered at once. Please only enable Custom Response OR Repeat Message"
                             }				
                         }
-                    input "pContCmdsProfile", "bool", title: "Allow Alexa to prompt for additional commands after a message is sent to a remote speaker", defaultValue: false
+                    input "pContCmdsProfile", "bool", title: "Disable Conversation? (Alexa no longer prompts for additional commands, after a message is sent to a remote speaker, except for 'try again' if an error ocurs)", defaultValue: false
              }
              section ("Remote Speaker Settings") {
                 	input "pRunMsg", "Text", title: "Play this predetermined message when this profile executes...", required: false
                     input "pPreMsg", "text", title: "Play this message before your spoken message...", defaultValue: none, submitOnChange: true, required: false 
              }
              section ("Sound Cancellation") {
-					input "pDisableAlexaProfile", "bool", title: "Turn on to disable Alexa Feedback Responses (silence Alexa) Overrides all other Alexa Options", defaultValue: false
-                    input "pDisableALLProfile", "bool", title: "Turn on to Disable Audio Messages on Remote Speaker", required: false
+					input "pDisableAlexaProfile", "bool", title: "Disable Alexa Feedback Responses (silence Alexa - overrides all other Alexa Options)?", defaultValue: false
+                    input "pDisableALLProfile", "bool", title: "Disable Audio Output on the Remote Speaker(s)?", required: false
              }
              section ("Text and Push Notification Output") {
                 	input "pRunTextMsg", "Text", title: "Send this predetermined text when this profile executes...", required: false
@@ -317,7 +317,7 @@ def initialize() {
         state.reminder2 = null
         state.reminder3 = null
         //Alexa Voice Settings
-		state.pContCmds = settings.pContCmdsProfile
+		state.pContCmds = settings.pContCmdsProfile == false ? true : settings.pContCmdsProfile == true ? false : true
         state.pContCmdsR = "init"
         state.pTryAgain = false
         //Sound Cancellation    
