@@ -1,7 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
- *		2/10/2017		Version:4.0 R.4.2.27		Added Short answers.  Harmony Handling bug fixes
+ *		2/11/2017		Version:4.0 R.4.2.28		More bug fixes, added Short answers.  Harmony Handling bug fixes
  *		2/9/2017		Version:4.0 R.4.2.26		Data configuration complete.  Final version ready for debugging and release
  *		2/9/2017		Version:4.0 R.4.2.25		More Error Trapping, fixed security handler, added Profile fan control
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
@@ -624,6 +624,7 @@ def initialize() {
             state.scheduledHandler
             state.filterNotif
             state.lastAction = null
+			state.lastActivity = null
 	}
 /************************************************************************************************************
 		CoRE Integration
@@ -935,7 +936,7 @@ try {
                             stateDate = s.currentState("temperature").date
                             stateTime = s.currentState("temperature").date.time
                             def timeText = getTimeVariable(stateTime, deviceType)
-                            outputTxt = "The temperature " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
+                            outputTxt = "The temperature in the " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
                         }
                     }
                     if (outputTxt != null) {
@@ -951,7 +952,7 @@ try {
                             stateDate = s.currentState("temperature").date
                             stateTime = s.currentState("temperature").date.time
                             def timeText = getTimeVariable(stateTime, deviceType)            
-                            outputTxt = "The temperature in the " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
+                            outputTxt = "The temperature of " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
                         }
                     }
                     if (outputTxt != null) {
@@ -1143,9 +1144,11 @@ try {
                     }
             }
 //>>> Battery Level >>>>                        
-            if(fOperand == "batteries" || fOperand == "battery level" ) {
+            if(fOperand == "batteries" || fOperand == "battery level" || fOperand == "battery" ) {
             	def cap = "bat"
-            	def devList = getCapabilities(cap)
+            	def dMatch = deviceMatchHandler(fDevice)	
+                if (dMatch?.deviceMatch == null) { 		
+                def devList = getCapabilities(cap)
                 if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fCommand == "low" || fQuery == "give" || fQuery == "get") {
                         if (devList.listSize > 0) {
                             if (devList.listSize == 1) {
@@ -1173,6 +1176,15 @@ try {
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                         } 
                     }
+                 }
+                 else {
+					device = dMatch.deviceMatch
+                    currState = device.currentState("battery").value
+					stateTime = device.currentState("battery").date.time
+                	def timeText = getTimeVariable(stateTime, deviceType)
+					outputTxt = "The battery level of " + fDevice + " is " + currState + " percent and was registered " + timeText.currDate + " at " + timeText.currTime
+                  	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]                    
+ 				}                   
             }
 //>>> Inactive Devices >>>>                               
             if(fOperand == "inactive" || fOperand.contains("inactive") ||  fCommand == "inactive" ) { //devices inactive
@@ -1198,7 +1210,7 @@ try {
                     }
                     else if (fQuery.contains ("what") || fQuery.contains ("which")) {
                         if (devList.listSize > 0) {
-                        outputTxt = "The following devices have been inactive for more than " + cInactiveDev + " " + devList.listDev.sort()
+                        outputTxt = "The following devices have been inactive for more than " + cInactiveDev + " hours " + devList.listDev.sort()
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                         }
                         else {outputTxt = "There are no inactive devices"
@@ -1342,7 +1354,7 @@ def controlDevices() {
                              "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (ctIntentName) = '${ctIntentName}'"
 	def ctProcess = true	
     state.pTryAgain = false 
-try {	   
+//try {	   
     if (ctIntentName == "main") {
         ctPIN = ctPIN == "?" ? "undefined" : ctPIN
         if (ctNum == "undefined" || ctNum =="?") {ctNum = 0 } 
@@ -1413,7 +1425,7 @@ try {
                             if (settings.cSpeaker?.size()>0) {
                                 deviceMatch = cSpeaker.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}
                                 if(deviceMatch) {
-                                log.warn "found a speaker"
+                                log.warn "found a speaker "
                                 dType = "v"}
                             }
                             if (deviceMatch == null && settings.cSynth?.size()>0) {
@@ -1422,6 +1434,7 @@ try {
                             }
 							//HARMONY PROCESS//
 							if (deviceMatch == null && settings.cMedia?.size()>0) {
+                                //deviceMatch = cMedia.first()
                                 deviceMatch = cMedia.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
                                 if(deviceMatch) {
                                     dType = "m"
@@ -1442,7 +1455,7 @@ try {
                                 }
                             }
                             //Personal Preference to use the Harmony Hub for TV off (works only with first Hub selected 2/10/17 Bobby
-                            if (ctDevice == "TV" && command != "setLevel" && command != "decrease" && command != "increase" && settings.cMedia?.size()>0) {
+                            if (ctDevice == "TV" && command != "mute" && command != "unmute" && command != "setLevel" && command != "decrease" && command != "increase" && settings.cMedia?.size()>0) {
                             	dType = "m"
                                 deviceMatch = cMedia.first()                   
                             }    
@@ -1501,10 +1514,11 @@ try {
                             device = deviceMatch
                             if (ctNum > 0 && ctUnit == "minutes") {
                                 log.warn "delay Harmony activity = ${deviceMatch}, activityId = ${activityId}, ctNum = ${ctNum}, ctUnit = ${ctUnit} "
+                                device = device.label
                                 delay = true
                                 data = [type: "cHarmony", command: command, device: device, unit: activityId, num: ctNum, delay: delay]
+                                log.warn "delay Harmony with data: ${data}"
                                 runIn(ctNum*60, controlHandler, [data: data])
-                                
                                 outputTxt = "Ok, turning " +  deviceMatch + " activity " + command + " in " + numText
                                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                             }
@@ -1781,14 +1795,14 @@ try {
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     }
-  
+  /*
        } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
-
+*/
 }
 /************************************************************************************************************
    DEVICE AND PROFILE CONTROL HANDLER
@@ -2071,12 +2085,18 @@ def controlHandler(data) {
            }           
 	}
 	if (deviceType == "cVolume" || deviceType == "cHarmony"  ) {
-   		if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "setLevel") {
+   		if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "setLevel" || deviceCommand == "mute" || deviceCommand == "unmute"){
             def currLevel = deviceD.latestValue("level")
             def currState = deviceD.latestValue("switch")
             if (cVolLevel == null) {cVolLevel = 2}
             def newLevel = cVolLevel*10
 			if (unitU == "percent") newLevel = numN      
+            if (deviceCommand == "mute" || deviceCommand == "unmute") {
+				deviceD."${deviceCommand}"()
+            	def volText = deviceCommand == "mute" ? "muting" : deviceCommand == "unmute" ? "unmuting" : "adjusting" 
+                result = "Ok, " + volText + " the " + deviceD
+            	return result
+            }
             if (deviceCommand == "increase") {
             	if (unitU == "percent") {
                 	newLevel = numN
@@ -2117,14 +2137,41 @@ def controlHandler(data) {
     	}
     	else {
 		//HARMONY ACTIONS
-			if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on" || deviceCommand == "off" || deviceCommand == "end" ) {
-                if(deviceType == "cHarmony") {
-                    if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on"){
-                        deviceCommand = "startActivity"
-                        deviceD."${deviceCommand}"(unitU)
-                        deviceD.refresh() 
-                        result = "Ok, starting " + deviceD + "activity"
-                        return result
+			if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on" || deviceCommand == "off" || deviceCommand == "end" || deviceCommand == "set" ) {
+                if(deviceType == "cHarmony") {     	
+                	if(delayD == true){deviceD = cMedia.first()} 
+                    	if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on"){
+							deviceCommand = "startActivity"
+                            if (unitU != null && unitU != ""){
+                            	deviceD."${deviceCommand}"(unitU)
+                        		deviceD.refresh() 
+                        		if(debug) log.debug "starting - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, unitU:${unitU}"
+                                result = "Ok, starting " + deviceD + " activity"
+                        		return result
+                            }
+                            else{
+                                if(unitU == null && state.lastActivity != null){
+                                    def activityId = null
+                                    def sMedia = cMedia.first()
+                                    def activities = sMedia.currentState("activities").value
+                                    def activityList = new groovy.json.JsonSlurper().parseText(activities)
+                                    activityList.each { it ->  
+                                        def activity = it
+                                        if(activity.name == state.lastActivity) {
+                                            activityId = activity.id
+                                        }    	
+                                    }
+                                    if(debug) log.debug "starting null - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, activityId:${activityId}"
+                                    deviceD."${deviceCommand}"(activityId)
+                                    deviceD.refresh() 
+                                    result = "Ok, starting " + deviceD + " activity"
+                                    return result
+                                }
+                                else { 
+                                    result = "Sorry for the trouble, but in order for EchoSistant to be able to start where you left off, the last activity must be saved"
+                                    return result
+                                }
+                         	}
                     }
                     else{
                     	def activityId = null
@@ -2134,15 +2181,16 @@ def controlHandler(data) {
                 		if (currState != "--"){
 							activityList.each { it ->  
 								def activity = it
-								log.warn "${activity.name} = ${currState}"
                                 if(activity.name == currState) {
-									log.warn "${activity.name} = ${currState}"
                                     activityId = activity.id
 								}    	
                             }
                         	deviceCommand = "activityoff"
+							state.lastActivity = currState
                             //deviceCommand =  "alloff" // 2/10/2017 changed to turn off current activity to avoid turning OFF all hubs
-                        	deviceD."${deviceCommand}"(activityId)
+							if(debug) log.debug "ending - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, activityId:${activityId}"
+                            //deviceD."${deviceCommand}"(activityId)
+                            deviceD."${deviceCommand}"()
                             deviceD.refresh()
                         	result = "Ok, turning off " + currState
                         	return result
@@ -2154,14 +2202,6 @@ def controlHandler(data) {
                         }
                    }
                 }
-                //deviceD."${deviceCommand}"()
-            	//result = "Ok, turning off your " + deviceD
-            	//return result 
-            }
-            else {
-            	deviceD."${deviceCommand}"()
-            	result = "Ok, adjusting the volume of your " + deviceD
-            	return result
             }
        }
     }
@@ -2172,8 +2212,9 @@ def controlHandler(data) {
                 def pintentName = cMatch
                 def ptts = "Running Profile as requested by the main intent"
                 def pDataSet = [ptts:ptts, pintentName:pintentName] 
-                if (deviceCommand == "run"){
+                if (deviceCommand == "run" || deviceCommand == "execute" || deviceCommand == "trigger"){
                 	child.profileEvaluate(pDataSet)
+                    result = "Ok, running the " + child.label + " profile"
                 }
                 else if (deviceCommand == "on" || deviceCommand == "off") {
             		child?.gSwitches."${deviceCommand}"()
@@ -2511,7 +2552,7 @@ def controlProfiles() {
 
 	def pProcess = true
     state.pTryAgain = false
-try {
+//try {
     if (pintentName == "profile") {         
         if (prProfile != "undefined"){
         	def profile = childApps.find {c -> c.label.toLowerCase() == prProfile.toLowerCase()}             
@@ -2615,12 +2656,14 @@ try {
             state.pTryAgain = true
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     }
-    } catch (Throwable t) {
+/*
+} catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
+    */
 }
 /************************************************************************************************************
    TEXT TO SPEECH PROCESS - Lambda via page t
@@ -2692,12 +2735,14 @@ try {
 			return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]              
     	}
     }
+
 } catch (Throwable t) {
 	log.error t
 	outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
 	state.pTryAgain = true
 	return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-}       
+} 
+
 }
 /***********************************************************************************************************
 		SMART HOME MONITOR STATUS AND KEYPAD HANDLER
@@ -2872,11 +2917,16 @@ private deviceMatchHandler(fDevice) {
         	}
         }        
         if (cMedia){
-		deviceMatch =cMedia?.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+            if (fDevice == "TV") {
+                deviceMatch = cMedia.first()
+            }
+            else {
+                deviceMatch =cMedia?.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+            }   
             if(deviceMatch)	{
                 deviceType = "cMedia"
                 currState = deviceMatch.currentState("currentActivity").value 
-                currState = currState == "--" ? " all activities are off " : " The " + currState + " has been on"
+                currState = currState == "--" ? " off " : " running the " + currState + " activity "
                 stateDate = deviceMatch.currentState("currentActivity").date
                 stateTime = deviceMatch.currentState("currentActivity").date.time
                 def timeText = getTimeVariable(stateTime, deviceType)
@@ -2913,7 +2963,7 @@ private deviceMatchHandler(fDevice) {
                 deviceType = "cBattery"
                 currState = cBattery.currentState("battery").value
 				stateTime = cBattery.currentState("battery").date.time
-                def timeText = getTimeVariable(stateTime, deviceType)            
+                def timeText = getTimeVariable(stateTime, deviceType)  
                 return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": "", "tText": timeText.tText,  "mainCap": "battery"]
             } 
      	}
@@ -3284,8 +3334,8 @@ private pinHandler(pin, command, num, unit) {
 	CONTROL SUPPORT - UNIT CONVERSIONS
 ************************************************************************************************************/ 
 private getUnitText (unit, num) {     
-    def String text = (String) null
-    def String nUnit = (String) null
+    def String text = (String) unit
+    def String nUnit = (String) num
     if (unit == "minute" || unit == "minutes" || unit.contains ("minutes") || unit.contains ("minute")) {
     	nUnit = "minutes"
         text = num == 1 ? num + " minute" : num + " minutes" 
@@ -3302,10 +3352,8 @@ private getUnitText (unit, num) {
 		text = num + " percent" 
         return ["text":text, "unit":nUnit]
     }
-    if (unit == "flash" || unit.contains ("flash")) {text = "flash your lights"}
-   	if (unit == "text" || unit.contains ("text")) {text = "send you a text"}
-    if (unit == "audio" || unit.contains ("audio")){text = "play a message"}
-    	return ["text":text, "unit":nUnit]
+		return ["text":text, "unit":nUnit]
+
 }   
 /***********************************************************************************************************************
     CONTROL SUPPORT - COMMANDS HANDLER

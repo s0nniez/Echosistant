@@ -1,6 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
+ *		02/11/2017		Version:4.0 R.4.2.7		bug fixes
  *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version
  *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
  *		02/07/2017		Version:4.0 R.4.2.3		Completed 4.0 Engine Work
@@ -359,15 +360,10 @@ def profileEvaluate(params) {
     //Custom Commands
    	def String command = (String) null 	
     def lights = tts.contains("lights")
-    	if(parent.debug) log.debug "lights = ${lights}"
     def fans = tts.contains("fans")
-    	if(parent.debug) log.debug "fans = ${fans}"
 	def vents = tts.contains("vents")
-    	if(parent.debug) log.debug "vents = ${vents}"
     def tv = tts.contains("TV")
-    	if(parent.debug) log.debug "tv = ${tv}"
     def volume = tts.contains("volume")
-    	if(parent.debug) log.debug "volume = ${volume}"
     // Hue Scenes    
     def read = tts.contains("reading") ? true : tts.contains("read") ? true : tts.contains("studying") ? true : false 
     def concentrate = tts.contains("cleaning") ? true : tts.contains("working") ? true : tts.contains("concentrate") ? true : tts.contains("concentrating") ? true : false
@@ -377,9 +373,7 @@ def profileEvaluate(params) {
     	muteAll = tts.contains("activate sound") ? "unmute" : tts.contains("enable audio") ? "unmute" : tts.contains("unmute audio") ? "unmute" : muteAll
     def muteAlexa = tts.contains("disable Alexa") ? "mute" : tts.contains("silence Alexa") ? "mute" : tts.contains("mute Alexa") ? "mute" : null
     	muteAlexa = tts.contains("enable Alexa") ? "unmute" : tts.contains("start Alexa") ? "unmute" : tts.contains("unmute Alexa") ? "unmute" : muteAll
-
-
-    if (parent.debug) log.debug "Message received from Parent with: (tts) = '${tts}', (intent) = '${intent}'"  
+    if (parent.debug) log.debug "Message received from Parent with: (tts) = '${tts}', (intent) = '${intent}', (childName) = '${childName}'"  
 
     if (intent == childName){  
         //Voice Activated Commands
@@ -659,7 +653,7 @@ def profileEvaluate(params) {
                     }                    
             }
             else{
-            	state.lastMessage = tts
+                state.lastMessage = tts
 				state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
 				outputTxt = ttsHandler(tts)
 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
@@ -671,7 +665,7 @@ def profileEvaluate(params) {
    SPEECH AND TEXT ALEXA RESPONSE
 ******************************************************************************************************/
 def ttsHandler(tts) {
-	def result
+	def result = tts
     def cm = app.label
 	//Preparing Alexa Response
     if (pAlexaCustResp) {
@@ -685,19 +679,18 @@ def ttsHandler(tts) {
        	    result = "Message sent to " + cm + " , " 
         }
     }
-	ttsActions(tts)
+	ttsActions(tts) 
     return result
 }
 /******************************************************************************************************
    SPEECH AND TEXT ACTION
 ******************************************************************************************************/
 def ttsActions(tts) {
-
-def String ttx = (String) null 	
-//Seding Data to CoRE 
-def data = [args: tts ]
-sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
-if (parent.debug) log.debug "sendNotificationEvent sent to CoRE was '${app.label}' from the TTS process section"
+	def String ttx = (String) null 	
+	//Seding Data to CoRE 
+	def data = [args: tts ]
+	sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
+	if (parent.debug) log.debug "sendNotificationEvent sent to CoRE was '${app.label}' from the TTS process section"
     //define audio message
     if(pRunMsg){
     	tts = settings.pRunMsg
@@ -737,12 +730,12 @@ if (parent.debug) log.debug "sendNotificationEvent sent to CoRE was '${app.label
             }
             if (sonosDevice){
                 def currVolLevel = sonosDevice.latestValue("level")
-                if (parent.debug) log.debug "Current volume level is: '${currVolLevel}'"
+                	if (parent.debug) log.debug "Current volume level is: '${currVolLevel}'"
                 def newVolLevel = volume//-(volume*10/100)
-                if (parent.debug) log.debug "Attempting to set volume to 10% less than selected volume '${newVolLevel}'"
+                	if (parent.debug) log.debug "Setting volume to: '${newVolLevel}'"
                 sonosDevice.setLevel(newVolLevel)
                 sonosDevice.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
-                if (parent.debug) log.debug "Sending message to Sonos Devices"
+                	if (parent.debug) log.debug "Playing message on Sonos"
             }
         }
 		if(recipients?.size()>0 || sms?.size()>0){        
@@ -754,27 +747,27 @@ if (parent.debug) log.debug "sendNotificationEvent sent to CoRE was '${app.label
 			if (parent.debug) log.debug "Only sending sms because disable voice message is ON"
             sendtxt(ttx)
 		}
-    }
-	    
-    if (hues) {               
-		colorB() 
+    }   
+   if (sHues) {               
+		processColor()
 	}
-	if (flashSwitches) {
+	if (sFlash) {
 		flashLights()
 	}
 	profileDeviceControl()
-	if (runRoutine) {
-		location.helloHome?.execute(settings.runRoutine)
+	if (pRoutine) {
+		location.helloHome?.execute(settings.pRoutine)
 		log.info "Running Routine ${runRoutine}"
     }
-	if (runRoutine2) {
-		location.helloHome?.execute(settings.runRoutine2)
-		log.info "And Running Routine ${runRoutine2}"
+	if (pRoutine2) {
+		location.helloHome?.execute(settings.pRoutine2)
+		if(parent.debud) log.debug "Running Second Routine ${pRoutine}"
 	}
-	if (newMode) {
-		setLocationMode(newMode)
-		log.info "The mode has been changed from '${location.mode}' to '${setMode}'"
+	if (pMode) {
+		setLocationMode(pMode)
+		log.info "The mode has been changed from '${location.mode}' to '${pMode}'"
 	}    		
+
 }         
 /***********************************************************************************************************************
     LAST MESSAGE HANDLER
@@ -932,62 +925,55 @@ def turnOffSwitch() { switches?.off() }
 def turnOnOtherSwitch() { otherSwitch?.on() }
 def turnOffOtherSwitch() { otherSwitch?.off() }  
 def turnOnDimmers() { def level = dimmersLVL < 0 || !dimmersLVL ?  0 : dimmersLVL >100 ? 100 : dimmersLVL as int
-			dimmers?.setLevel(dimmersLVL) }
+	dimmers?.setLevel(dimmersLVL) }
 def turnOffDimmers() { dimmers?.off() }
 def turnOnOtherDimmers() { def otherlevel = otherDimmersLVL < 0 || !otherDimmersLVL ?  0 : otherDimmersLVL >100 ? 100 : otherDimmersLVL as int
-			otherDimmers?.setLevel(otherDimmersLVL) }
-def turnOffOtherDimmers() { otherDimmers?.off() }            
+	otherDimmers?.setLevel(otherDimmersLVL) }
+def turnOffOtherDimmers() { otherDimmers?.off() }   
 
 // Primary control of profile triggered lights/switches when delayed
 def profileDeviceControl() {
 	if (sSecondsOn) { runIn(sSecondsOn,turnOnSwitch)}
     if (sSecondsOff) { runIn(sSecondsOff,turnOffSwitch)}
-    if (sSecondsOn1)  { runIn(sSecondsOn1,turnOnOtherSwitch)}
-    if (sSecondsOff1) { runIn(sSecondsOff1,turnOffOtherSwitch)}
-	if (sSecondsOn2) { runIn(sSecondsOn2,turnOnDimmers)}
-	if (sSecondsOff2) { runIn(sSecondsOff2,turnOffDimmers)}
-    if (sSecondsOn3) { runIn(sSecondsOn3,turnOnOtherDimmers)}
-	if (sSecondsOff3) { runIn(sSecondsOff3,turnOffOtherDimmers)}
-
+    if (sOtherSecondsOn)  { runIn(sOtherSecondsOn,turnOnOtherSwitch)}
+    if (sSecondsOtherOff) { runIn(sSecondsOtherOff,turnOffOtherSwitch)}
+	if (sSecondsDimmersOn) { runIn(sSecondsDimmersOn,turnOnDimmers)}
+	if (sSecondsDimmersOff) { runIn(sSecondsDimmersOff,turnOffDimmers)}
+    if (sSecondsOtherDimmersOn) { runIn(sSecondsOtherDimmersOn,turnOnOtherDimmers)}
+	if (sSecondsOtherDimmersOff) { runIn(sSecondsOtherDimmersOff,turnOffOtherDimmers)}
 // Control of Lights and Switches when not delayed            
     if (!sSecondsOn) {
-            	if  (switchCmd == "on") { switches?.on() }
-	            	else if (switchCmd == "off") { switches?.off() }
-	           		if (switchCmd == "toggle") { toggle() }
-                if (otherSwitchCmd == "on") { otherSwitch?.on() }
-            		else if (otherSwitchCmd == "off") { otherSwitch?.off() }
-                    if (otherSwitchCmd == "toggle") { toggle() }
-                if (dimmersCmd == "set" && dimmers) { def level = dimmersLVL < 0 || !dimmersLVL ?  0 : dimmersLVL >100 ? 100 : dimmersLVL as int
-        				dimmers?.setLevel(level) }
-            	if (otherDimmersCmd == "set" && otherDimmers) { def otherlevel = otherDimmersLVL < 0 || !otherDimmersLVL ?  0 : otherDimmersLVL >100 ? 100 : otherDimmersLVL as int
-        				otherDimmers?.setLevel(otherlevel) }
-                }
-			}
+		if  (sSwitchCmd == "on") { sSwitches?.on() }
+			else if (sSwitchCmd == "off") { sSwitches?.off() }
+		if (sSwitchCmd == "toggle") { toggle() }
+		if (sOtherSwitchCmd == "on") { sOtherSwitch?.on() }
+			else if (sOtherSwitchCmd == "off") { sOtherSwitch?.off() }
+		if (otherSwitchCmd == "toggle") { toggle() }
+		
+        if (sDimmersCmd == "set" && dimmers) { def level = sDimmersLVL < 0 || !sDimmersLVL ?  0 : sDimmersLVL >100 ? 100 : sDimmersLVL as int
+			sDimmers?.setLevel(level) }
+		if (sOtherDimmersCmd == "set" && sOtherDimmers) { def otherLevel = sOtherDimmersLVL < 0 || !sOtherDimmersLVL ?  0 : sOtherDimmersLVL >100 ? 100 : sOtherDimmersLVL as int
+			sOtherDimmers?.setLevel(otherLevel) }
+	}
+}
 
 private toggle() {
-    if (parent.debug) log.debug "The selected device is toggling now"
-	if (switches) {
-	if (switches?.currentValue('switch').contains('on')) {
-		switches?.off()
-		}
-    else if (switches?.currentValue('switch').contains('off')) {
-		switches?.on()
-		}
+	if (sSwitches) {
+        if (sSwitches?.currentValue('switch').contains('on')) {
+            sSwitches?.off()
+            }
+        else if (sSwitches?.currentValue('switch').contains('off')) {
+            sSwitches?.on()
+            }
     }
-    if (otherSwitch) {
-	if (otherSwitch?.currentValue('switch').contains('on')) {
-		otherSwitch?.off()
+    if (sOtherSwitch) {
+        if (sOtherSwitch?.currentValue('switch').contains('on')) {
+            sOtherSwitch?.off()
+        }
+        else if (sOtherSwitch?.currentValue('switch').contains('off')) {
+            sOtherSwitch?.on()
+            }
 	}
-	else if (otherSwitch?.currentValue('switch').contains('off')) {
-		otherSwitch?.on()
-		}
-	}
-	if (lock) {
-	if (lock?.currentValue('lock').contains('locked')) {
-		lock?.unlock()
-		}
-    }
-	if (parent.debug) log.debug "The selected device has toggled"
 }
 /************************************************************************************************************
    Flashing Lights Handler
@@ -995,35 +981,47 @@ private toggle() {
 private flashLights() {
  	if (parent.debug) log.debug "The Flash Switches Option has been activated"
 	def doFlash = true
-	def onFor = onFor ?: 60000/60
-	def offFor = offFor ?: 60000/60
-	def numFlashes = numFlashes ?: 3
-	if (state.lastActivated) {
+	def onFor = onFor // onFor ?: 60000/60
+	def offFor = offFor // offFor ?: 60000/60
+	def numFlashes = numFlashes // settings.numFlashes > 0 ? numFlashes : 3
+	
+    if (state.lastActivated) {
 		def elapsed = now() - state.lastActivated
 		def sequenceTime = (numFlashes + 1) * (onFor + offFor)
 		doFlash = elapsed > sequenceTime
 	}
 	if (doFlash) {
 		state.lastActivated = now()
-		def initialActionOn = flashSwitches.collect{it.currentflashSwitch != "on"}
+		def initialActionOn = sFlash.collect{it.currentflashSwitch != "on"}
 		def delay = 0L
-		numFlashes.times {
-			flashSwitches.eachWithIndex {s, i ->
+		
+        numFlashes.times {
+			sFlash.eachWithIndex {s, i ->
 				if (initialActionOn[i]) {
 					s.on(delay: delay)
-				}
+						//if(sFlashColorA) {
+						//def hueSetVals = getColorName(sFlashColorA, level)
+                    	//log.warn "setting flash color ${hueSetVals}"
+                       // s.setColor(hueSetVals)
+                		//}
+                }
 				else {
-					s.off(delay:delay)
+					s.off(delay:delay)                   
+                   		} 
 				}
 			}
 			delay += onFor
-			flashSwitches.eachWithIndex {s, i ->
+			sFlash.eachWithIndex {s, i ->
 				if (initialActionOn[i]) {
 					s.off(delay: delay)
 				}
 				else {
 					s.on(delay:delay)
-				}
+					//if(sFlashColorB) {
+						//def hueSetVals = getColorName(sFlashColorB, level)
+                        //log.warn "setting flash color ${hueSetVals}"
+                    	//s.setColor(hueSetVals) 
+						//}
 			}
 			delay += offFor
 		}
@@ -1032,28 +1030,17 @@ private flashLights() {
 /************************************************************************************************************
    Custom Color Filter
 ************************************************************************************************************/       
-private colorB() { 
-	if (hueCmd == "off") { hues?.off() }
-    if (hueCmd1 == "off") { hues1?.off() }
+private processColor() { 
+	if (sHuesCmd == "off") { sHues?.off() }
+    if (sHuesOtherCmd == "off") { sHuesOther?.off() }
 		if (debug) log.debug "color bulbs initiated"
-		def hueColor = 0
-        def hueColor1 = 0
-        fillColorSettings()
-        if (color == "White")hueColor = 48
-        if (color == "Red")hueColor = 0
-        if (color == "Blue")hueColor = 70//60  
-        if (color == "Green")hueColor = 39//30
-        
-        if(color == "Yellow")hueColor = 25//16
-        if(color == "Orange")hueColor = 11
-        if(color == "Purple")hueColor = 75
-        if(color == "Pink")hueColor = 83
-        
-	def colorB = [hue: hueColor, hue1: hueColor1, saturation: 100, level: (lightLevel as Integer) ?: 100]
-    hues*.setColor(colorB)
-	}
-
-
+		def hueSetVals = getColorName("${sHuesColor}",level)
+        	sHues?.setColor(hueSetVals)
+		log.warn "setting color ${hueSetVals}"
+        hueSetVals = getColorName("${sHuesOtherColor}",level)
+        	sHuesOther?.setColor(hueSetVals)
+        log.warn "setting other color ${hueSetVals}"    
+}
 private getColorName(cName, level) {
     for (color in fillColorSettings()) {
 		if (color.name == cName) {
