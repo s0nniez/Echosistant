@@ -1,7 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
- *		2/11/2017		Version:4.0 R.4.2.28		More bug fixes, added Short answers.  Harmony Handling bug fixes
+ *		2/11/2017		Version:4.0 R.4.2.28a		More bug fixes, added Short answers.  Harmony Handling bug fixes
  *		2/9/2017		Version:4.0 R.4.2.26		Data configuration complete.  Final version ready for debugging and release
  *		2/9/2017		Version:4.0 R.4.2.25		More Error Trapping, fixed security handler, added Profile fan control
  *		2/8/2017		Version:4.0 R.4.2.21		Bug fixes + rebuilt HVAC Reminders Proc
@@ -1346,6 +1346,7 @@ def controlDevices() {
         def String command = (String) null
 		def String numText = (String) null
         def String result = (String) null
+        def String activityId = (String) "undefined"
         def delay = false
         def data
         ctDevice = ctDevice.replaceAll("[^a-zA-Z0-9 ]", "")
@@ -1420,7 +1421,7 @@ def controlDevices() {
     		//>>> MAIN PROCESS STARTS <<<<        
             if (deviceType == "volume" || deviceType == "general" || deviceType == "light") {      
                         def deviceMatch = null
-                        def activityId = null
+                        //def activityId = null 2/11/2017 moved as global variable
                         def dType = null
                             if (settings.cSpeaker?.size()>0) {
                                 deviceMatch = cSpeaker.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}
@@ -1519,7 +1520,7 @@ def controlDevices() {
                                 data = [type: "cHarmony", command: command, device: device, unit: activityId, num: ctNum, delay: delay]
                                 log.warn "delay Harmony with data: ${data}"
                                 runIn(ctNum*60, controlHandler, [data: data])
-                                outputTxt = "Ok, turning " +  deviceMatch + " activity " + command + " in " + numText
+                                outputTxt = "Ok, turning " +  deviceMatch + " activity " + command + ", in " + numText
                                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                             }
                             else{                        
@@ -2140,9 +2141,10 @@ def controlHandler(data) {
 			if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on" || deviceCommand == "off" || deviceCommand == "end" || deviceCommand == "set" ) {
                 if(deviceType == "cHarmony") {     	
                 	if(delayD == true){deviceD = cMedia.first()} 
-                    	if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on"){
+                    	if (deviceCommand == "start" || deviceCommand == "switch" || deviceCommand == "on" || deviceCommand == "set"){
 							deviceCommand = "startActivity"
-                            if (unitU != null && unitU != ""){
+                            if (unitU != "undefined"){
+                            	log.warn "starting unitU = ${unitU}"
                             	deviceD."${deviceCommand}"(unitU)
                         		deviceD.refresh() 
                         		if(debug) log.debug "starting - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, unitU:${unitU}"
@@ -2150,7 +2152,7 @@ def controlHandler(data) {
                         		return result
                             }
                             else{
-                                if(unitU == null && state.lastActivity != null){
+                                if(state.lastActivity != null){
                                     def activityId = null
                                     def sMedia = cMedia.first()
                                     def activities = sMedia.currentState("activities").value
@@ -2161,13 +2163,14 @@ def controlHandler(data) {
                                             activityId = activity.id
                                         }    	
                                     }
-                                    if(debug) log.debug "starting null - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, activityId:${activityId}"
+                                    if(debug) log.warn "starting null - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, activityId:${activityId}"
                                     deviceD."${deviceCommand}"(activityId)
                                     deviceD.refresh() 
                                     result = "Ok, starting " + deviceD + " activity"
                                     return result
                                 }
                                 else { 
+                                    if(debug) log.warn "last activity must be saved - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, activityId:${activityId}"
                                     result = "Sorry for the trouble, but in order for EchoSistant to be able to start where you left off, the last activity must be saved"
                                     return result
                                 }

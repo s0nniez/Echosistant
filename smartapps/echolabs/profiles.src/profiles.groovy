@@ -1,7 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
- *		02/11/2017		Version:4.0 R.4.2.7		bug fixes
+ *		02/11/2017		Version:4.0 R.4.2.8		bug fixes, enhancements to reminders process
  *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version
  *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
  *		02/07/2017		Version:4.0 R.4.2.3		Completed 4.0 Engine Work
@@ -216,16 +216,8 @@ page name: "pDeviceControl"
                     if (sFlash) {
                     	input "numFlashes", "number", title: "This number of times (default 3)", required: false, submitOnChange:true
                     	input "onFor", "number", title: "On for (default 1 second)", required: false, submitOnChange:true			
-                            if (onFor) {
-                                input "sFlashColorA", "enum", title: "Flasher Color?", required: false, multiple:false, options: fillColorSettings().name
-                                input "sFlashLevelA", "enum", title: "Light Flash Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
-                            }
                     	input "offFor", "number", title: "Off for (default 1 second)", required: false, submitOnChange:true
-                            if (offFor) {
-                                input "sFlashColorB", "enum", title: "Flasher Second Color?", required: false, multiple:false, options: fillColorSettings().name
-                                input "sFlashLevelB", "enum", title: "Light Flash Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]] 					
-                            }
-                	}
+                    }
                 }
 			}
 		}    
@@ -355,8 +347,10 @@ def profileEvaluate(params) {
 	def play = "play message"
 	def recordingNow = tts.startsWith("record a message")
 	//Reminders
-    def reminder = tts.startsWith("set reminder")
-	def cancelReminder = tts.startsWith("cancel reminder")
+    def reminder = tts.startsWith("set reminder") ?  true : tts.startsWith("set a reminder") ? true : false
+	def cancelReminder = tts.startsWith("cancel reminder") ? true : tts.startsWith("cancel the reminder") ? true : false
+    def whatReminders = tts.startsWith("what reminders")
+    def cancelReminderNum = tts.startsWith("cancel reminder 1") ?  "reminder1" : tts.startsWith("cancel reminder 2") ? "reminder2" : tts.startsWith("cancel reminder 3") ? "reminder3" : null 
     //Custom Commands
    	def String command = (String) null 	
     def lights = tts.contains("lights")
@@ -414,12 +408,13 @@ def profileEvaluate(params) {
         }  
 		else {
         	//Schedule Reminders
-        	if(state.reminderAnsPend >0){ 
+        	if(state.reminderAnsPend >0){
+            	int iLength
                 def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
                 def length = tts.findAll( /\d+/ )*.toInteger()
-                if(parent.debug) log.debug "length = ${length}"
+                if(parent.debug) log.debug "length = ${length}, converted = ${length[0]} "
                 if(length[0] !=null) {
-                	int iLength = length[0]
+                	iLength = (int)length.get(0) //getInteger(length[0]) 2/17/2017                    
                 }
                 else {
 					outputTxt = "sorry, I was unable to get the number,  "
@@ -428,8 +423,8 @@ def profileEvaluate(params) {
                     return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }	
                 if(parent.debug) log.debug " iLength= ${iLength}, unit= ${unit}" 
-                if(unit !="undefined"){
-					if 		(state.reminderAnsPend == 1)	{
+                if(unit !="undefined" && iLength != null){
+					if (state.reminderAnsPend == 1)	{
                     	ttsR = state.reminder1
                         scheduler = "reminderHandler1"
                         outputTxt = "I have scheduled a reminder to " + ttsR + " in " + tts
@@ -472,32 +467,38 @@ def profileEvaluate(params) {
                 }
             }
 			//Cancel Reminders
-            if (cancelReminder == true) {  
-				def cancelMeText = tts.replace("cancel reminder to", "")
+            if (cancelReminder == true || cancelReminderNum != null) {  
+				if (cancelReminder == true) {
+                def cancelMeText = tts.replaceAll("cancel reminder to", "")
+					cancelMeText = tts.replaceAll("cancel the reminder to", "")                
+                log.warn "cancel me text = ${cancelMeText}"
                 def cancelMe = cancelMeText == state.reminder1 ? "reminder1" : cancelMeText == state.reminder2 ? "reminder2" : cancelMeText == state.reminder3 ? "reminder3" : "undefined"
-                 
+                }
+                else {
+                	cancelMeText = "canceling reminder "
+                }
                  if(cancelMe != "undefined") {
-                     if(cancelMe == "reminder1") {
-                        unschedule(reminderHandler1)
+                 	if (cancelMe == "reminder2" || cancelReminderNum == "reminder1") {                        
+                 		unschedule(reminderHandler1)
                         state.reminder1 = null
                         state.reminderAnsPend = 0
 
                      }
                      else {
-                        if (cancelMe == "reminder2") {
+                        if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
                             unschedule(reminder2)
                             state.reminder2 = null
                             state.reminderAnsPend = 0
                         }
                         else {
-                            if (cancelMe == "reminder3") {
+                            if (cancelMe == "reminder3" || cancelReminderNum == "reminder3") {
                             unschedule(reminder3)
                             state.reminder3 = null
                             state.reminderAnsPend = 0
                             }
                         }
                     }
-                	outputTxt = "Ok, canceling reminder to " + cancelMeText
+                	outputTxt = "Ok, canceling reminder " + cancelMeText
                 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
                 else {
@@ -507,7 +508,7 @@ def profileEvaluate(params) {
                     return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
             }
-            if (recordingNow == true || reminder == true) {  
+            if (recordingNow == true || reminder == true || whatReminders == true) {  
                 if (recordingNow == true) {
                     def record = tts.replace("record a message", "")
                     state.recording = record
@@ -517,18 +518,19 @@ def profileEvaluate(params) {
 				//Set reminder        	
                 if (reminder == true) {
                 def remindMe = tts.replace("set reminder to", "")
+                remindMe = tts.replace("set a reminder to", "")
                 if (parent.debug) log.debug "Setting Reminder: (remindMe) = '${remindMe}' for (intent) = '${intent}'" 
                     if (state.reminder1 == null || state.reminder2 == null || state.reminder3 == null) {
-                        if(state.reminder1 == null) {
+                        if(state.reminder1 == null || state.reminder1 == "" ) {
                             state.reminder1 = remindMe
                             state.reminderAnsPend = 1
                             
                         }
-                        else if(state.reminder2 == null) {
+                        else if(state.reminder2 == null || state.reminder2 == "") {
                             state.reminder2 = remindMe
                             state.reminderAnsPend = 2
                         }  
-                        else if(state.reminder3 == null) {
+                        else if(state.reminder3 == null || state.reminder3 == "") {
                             state.reminder3 = remindMe
                             state.reminderAnsPend = 3
                         }
@@ -538,10 +540,15 @@ def profileEvaluate(params) {
                     }
                     else {
                         pTryAgain = true
-                        outputTxt = "You have reached the maximum allowed numbers of reminders. Please cancel a reminder before scheduling another reminder."
+                        outputTxt = "You have reached the maximum allowed numbers of reminders. Please cancel a reminder before scheduling another one."
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                     }            
                 }
+                if (whatReminders == true) {
+						def numReminders = state.reminder3 != null ? "3 reminders" : state.reminder2 != null ? "2 reminders" : state.reminder1 != null ? "one reminder" : "no reminders" 
+                        outputTxt = "You have " + numReminders + "scheduled, " + state.reminder1 + " , " + state.reminder2 + " , " + state.reminder3
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            	}    
             }
             if (lights == true) {
     			command = tts.contains("on") ? "on" : tts.contains("off") ? "off" : "undefined"
@@ -735,7 +742,7 @@ def ttsActions(tts) {
                 	if (parent.debug) log.debug "Setting volume to: '${newVolLevel}'"
                 sonosDevice.setLevel(newVolLevel)
                 sonosDevice.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
-                	if (parent.debug) log.debug "Playing message on Sonos"
+                	if (parent.debug) log.debug "Playing message on Sonos: ${tts}"
             }
         }
 		if(recipients?.size()>0 || sms?.size()>0){        
@@ -999,16 +1006,10 @@ private flashLights() {
 			sFlash.eachWithIndex {s, i ->
 				if (initialActionOn[i]) {
 					s.on(delay: delay)
-						//if(sFlashColorA) {
-						//def hueSetVals = getColorName(sFlashColorA, level)
-                    	//log.warn "setting flash color ${hueSetVals}"
-                       // s.setColor(hueSetVals)
-                		//}
                 }
 				else {
 					s.off(delay:delay)                   
-                   		} 
-				}
+                } 
 			}
 			delay += onFor
 			sFlash.eachWithIndex {s, i ->
@@ -1017,11 +1018,7 @@ private flashLights() {
 				}
 				else {
 					s.on(delay:delay)
-					//if(sFlashColorB) {
-						//def hueSetVals = getColorName(sFlashColorB, level)
-                        //log.warn "setting flash color ${hueSetVals}"
-                    	//s.setColor(hueSetVals) 
-						//}
+                }
 			}
 			delay += offFor
 		}
