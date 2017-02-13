@@ -1,6 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
+ *		02/11/2017		Version:4.0 R.4.2.9		added disable switches
  *		02/11/2017		Version:4.0 R.4.2.8		bug fixes, enhancements to reminders process
  *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version
  *		02/08/2017		Version:4.0 R.4.2.4		Bug Fixes
@@ -230,6 +231,11 @@ page name: "pDeviceControl"
                             paragraph "You can now control this group by speaking commands to Alexa:  \n" +
                             " E.G: Alexa tell Main Skill, to turn on/off the lights in the Profile Name"
                         }
+                        input "gDisable", "capability.switch", title: "Group Disable Automation Switches...", multiple: true, required: false, submitOnChange: true
+						if (gDisable) {
+                            paragraph "You can now use this group by speaking commands to Alexa:  \n" +
+                            " E.G: Disable Automation in the Profile Name"
+                        }
 						input "gFans", "capability.switch", title: "Group Ceiling Fans...", multiple: true, required: false, submitOnChange: true
                         if (gFans) {
                             paragraph "You can now control this group by speaking commands to Alexa:  \n" +
@@ -342,13 +348,15 @@ def profileEvaluate(params) {
 	def String ttsR = (String) null
 	def String deviceCommand = (String) null 
     //Recorded Messages
-	def repeat = "repeat last message"
-	def whatsUP = "what's up"
-	def play = "play message"
+	def repeat = tts.startsWith("repeat last message") ? true : tts.contains("repeat last message") ? true : tts.startsWith("repeat message") ? true : false
+    def whatsUP = "what's up"
+	def play = tts.startsWith("play message") ? true : tts.startsWith("play the message") ? true : tts.startsWith("play recording") ? true : tts.startsWith("play recorded") ? true : false
 	def recordingNow = tts.startsWith("record a message")
-	//Reminders
-    def reminder = tts.startsWith("set reminder") ?  true : tts.startsWith("set a reminder") ? true : false
-	def cancelReminder = tts.startsWith("cancel reminder") ? true : tts.startsWith("cancel the reminder") ? true : false
+    def recordingNowNoA = tts.startsWith("record message")
+    //Reminders
+    def reminder = tts.startsWith("set a reminder")
+    def reminderNoA = tts.startsWith("set reminder")	
+    def cancelReminder = tts.startsWith("cancel reminder") ? true : tts.startsWith("cancel the reminder") ? true : tts.startsWith("cancel a reminder") ? true : false
     def whatReminders = tts.startsWith("what reminders")
     def cancelReminderNum = tts.startsWith("cancel reminder 1") ?  "reminder1" : tts.startsWith("cancel reminder 2") ? "reminder2" : tts.startsWith("cancel reminder 3") ? "reminder3" : null 
     //Custom Commands
@@ -357,7 +365,8 @@ def profileEvaluate(params) {
     def fans = tts.contains("fans")
 	def vents = tts.contains("vents")
     def tv = tts.contains("TV")
-    def volume = tts.contains("volume")
+    def volume = tts.contains("volume") // not used YET
+   	def disable = tts.startsWith("disable automation") ? true : tts.startsWith("stop turning the") ? true : tts.startsWith("stop the motion sensor") ? true : false
     // Hue Scenes    
     def read = tts.contains("reading") ? true : tts.contains("read") ? true : tts.contains("studying") ? true : false 
     def concentrate = tts.contains("cleaning") ? true : tts.contains("working") ? true : tts.contains("concentrate") ? true : tts.contains("concentrating") ? true : false
@@ -396,7 +405,7 @@ def profileEvaluate(params) {
             }
         } 
         //Repeat Message
-        if (tts==repeat || tts == play  || tts == whatsUP) {
+        if (repeat == true || play == true  || tts == whatsUP) {
 			if (tts == repeat || tts == whatsUP) {
 				outputTxt = getLastMessage()          
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
@@ -412,9 +421,8 @@ def profileEvaluate(params) {
             	int iLength
                 def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
                 def length = tts.findAll( /\d+/ )*.toInteger()
-                if(parent.debug) log.debug "length = ${length}, converted = ${length[0]} "
                 if(length[0] !=null) {
-                	iLength = (int)length.get(0) //getInteger(length[0]) 2/17/2017                    
+                	iLength = (int)length.get(0)                    
                 }
                 else {
 					outputTxt = "sorry, I was unable to get the number,  "
@@ -422,7 +430,6 @@ def profileEvaluate(params) {
                     pTryAgain = true
                     return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }	
-                if(parent.debug) log.debug " iLength= ${iLength}, unit= ${unit}" 
                 if(unit !="undefined" && iLength != null){
 					if (state.reminderAnsPend == 1)	{
                     	ttsR = state.reminder1
@@ -448,7 +455,7 @@ def profileEvaluate(params) {
                     }
                     if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, scheduler)}
                 	else {
-                    	if (unit == "hours" && iLength>0 ) { runin(iLength*3600, scheduler)}
+                    	if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, scheduler)}
                 			else{
                             	if(unit == "days"){
                     				def currDate = new Date(now() + location.timeZone.rawOffset)
@@ -467,38 +474,36 @@ def profileEvaluate(params) {
                 }
             }
 			//Cancel Reminders
-            if (cancelReminder == true || cancelReminderNum != null) {  
+            if (cancelReminder == true || cancelReminderNum != null) {
+            	def String cancelMeText = (String) null
 				if (cancelReminder == true) {
-                def cancelMeText = tts.replaceAll("cancel reminder to", "")
-					cancelMeText = tts.replaceAll("cancel the reminder to", "")                
-                log.warn "cancel me text = ${cancelMeText}"
-                def cancelMe = cancelMeText == state.reminder1 ? "reminder1" : cancelMeText == state.reminder2 ? "reminder2" : cancelMeText == state.reminder3 ? "reminder3" : "undefined"
-                }
-                else {
-                	cancelMeText = "canceling reminder "
-                }
-                 if(cancelMe != "undefined") {
-                 	if (cancelMe == "reminder2" || cancelReminderNum == "reminder1") {                        
+                	cancelMeText = tts.replaceAll("cancel reminder to", "")
+                    def cancelMe = cancelMeText == state.reminder1 ? "reminder1" : cancelMeText == state.reminder2 ? "reminder2" : cancelMeText == state.reminder3 ? "reminder3" : "undefined"
+                 }	
+                 if(cancelMe != "undefined" || cancelReminderNum != null) {
+                 	if (cancelMe == "reminder1" || cancelReminderNum == "reminder1") {                        
                  		unschedule(reminderHandler1)
+                        cancelMeText = state.reminder1
                         state.reminder1 = null
                         state.reminderAnsPend = 0
-
                      }
                      else {
                         if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
                             unschedule(reminder2)
+                            cancelMeText = state.reminder2
                             state.reminder2 = null
                             state.reminderAnsPend = 0
                         }
                         else {
                             if (cancelMe == "reminder3" || cancelReminderNum == "reminder3") {
                             unschedule(reminder3)
+                            cancelMeText = state.reminder3
                             state.reminder3 = null
                             state.reminderAnsPend = 0
                             }
                         }
                     }
-                	outputTxt = "Ok, canceling reminder " + cancelMeText
+                	outputTxt = "Ok, canceling reminder to " + cancelMeText
                 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
                 else {
@@ -508,17 +513,21 @@ def profileEvaluate(params) {
                     return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
             }
+            //Recording a Message
             if (recordingNow == true || reminder == true || whatReminders == true) {  
-                if (recordingNow == true) {
-                    def record = tts.replace("record a message", "")
+                if (recordingNow == true || recordingNowNoA == true) {
+                def record
+                	if (recordingNow == true) {
+                    	record = tts.replace("record a message", "")
+                	}
+                    else record = tts.replace("record message", "")
                     state.recording = record
                     outputTxt = "Ok, message recorded. To play it later, just say: play message"
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }
 				//Set reminder        	
                 if (reminder == true) {
-                def remindMe = tts.replace("set reminder to", "")
-                remindMe = tts.replace("set a reminder to", "")
+                def remindMe = tts.replace("set a reminder to", "")
                 if (parent.debug) log.debug "Setting Reminder: (remindMe) = '${remindMe}' for (intent) = '${intent}'" 
                     if (state.reminder1 == null || state.reminder2 == null || state.reminder3 == null) {
                         if(state.reminder1 == null || state.reminder1 == "" ) {
@@ -563,6 +572,19 @@ def profileEvaluate(params) {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
             }
+            if (disable == true) {
+            	if (gDisable?.size()>0) {
+                	gSwitches?.off()
+                    outputTxt = "Ok, disabling automation in the " + childName
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            	}
+                else {
+					outputTxt = "Sorry, I couldn't find any disable switches"
+                    pTryAgain = true
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            	}
+            }
+            
             if (fans == true) {
     			command = tts.contains("on") ? "on" : tts.contains("start") ? "on" : tts.contains("off") ? "off" : tts.contains("stop") ? "off" : "undefined"
             	if (command != "undefined" && gFans?.size()>0) {
@@ -583,7 +605,7 @@ def profileEvaluate(params) {
                 	def hueSetVals = getColorName("${color}",level)
                     gHues?.setColor(hueSetVals)
 					outputTxt =  "Ok, changing your bulbs to " + color 
-					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }
             }
             if (vents == true){
@@ -593,12 +615,12 @@ def profileEvaluate(params) {
         				sVent.on()
                 		sVent.setLevel(100)
                         outputTxt = "Ok, opening the vents"
-						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 	}
                     else {
         				sVent.off()
 						outputTxt = "Ok, closing the vents"
-						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                   	}
             	}
                 else {
@@ -627,11 +649,11 @@ def profileEvaluate(params) {
 						sMedia."${deviceCommand}"(activityId)
 						sMedia.refresh()
 						outputTxt = "Ok, starting " + state.lastActivity + " activity "
-                       	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                       	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
              			}
                         else { 
 							outputTxt = "Sorry for the trouble, but in order for EchoSistant to be able to start where you left off, the last activity must be saved"
-                       		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                       		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                     	}
                     }
 					else{
@@ -643,12 +665,12 @@ def profileEvaluate(params) {
 								sMedia."${deviceCommand}"()
 								sMedia.refresh()
 								outputTxt = "Ok, ending Harmony activity"
-								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
 							}
 							else {
 								outputTxt = "The Harmony hub is already off"
 								pTryAgain = true
-								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                                 }
                             }
                        }
@@ -663,7 +685,8 @@ def profileEvaluate(params) {
                 state.lastMessage = tts
 				state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
 				outputTxt = ttsHandler(tts)
-				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":state.pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                pContCmdsR = "profile"
+				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             }
    		}
 	}
@@ -913,14 +936,17 @@ def playAlert(message, speaker) {
 ***********************************************************************************************************************/
 private reminderHandler1() {
 def text = state.reminder1
+state.reminder1 = null
 ttsActions(text)
 }
 private reminderHandler2() {
 def text = state.reminder2
+state.reminder2 = null
 ttsActions(text)
 }
 private reminderHandler3() {
 def text = state.reminder3
+state.reminder3 = null
 ttsActions(text)
 }
 /************************************************************************************************************
@@ -988,9 +1014,9 @@ private toggle() {
 private flashLights() {
  	if (parent.debug) log.debug "The Flash Switches Option has been activated"
 	def doFlash = true
-	def onFor = onFor // onFor ?: 60000/60
-	def offFor = offFor // offFor ?: 60000/60
-	def numFlashes = numFlashes // settings.numFlashes > 0 ? numFlashes : 3
+	def onFor = onFor ?: 60000/60
+	def offFor = offFor ?: 60000/60
+	def numFlashes = numFlashes ?: 3
 	
     if (state.lastActivated) {
 		def elapsed = now() - state.lastActivated
@@ -1033,10 +1059,8 @@ private processColor() {
 		if (debug) log.debug "color bulbs initiated"
 		def hueSetVals = getColorName("${sHuesColor}",level)
         	sHues?.setColor(hueSetVals)
-		log.warn "setting color ${hueSetVals}"
         hueSetVals = getColorName("${sHuesOtherColor}",level)
         	sHuesOther?.setColor(hueSetVals)
-        log.warn "setting other color ${hueSetVals}"    
 }
 private getColorName(cName, level) {
     for (color in fillColorSettings()) {

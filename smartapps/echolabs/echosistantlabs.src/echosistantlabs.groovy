@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  *
+ *		2/12/2017		Version:4.0 R.4.2.29		More Harmony Handling bug fixes
  *		2/11/2017		Version:4.0 R.4.2.28a		More bug fixes, added Short answers.  Harmony Handling bug fixes
  *		2/9/2017		Version:4.0 R.4.2.26		Data configuration complete.  Final version ready for debugging and release
  *		2/9/2017		Version:4.0 R.4.2.25		More Error Trapping, fixed security handler, added Profile fan control
@@ -145,6 +146,9 @@ page name: "mIntent"
                     input "cSpeaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
                     input "cSynth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
                     input "cMedia", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
+                     if (cMedia?.size() > 1) {
+                     paragraph "NOTE: only the fist selected device is used by the Main intent. The additional devices MUST be used by Profiles"
+                     }
                 } 
                 section ("Batteries", hideWhenEmpty: true ){
                     input "cBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
@@ -1441,18 +1445,20 @@ def controlDevices() {
                                     dType = "m"
                                 }
                                 else {
-                                    cMedia.each {a ->         
-                                        def activities = a.currentState("activities").value
+                                    //cMedia.each {a -> //disabled 2/13/2017 to ONLY use Main Hub        
+                                        //def activities = a.currentState("activities").value //disabled 2/13/2017 to ONLY use Main Hub
+                                        def harmonyMain = cMedia.first()
+                                        def activities = harmonyMain.currentState("activities").value
                                         def activityList = new groovy.json.JsonSlurper().parseText(activities)
                                             activityList.each { it ->  
                                                 def activity = it
                                                     if(activity.name.toLowerCase() == ctDevice.toLowerCase()) {
                                                     dType = "m"
-                                                    deviceMatch = a
+                                                    deviceMatch = harmonyMain //a //disabled 2/13/2017 to ONLY use Main Hub
                                                     activityId = activity.id
                                                     }    	
                                             }
-                                  	}   
+                                  	//}   //disabled 2/13/2017 to ONLY use Main Hub
                                 }
                             }
                             //Personal Preference to use the Harmony Hub for TV off (works only with first Hub selected 2/10/17 Bobby
@@ -2688,8 +2694,8 @@ def processTts() {
 		def tProcess = true
 try {
 	if (pintentName != "undefined") {
-        if(ptts == "no" || ptts == "yes"){
-        	if(ptts == "no"){
+        if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes"){
+        	if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it"){
                 outputTxt = "ok, I am here if you need me"
                 pContCmds = false
                 return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
