@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
- *
+ * 
+ *		2/13/2017		Version:4.0 R.4.2.30		Attempting to prevent unintended messages being sent to Profile
  *		2/12/2017		Version:4.0 R.4.2.29		More Harmony Handling bug fixes
  *		2/11/2017		Version:4.0 R.4.2.28a		More bug fixes, added Short answers.  Harmony Handling bug fixes
  *		2/9/2017		Version:4.0 R.4.2.26		Data configuration complete.  Final version ready for debugging and release
@@ -114,6 +115,9 @@ page name: "mIntent"
             section ("Manage Home Security") {
             	href "mSecurity", title: "Home Security control options", description: mSecurityD(), state: mSecurityS()
             }
+        	section ("Rename Your Main Skill") {
+ 		   	label title:"              Rename Main Skill ", required:false, defaultValue: "EchoSistant"  
+        }            
 		}
 	}
     page name: "mDevices"    
@@ -626,7 +630,7 @@ def initialize() {
             state.pinTry = null
         //Other Settings
             state.scheduledHandler
-            state.filterNotif
+            state.filterNotif = null
             state.lastAction = null
 			state.lastActivity = null
 	}
@@ -812,7 +816,8 @@ def feedbackHandler() {
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
 	def fProcess = true
     state.pTryAgain = false
-try {
+
+//try {
 		
         fOperand = fOperand == "lights on" ? "lights" : fOperand == "switches on" ? "lights" : fOperand == "switches" ? "lights" : fOperand
         fCommand = fOperand == "lights on" ? "on" : fOperand == "switches on" ? "on" : fCommand
@@ -1047,7 +1052,7 @@ try {
                                     }
                         }
                     }
-                    if (fQuery == "how" || fQuery.contains ("if") || fQuery == "undefined" || fQuery == "are there") {
+                    if (fQuery == "how" || fQuery.contains ("if") || fQuery == "are there") { // removed fQuery == "undefined" 2/13/2017
                         if (devList.size() > 0) {
                             if (devList.size() == 1) {
                                 outputTxt = "There is one switch " + fCommand + " , would you like to know which one"                           			
@@ -1102,7 +1107,7 @@ try {
                                     }
                         }                    
                     }
-                    if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there") {
+                    if (fQuery == "how" || fQuery== "how many" || fQuery == "arere") { // removed fQuery == "undefined" 2/13
                         if (devList.size() > 0) {
                             if (devList.size() == 1) {
                                 outputTxt = "There is one door or window " + fCommand + " , would you like to know which one"                           			
@@ -1324,12 +1329,14 @@ try {
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
         }
     } 
+/*
 }catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 }
+*/
 }
 /************************************************************************************************************
    DEVICE CONTROL - from Lambda via page c
@@ -2234,15 +2241,15 @@ def controlHandler(data) {
                     child?.gFans."${deviceCommand}"()
 					result = "Ok, turning " + child.label + " fan " + deviceCommand  
 				}
-				else if (deviceCommand == "energize" || deviceCommand == "relax" || deviceCommand == "read" || deviceCommand == "concentrate") {
-					def color = deviceCommand == "read" ? "Warm White" : deviceCommand == "concentrate" ? "Daylight White" : deviceCommand == "relax" ? "Very Warm White" : deviceCommand == "energize" ? "White" : "undefined"
+				else if (deviceCommand == "energize" || deviceCommand == "relax" || deviceCommand == "read" || deviceCommand == "concentrate" ||  deviceCommand == "random") {
+					def color = deviceCommand == "read" ? "Warm White" : deviceCommand == "concentrate" ? "Daylight White" : deviceCommand == "relax" ? "Very Warm White" : deviceCommand == "energize" ? "White" : deviceCommand == "random" ? "random" : "undefined"
                     if (color != "undefined"){
                 		def hueSetVals = getColorName("${color}",level)
-                    	child?.gHues.setColor(hueSetVals)
+                    	if(deviceCommand != "random") {child?.gHues.setColor(hueSetVals)}
 						result = "Ok, changing your bulbs to " + deviceCommand + " scene "               
                 	}
                 }
-				else if (deviceCommand == "blue" || deviceCommand == "red" || deviceCommand == "yellow" || deviceCommand == "green") {
+                else if (deviceCommand == "blue" || deviceCommand == "red" || deviceCommand == "yellow" || deviceCommand == "green") {
 					//set lights to blue in the  living room
                     def hueSetVals = getColorName("${deviceCommand}",level)
                     child?.gHues.setColor(hueSetVals)
@@ -2694,7 +2701,13 @@ def processTts() {
 		def tProcess = true
 try {
 	if (pintentName != "undefined") {
-        if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes"){
+    def checkPoint = "tell " + app.label.toLowerCase()
+    def worngIntent = ptts.startsWith("${checkPoint}")
+   	if (worngIntent == false ){
+        if(state.pContCmdsR == "feedback" && ptts == "yes") {
+            ptts = state.lastAction
+        }
+        if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes" && state.pContCmdsR != "wrongIntent"){
         	if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it"){
                 outputTxt = "ok, I am here if you need me"
                 pContCmds = false
@@ -2743,7 +2756,14 @@ try {
 			return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]              
     	}
     }
-
+    else {
+    	outputTxt = "Sorry, it sounds like you tried to use the Main skill, are you sure you want to send this message to " + pintentName
+        state.lastAction = ptts
+        state.pContCmdsR = "feedback"
+        pPIN = true
+        return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+	}
+	}
 } catch (Throwable t) {
 	log.error t
 	outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
@@ -3388,6 +3408,10 @@ private getCommand(command, unit) {
             	command = "read" 
                 deviceType = "general"
             }
+			if (command == "feeling lucky" || command == "random" || command == "different colors"){ 
+            	command = "random" 
+                deviceType = "general"
+            }
     		if (command == "cleaning" || command == "working" || command == "concentrating" || command == "concentrate" || command == "cooking"){ 
     			command = "concentrate"
                 deviceType = "general"
@@ -3693,6 +3717,15 @@ private void processSms(number, message) {
    Custom Color Filter
 ************************************************************************************************************/       
 private getColorName(cName, level) {
+	if (cName == "random") {    	
+        for (bulb in child?.gHues) {    
+            int hueLevel = !level ? 100 : level
+            int hueHue = Math.random() *100 as Integer
+            def randomColor = [hue: hueHue, saturation: 100, level: hueLevel]
+            bulb.setColor(hueSetVals)
+        }
+        return "executed"
+	}    
     for (color in fillColorSettings()) {
 		if (color.name.toLowerCase() == cName.toLowerCase()) {
         	int hueVal = Math.round(color.h / 3.6)
