@@ -1,6 +1,7 @@
 /* 
  * Profile - EchoSistant Add-on 
  *
+ *		02/12/2017		Release 4.1.3	Bug fix: Scheduled events not executing properly
  *		02/07/2017		Release 4.1.2	Updates... lots and lots of updates
  *		12/31/2016		Release 4.1.1	New features: status updates, custom commands, weather alerts, message reminders 
  *										Improvements: streamlined UI and processing
@@ -235,12 +236,12 @@ def CustomMessage = message
         if (resumePlaying){
 		sonos.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
 	}
-	else {
-		sonos?.playTrackAndRestore(state.sound.uri, state.sound.duration, volume)
-	}
-	if (frequency || oncePerDay) {
-		state[frequencyKey(evt)] = now()
-		}
+//	else {
+//		sonos?.playTrackAndRestore(state.sound.uri, state.sound.duration, volume)
+//	}
+//	if (frequency || oncePerDay) {
+//		state[frequencyKey(evt)] = now()
+//		}
     log.trace "Exiting takeAction()"
 	}
 private loadText() {
@@ -388,7 +389,7 @@ def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone
 	}
 private void sendText(number, message) {
     if (sms) {
-        def phones = sms.split("\\;")
+        def phones = sms.split("\\,")
         for (phone in phones) {
             sendSms(phone, message)
             log.debug "Sending sms to selected phones"
@@ -399,13 +400,11 @@ private void sendText(number, message) {
    Time of Day Scheduler Handler
 ************************************************************************************************************/
 def scheduledTimeHandler() {
-	sendtxt(message)
-    takeAction()
-    if (sendText) {
-    	sendtxt(message)
-        log.info "Sending a text message"
-        }
-    }
+	if (getDayOk()==true && getModeOk()==true && getTimeOk()==true) {
+		sendtxt(message)
+    	takeAction()
+    	}
+    }    
 /************************************************************************************************************
    Alerts Handler
 ************************************************************************************************************/
@@ -420,17 +419,7 @@ def alertsHandler(evt) {
 	def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
         if (eVal == "present" || eVal == "open" || eVal == "locked" || eVal == "active" || eVal == "on") {
         	takeAction(evt)
-        	if (push && timeStamp) {
-     		sendPush (message + " at " + stamp)
-       		log.info "Sending push message to selected reipients with timestamp"
-			}
-            else if (push) {
-            	sendPush message
-            }
-            if (sendText) {
-            	sendtxt(message)
-                log.info "Sending a text message"
-            }
+            sendtxt(message)
         }
 	}        
 }
