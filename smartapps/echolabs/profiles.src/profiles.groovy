@@ -1,6 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
+ *		02/11/2017		Version:4.0 R.4.2.10	added Hue Bulbs color control
  *		02/11/2017		Version:4.0 R.4.2.9		added disable switches
  *		02/11/2017		Version:4.0 R.4.2.8		bug fixes, enhancements to reminders process
  *		02/09/2017		Version:4.0 R.4.2.6		Final Release Version
@@ -347,6 +348,7 @@ def profileEvaluate(params) {
 	def String scheduler = (String) null     
 	def String ttsR = (String) null
 	def String deviceCommand = (String) null 
+    def String colorMatch = (String) null 
     //Recorded Messages
 	def repeat = tts.startsWith("repeat last message") ? true : tts.contains("repeat last message") ? true : tts.startsWith("repeat message") ? true : false
     def whatsUP = "what's up"
@@ -365,9 +367,12 @@ def profileEvaluate(params) {
     def fans = tts.contains("fans")
 	def vents = tts.contains("vents")
     def tv = tts.contains("TV")
-    def volume = tts.contains("volume") // not used YET
+	def volume = tts.contains("volume") // not used YET
    	def disable = tts.startsWith("disable automation") ? true : tts.startsWith("stop turning the") ? true : tts.startsWith("stop the motion sensor") ? true : false
-    // Hue Scenes    
+    // Hue Scenes / Colored Lights   
+    def hueSet = tts.startsWith("set the color")
+    def hueChange = tts.startsWith("change the color")
+    def feelLucky = tts.startsWith("I feel lucky") ? true : tts.startsWith("I am feeling lucky") ? true : tts.startsWith("I'm feeling lucky") ? true : tts.contains("feeling lucky") ? true : tts.startsWith("pick a random color") ? true : false
     def read = tts.contains("reading") ? true : tts.contains("read") ? true : tts.contains("studying") ? true : false 
     def concentrate = tts.contains("cleaning") ? true : tts.contains("working") ? true : tts.contains("concentrate") ? true : tts.contains("concentrating") ? true : false
     def relax = tts.contains("relax") ? true : tts.contains("relaxing") ? true : tts.contains("chilling") ? true : false
@@ -583,8 +588,7 @@ def profileEvaluate(params) {
                     pTryAgain = true
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
-            }
-            
+            }            
             if (fans == true) {
     			command = tts.contains("on") ? "on" : tts.contains("start") ? "on" : tts.contains("off") ? "off" : tts.contains("stop") ? "off" : "undefined"
             	if (command != "undefined" && gFans?.size()>0) {
@@ -598,16 +602,42 @@ def profileEvaluate(params) {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             	}
             }            
-			if (read == true || concentrate == true || relax == true){
-				def color = read == true ? "Warm White" : concentrate == true ? "Daylight White" : relax == true ? "Very Warm White" : "undefined"
-                if(parent.debug) log.debug "color= ${color}"
+			//HUE SCENES / Colored Lights
+            if (read == true || concentrate == true || relax == true || feelLucky == true){
+				def color = read == true ? "Warm White" : concentrate == true ? "Daylight White" : relax == true ? "Very Warm White" : feelLucky == true ? "random" : "undefined"
                 if (color != "undefined" && gHues?.size()>0){
                 	def hueSetVals = getColorName("${color}",level)
                     gHues?.setColor(hueSetVals)
 					outputTxt =  "Ok, changing your bulbs to " + color 
 					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }
+                else {
+					outputTxt =  "Sorry, I was unable to change the color "
+                    pTryAgain = true
+					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            	}
             }
+            if (hueSet == true || hueChange == true){
+            	def hueSetVals
+    				if(hueSet == true) {
+                    	tts = tts.replace("set the color to ", "")
+                        hueSetVals =  getColorName( tts , level)
+                        gHues?.setColor(hueSetVals)
+                        outputTxt =  "Ok, changing your bulbs to " + tts
+                    }
+                    if(hueChange == true) {
+                    	tts = tts.replace("change the color to ", "")
+                        hueSetVals =  getColorName("${tts}", level)
+                        gHues?.setColor(hueSetVals)
+                        outputTxt =  "Ok, changing your bulbs to " + tts
+					}
+                    if (hueSetVals == null) {
+                    	outputTxt =  "Sorry, I wasn't able to change the color to " +  tts
+                		pTryAgain = true
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
+            		}
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+       		}
             if (vents == true){
     			command = tts.contains("open") ? "on" : tts.contains("close") ? "off" : "undefined"
             	if (command != "undefined" && sVent?.size()>0 ) {
@@ -1063,15 +1093,21 @@ private processColor() {
         	sHuesOther?.setColor(hueSetVals)
 }
 private getColorName(cName, level) {
+	if (cName == "random") {    	
+		int hueLevel = !level ? 100 : level
+		int hueHue = Math.random() *100 as Integer
+		def randomColor = [hue: hueHue, saturation: 100, level: hueLevel]
+		return randomColor
+	}    
     for (color in fillColorSettings()) {
-		if (color.name == cName) {
+		if (color.name.toLowerCase() == cName.toLowerCase()) {
         	int hueVal = Math.round(color.h / 3.6)
             int hueLevel = !level ? color.l : level
 			def hueSet = [hue: hueVal, saturation: color.s, level: hueLevel]
             return hueSet
 		}
 	}
-	if (parent.debug) log.debug "Color Match Not Found"
+	if (parent.debug) log.warn "Color ${cName} Not Found"
 }
 
 def fillColorSettings() {

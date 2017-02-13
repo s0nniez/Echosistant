@@ -2717,7 +2717,6 @@ try {
                     state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
                     dataSet = [ptts:ptts, pintentName:pintentName] 
                     def pResponse = child.profileEvaluate(dataSet)
-                    
                     outputTxt = pResponse?.outputTxt
                     pContCmds = pResponse?.pContCmds
                     pContCmdsR = pResponse?.pContCmdsR
@@ -2725,7 +2724,7 @@ try {
                 }
             }
             if (outputTxt?.size()>0){
-                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             }
             else {
                 if (state.pShort != true){
@@ -2733,15 +2732,15 @@ try {
                 }
                 else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "} 
                 pTryAgain = true
-                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
             }
         def hText = "run a messaging and control profile"
 			if (state.pShort != true){ 
 				outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
 			}
 			else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "}         
-			state.pTryAgain = true
-			return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]              
+			pTryAgain = true
+			return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]              
     	}
     }
 
