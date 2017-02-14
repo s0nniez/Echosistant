@@ -1,7 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  * 
- *		2/13/2017		Version:4.0 R.4.2.30		Attempting to prevent unintended messages being sent to Profile
+ *		2/13/2017		Version:4.0 R.4.2.30a		Attempting to prevent unintended messages being sent to Profile
  *		2/12/2017		Version:4.0 R.4.2.29		More Harmony Handling bug fixes
  *		2/11/2017		Version:4.0 R.4.2.28a		More bug fixes, added Short answers.  Harmony Handling bug fixes
  *		2/9/2017		Version:4.0 R.4.2.26		Data configuration complete.  Final version ready for debugging and release
@@ -174,8 +174,8 @@ page name: "mIntent"
                         input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
                     }
                     section ("Activity Defaults") {            
-                        input "cLowBattery", "number", title: "Alexa Provides Low Battery Feddback when the Bettery Level falls below (default is 25%)", defaultValue: 25, required: false
-                        input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feddback when No Activity was Detected for (default is 24 hours) ", defaultValue: 24, required: false
+                        input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
+                        input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
                     }
 					section ("Alexa Voice Settings") {            
                         input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
