@@ -1,6 +1,7 @@
 /* 
  * Profile - EchoSistant Add-on 
  *
+ *		02/14/2017		Release 4.1.4	Removed weather alerts and added mode change notifications
  *		02/12/2017		Release 4.1.3	Bug fix: Scheduled events not executing properly
  *		02/07/2017		Release 4.1.2	Updates... lots and lots of updates
  *		12/31/2016		Release 4.1.1	New features: status updates, custom commands, weather alerts, message reminders 
@@ -78,21 +79,8 @@ page name: "mainProfilePage"
             input "myLocks", "capability.lock", title: "Choose Locks..", required: false, multiple: true, submitOnChange: true
             input "myMotion", "capability.motionSensor", title: "Choose Motion Sensors..", required: false, multiple: true, submitOnChange: true
             input "myPresence", "capability.presenceSensor", title: "Choose Presence Sensors...", required: false, multiple: true, submitOnChange: true
-            input "cWeather", "enum", title: "Choose Weather Alerts...", required: false, multiple: true, submitOnChange: true,
-				options: [
-				"TOR":	"Tornado Warning",
-				"TOW":	"Tornado Watch",
-				"WRN":	"Severe Thunderstorm Warning",
-				"SEW":	"Severe Thunderstorm Watch",
-				"WIN":	"Winter Weather Advisory",
-				"FLO":	"Flood Warning",
-				"WND":	"High Wind Advisoryt",
-				"HEA":	"Heat Advisory",
-				"FOG":	"Dense Fog Advisory",
-				"FIR":	"Fire Weather Advisory",
-				"VOL":	"Volcanic Activity Statement",
-				"HWW":	"Hurricane Wind Warning"
-					]
+            input "pMode", "enum", title: "Choose Modes...", options: location.modes.name.sort(), multiple: true, required: false 
+            	def actions = location.helloHome?.getPhrases()*.label 
                 }    
         section ("and these output methods...") {    
 			input "sonos", "capability.musicPlayer", title: "On this Sonos type music player", required: false, multiple: true, submitOnChange: true
@@ -183,7 +171,8 @@ def updated() {
 }
 def initialize() {
     	subscribeToEvents()
-    	subscribe(location, locationHandler)      
+        subscribe(location, modeChangeHandler)
+	    subscribe(location, locationHandler) 
 }    
 /************************************************************************************************************
 		Subscriptions
@@ -193,20 +182,17 @@ def subscribeToEvents() {
 	if (timeOfDay) {
     log.debug "Time of Day subscribed to for ${timeOfDay}"
 		schedule(timeOfDay, scheduledTimeHandler)
-	}    
-    if (runModes) {
-		subscribe(runMode, location.currentMode, modeChangeHandler)
-	}
+	} 
     if (runDay) {
    		subscribe(runDay, location.day, location.currentDay)
 	}
     if (actionType) {
+    if (pMode) {subscribe(location, "mode", locationHandler)}
    	if (mySwitch) {subscribe(mySwitch, "switch.on", alertsHandler)}
     if (myContact) {subscribe(myContact, "contact.open", alertsHandler)}
     if (myLocks) {subscribe(myLocks, "lock.locked", alertsHandler)}
     if (myLocks) {subscribe(myLocks, "lock.unlocked", alertsHandler)}
     if (myPresence) {subscribe(myPresence, "presenceSensor", alertsHandler)}
-    if (cWeather) {subscribe(audioTextWeather, "WeatherAlerts", WeatherAlerts)} 
 	}
 }
 private dayString(Date date) {
@@ -219,6 +205,16 @@ private dayString(Date date) {
 	}
 	df.format(date)
 }
+/***********************************************************************************************************************
+    MODE CHANGE HANDLER
+***********************************************************************************************************************/
+def locationHandler(evt) {
+	if (pMode) {
+  		log.debug "Location Mode changed to: ${evt.value}"
+//    	def result = !modes || modes?.contains(location.mode)
+		takeAction()
+	}
+} 
 /***********************************************************************************************************************
     CUSTOM SOUNDS HANDLER
 ***********************************************************************************************************************/
@@ -235,13 +231,7 @@ def CustomMessage = message
 		}
         if (resumePlaying){
 		sonos.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
-	}
-//	else {
-//		sonos?.playTrackAndRestore(state.sound.uri, state.sound.duration, volume)
-//	}
-//	if (frequency || oncePerDay) {
-//		state[frequencyKey(evt)] = now()
-//		}
+		}
     log.trace "Exiting takeAction()"
 	}
 private loadText() {
@@ -395,7 +385,7 @@ private void sendText(number, message) {
             log.debug "Sending sms to selected phones"
         	}
     	}        
-	}	    
+	}
 /************************************************************************************************************
    Time of Day Scheduler Handler
 ************************************************************************************************************/
@@ -423,27 +413,6 @@ def alertsHandler(evt) {
         }
 	}        
 }
-/************************************************************************************************************
-   Severe Weather Alerts Handler
-************************************************************************************************************/
-def WeatherAlerts(){
-	def result ="Weather Alerts Active"
-	def WeatherAlerts =  getWeatherFeature("alerts", settings.wZipCode)
-		result = ""
-        }
-page name: "severeWeatherAlertsPage"    
-    def severeWeatherAlertsPage(){
-        dynamicPage(name: "severeWeatherAlertsPage", title: "Severe Weather Alerts",install: false, uninstall: false) {
-		section ("Weather Alerts") {
-        	input "WeatherAlertsToggle", "bool", title: "Activate severe weather alerts notifications", required: false, default: false, submitOnChange: true
-            if (WeatherAlertsToggle) {
-        	(WeatherAlerts())
-            	}
-        	}        
-        section ("Choose which Alerts to Activate and Receive") {
-		}
-	}
-} 
 /************************************************************************************************************
    Page status and descriptions 
 ************************************************************************************************************/       
