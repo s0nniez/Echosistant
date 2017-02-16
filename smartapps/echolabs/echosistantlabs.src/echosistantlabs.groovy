@@ -1,6 +1,7 @@
 /* 
  * EchoSistant - The Ultimate Voice and Text Messaging Assistant Using Your Alexa Enabled Device.
  * 
+ *		2/13/2017		Version:4.0 R.4.2.31		Removed Profile Control (migrated to Profile app via FTC - Free Text Control engine)
  *		2/13/2017		Version:4.0 R.4.2.30a		Attempting to prevent unintended messages being sent to Profile
  *		2/12/2017		Version:4.0 R.4.2.29		More Harmony Handling bug fixes
  *		2/11/2017		Version:4.0 R.4.2.28a		More bug fixes, added Short answers.  Harmony Handling bug fixes
@@ -69,7 +70,6 @@ preferences {
             page name: "mSupport"
             page name: "mSettings"
            		page name: "mSkill"
-            		page name: "mProfileDetails"
                     page name: "mControls"
             		page name: "mDeviceDetails" 
                 page name: "mTokens"
@@ -114,10 +114,7 @@ page name: "mIntent"
 			}
             section ("Manage Home Security") {
             	href "mSecurity", title: "Home Security control options", description: mSecurityD(), state: mSecurityS()
-            }
-        	section ("Rename Your Main Skill") {
- 		   	label title:"              Rename Main Skill ", required:false, defaultValue: "EchoSistant"  
-        }            
+            }   
 		}
 	}
     page name: "mDevices"    
@@ -243,13 +240,13 @@ page name: "mIntent"
                         dynamicPage (name: "mSecuritySuite", title: "", install: true, uninstall: false) {
                             if (childApps.size()) {  
                                 section("Security Suite",  uninstall: false){
-                                    app(name: "profile", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
+                                    app(name: "security", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
                                 }
                             }
                             else {
                                 section("Security Suite",  uninstall: false){
                                     paragraph "NOTE : Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-                                    app(name: "profile", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
+                                    app(name: "security", appName: "SecuritySuite", namespace: "EchoLabs", title: "Configure Security Suite", multiple: false,  uninstall: false)
                                 }
                             }
                        }
@@ -328,9 +325,6 @@ page name: "mSettings"
     page name: "mSkill"
         def mSkill(){
 			dynamicPage(name: "mSkill", uninstall: false) {
-                section ("List of Profiles") { 
-                    href "mProfileDetails", title: "View your List of Profiles for copy & paste to the AWS Skill...", description: "", state: "complete" 
-                }
                 section ("List of Devices") {
                     href "mDeviceDetails", title: "View your List of Devices for copy & paste to the AWS Skill...", description: "", state: "complete" 
                 }
@@ -339,16 +333,6 @@ page name: "mSettings"
                 }                
             }
       }    
-        page name: "mProfileDetails"
-            def mProfileDetails(){
-                    dynamicPage(name: "mProfileDetails", uninstall: false) {
-                    section ("LIST_OF_PROFILES") { 
-                        def ProfileList = getProfileDetails()   
-                            paragraph ("${ProfileList}")
-                            log.info "\nLIST_OF_PROFILES \n${ProfileList}"
-                                }
-                            }
-                        }     
         page name: "mDeviceDetails"
             def mDeviceDetails(){
                     dynamicPage(name: "mDeviceDetails", uninstall: false) {
@@ -578,7 +562,6 @@ mappings {
 	path("/b") { action: [GET: "processBegin"] }
 	path("/c") { action: [GET: "controlDevices"] }
 	path("/f") { action: [GET: "feedbackHandler"] }
-    path("/p") { action: [GET: "controlProfiles"] }
     path("/s") { action: [GET: "controlSecurity"] }
 	path("/t") { action: [GET: "processTts"] }
 }
@@ -783,6 +766,7 @@ try {
         "other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
 	}
     return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	 
+
 } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
@@ -795,7 +779,6 @@ try {
 ************************************************************************************************************/
 def feedbackHandler() {
     //LAMBDA
-    def fProfile = params.fProfile
     def fDevice = params.fDevice
    	def fQuery = params.fQuery
     def fOperand = params.fOperand 
@@ -812,17 +795,17 @@ def feedbackHandler() {
 	def data = [:]
     	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
     if (debug){
-    	log.debug 	"Feedback data: (fProfile) = '${fProfile}', (fDevice) = '${fDevice}', "+
+    	log.debug 	"Feedback data: (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
 	def fProcess = true
     state.pTryAgain = false
 
-//try {
+try {
 		
         fOperand = fOperand == "lights on" ? "lights" : fOperand == "switches on" ? "lights" : fOperand == "switches" ? "lights" : fOperand
         fCommand = fOperand == "lights on" ? "on" : fOperand == "switches on" ? "on" : fCommand
     
-    if (fDevice == "undefined" && fQuery == "undefined" && fOperand == "undefined" && fCommand == "undefined"  && fProfile == "undefined") {
+    if (fDevice == "undefined" && fQuery == "undefined" && fOperand == "undefined" && fCommand == "undefined") {
 		outputTxt = "Sorry, I didn't get that, "
         state.pTryAgain = true
         state.pContCmdsR = "clear"
@@ -852,8 +835,7 @@ def feedbackHandler() {
         			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             }
         }
-        if (fOperand == "undefined" && fQuery != "undefined" && fQuery != "who" && !fQuery.contains ("when")) {
-			//if (fQuery == "get" || fQuery == "about"){ REMOVED 2/9/17        
+        if (fOperand == "undefined" && fQuery != "undefined" && fQuery != "who" && !fQuery.contains ("when")) {        
                 def deviceMatch=cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                     if(deviceMatch)	{
                             deviceType = "cTstat"
@@ -871,7 +853,7 @@ def feedbackHandler() {
         					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
                     else {
-                        if (fDevice != "undefined" || fProfile != "undefined" ) {
+                        if (fDevice != "undefined") {
                              if (fDevice != "undefined"){
                                 def rSearch = deviceMatchHandler(fDevice)
                                     if (rSearch?.deviceMatch == null) { 
@@ -893,19 +875,6 @@ def feedbackHandler() {
                                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                                 }
                             }
-                            //to do expand feedback on Profile
-                            if (fProfile != "undefined") {
-                                def rSearch = profileMatchHandler(fProfile)
-                                    if (rSearch == null) { 
-                                        outputTxt = "Sorry I couldn't find any details about " + fProfile
-                                        state.pTryAgain = true
-                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                                    }
-                                    else {
-                                        outputTxt = "There " + rSearch
-                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                                    }                                          
-                            }
                         }
                         else {
                             outputTxt = "Sorry, I didn't get that, "
@@ -914,8 +883,7 @@ def feedbackHandler() {
                             state.lastAction = null
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                         }
-					} 
-            //}  REMOVED 2/9/17  
+					}  
         }
         else {
 //>>> Temp >>>>      
@@ -1320,7 +1288,7 @@ def feedbackHandler() {
                 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             	}
             }      
-            def hText = fDevice != "undefined" ? " a device named " + fDevice :  fProfile != "undefined" ? "a profile named " + fProfile : " something "           
+            def hText = fDevice != "undefined" ? " a device named " + fDevice : " something "           
                 if (state.pShort != true){ 
 					outputTxt = "Sorry, I heard that you were looking for feedback on  " + hText + " but Echosistant wasn't able to help, "        
                 }
@@ -1329,14 +1297,14 @@ def feedbackHandler() {
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
         }
     } 
-/*
+
 }catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 }
-*/
+
 }
 /************************************************************************************************************
    DEVICE CONTROL - from Lambda via page c
@@ -1366,7 +1334,7 @@ def controlDevices() {
                              "(ctDevice) = '${ctDevice}', (ctUnit) = '${ctUnit}', (ctGroup) = '${ctGroup}', (ctIntentName) = '${ctIntentName}'"
 	def ctProcess = true	
     state.pTryAgain = false 
-//try {	   
+try {	   
     if (ctIntentName == "main") {
         ctPIN = ctPIN == "?" ? "undefined" : ctPIN
         if (ctNum == "undefined" || ctNum =="?") {ctNum = 0 } 
@@ -1543,6 +1511,7 @@ def controlDevices() {
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                             }
                         }
+                        //Switch Control
                         if (deviceMatch && dType == "s") {
                             device = deviceMatch
                             if (command == "disable" || command == "deactivate"|| command == "stop") {command = "off"}
@@ -1809,17 +1778,15 @@ def controlDevices() {
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     }
-  /*
        } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
-*/
 }
 /************************************************************************************************************
-   DEVICE AND PROFILE CONTROL HANDLER
+   DEVICE CONTROL HANDLER
 ************************************************************************************************************/      
 def controlHandler(data) {   
     def deviceType = data.type
@@ -2164,7 +2131,7 @@ def controlHandler(data) {
                                 result = "Ok, starting " + deviceD + " activity"
                         		return result
                             }
-                            else{
+                            else {
                                 if(state.lastActivity != null){
                                     def activityId = null
                                     def sMedia = cMedia.first()
@@ -2176,7 +2143,6 @@ def controlHandler(data) {
                                             activityId = activity.id
                                         }    	
                                     }
-                                    if(debug) log.warn "starting null - deviceD: ${deviceD.label}, deviceCommand:${deviceCommand}, activityId:${activityId}"
                                     deviceD."${deviceCommand}"(activityId)
                                     deviceD.refresh() 
                                     result = "Ok, starting " + deviceD + " activity"
@@ -2220,108 +2186,6 @@ def controlHandler(data) {
                 }
             }
        }
-    }
-    if (deviceType == "cProfiles") {
-		childApps.each { child ->
-        	def cMatch = child.label
-            if (cMatch == deviceD) {
-                def pintentName = cMatch
-                def ptts = "Running Profile as requested by the main intent"
-                def pDataSet = [ptts:ptts, pintentName:pintentName] 
-                if (deviceCommand == "run" || deviceCommand == "execute" || deviceCommand == "trigger"){
-                	child.profileEvaluate(pDataSet)
-                    result = "Ok, running the " + child.label + " profile"
-                }
-                else if (deviceCommand == "on" || deviceCommand == "off") {
-            		child?.gSwitches."${deviceCommand}"()
-					result = "Ok, turning " + child.label + " lights " + deviceCommand  
-				}
-				else if (deviceCommand == "on" || deviceCommand == "off" || deviceCommand == "stop" || deviceCommand == "start") {
-            		deviceCommand =  deviceCommand == "stop" ? "off" : deviceCommand == "start" ? "on" :  deviceCommand
-                    child?.gFans."${deviceCommand}"()
-					result = "Ok, turning " + child.label + " fan " + deviceCommand  
-				}
-				else if (deviceCommand == "energize" || deviceCommand == "relax" || deviceCommand == "read" || deviceCommand == "concentrate" ||  deviceCommand == "random") {
-					def color = deviceCommand == "read" ? "Warm White" : deviceCommand == "concentrate" ? "Daylight White" : deviceCommand == "relax" ? "Very Warm White" : deviceCommand == "energize" ? "White" : deviceCommand == "random" ? "random" : "undefined"
-                    if (color != "undefined"){
-                		def hueSetVals = getColorName("${color}",level)
-                    	if(deviceCommand != "random") {child?.gHues.setColor(hueSetVals)}
-						result = "Ok, changing your bulbs to " + deviceCommand + " scene "               
-                	}
-                }
-                else if (deviceCommand == "blue" || deviceCommand == "red" || deviceCommand == "yellow" || deviceCommand == "green") {
-					//set lights to blue in the  living room
-                    def hueSetVals = getColorName("${deviceCommand}",level)
-                    child?.gHues.setColor(hueSetVals)
-					result = "Ok, changing your colored bulbs to " + deviceCommand                
-                }
-                else if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "setLevel" || deviceCommand == "set") {
-                    child?.gSwitches.each {s -> 
-                    	def	currLevel = s?.latestValue("level")
-                    	def currState = s?.latestValue("switch") 
-                        if (currLevel) {
-                        def newLevel = cLevel*10
-                        if (unitU == "percent") newLevel = numN     
-            			if (deviceCommand == "increase") {
-            				if (unitU == "percent") {
-                				newLevel = numN
-                			}   
-                			else {
-                				if (currLevel == null){
-                    				s?.on()
-                    				result = "Ok, turning " + child.label + " lights on"   
-                    			}
-                    			else {
-                					newLevel =  currLevel + newLevel
-            						newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-            					}
-                			}
-            			}
-            			if (deviceCommand == "decrease") {
-            				if (unitU == "percent") {
-                				newLevel = numN
-                			}   
-                			else {
-                				if (currLevel == null) {
-                    				s?.off()
-                    				result = "Ok, turning " + child.label + " lights off"                   
-                    			}
-                    			else {
-                					newLevel =  currLevel - newLevel
-            						newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-                    			}
-                			}            
-            			}
-            			if (deviceCommand == "setLevel") {
-            				if (unitU == "percent") {
-                				newLevel = numN
-                			}   
-                			else {
-                				newLevel =  numN*10
-            					newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-                			}            
-            			}
-            			if (newLevel > 0 && currState == "off") {
-            				s?.on()
-            				s?.setLevel(newLevel)
-            			}
-            			else {                                    
-            				if (newLevel == 0 && currState == "on") {
-                            	s?.off()
-                            }
-                			else {
-                            	s?.setLevel(newLevel)
-                            }
-            			} 
-    				}
-                    else if  (deviceCommand == "increase" && currState == "off") {s.on()}
-                    else if (deviceCommand == "decrease" && currState == "on") {s.off()}
-                }
-    			result = "Ok, adjusting the lights in the  " + child.label
-            }
-    	}
-    }
-    return result
     }
 }
 /************************************************************************************************************
@@ -2541,147 +2405,6 @@ def securityHandler(data) {
     return result
 }
 /************************************************************************************************************
-	PROFILE CONTROL - from Lambda via page p
-************************************************************************************************************/
-def controlProfiles() {
-	//LAMBDA VARIABLES	
-    def prCommand = params.pCommand //old ctCommand
-	def prNum = params.pNum // old ctNum
-	def prProfile = params.pProfile // ctDevice
-	def prGroup = params.pGroup
-	def prUnit = params.pUnit
-	def prPIN = params.pPIN
-    def pintentName = params.intentName
-        //OTHER VARIABLES
-        def String outputTxt = (String) null 
-		def pPIN = false
-        def String deviceType = (String) null
-        def String command = (String) null
-		def String numText = (String) null
-        def String result = (String) null
-        def delay = false
-        def data
-        prProfile = prProfile.replaceAll("[^a-zA-Z0-9 ]", "")
-		prProfile = prProfile.replace(" ", "") 
-        if (debug) log.debug	"Control Profile Data: (prCommand)= ${prCommand}',(prNum) = '${prNum}', (prProfile) = '${prProfile}',"+
-                                " (prUnit) = '${prUnit}', (prPIN) = '${prPIN}',  (pintentName) = '${pintentName}'"   
-
-	def pProcess = true
-    state.pTryAgain = false
-//try {
-    if (pintentName == "profile") {         
-        if (prProfile != "undefined"){
-        	def profile = childApps.find {c -> c.label.toLowerCase() == prProfile.toLowerCase()}             
-			def profileMatch = profile?.label
-            if (debug) log.debug "Found a Profile match = '${profileMatch}'"
-            if (profileMatch) {
-				prPIN = prPIN == "?" ? "undefined" : prPIN
-        		if (prNum == "undefined" || prNum =="?") {prNum = 0 } 
-        		if (prCommand =="?") {prCommand = "undefined"} 
-        			prNum = prNum as int
-    			if (prCommand == "undefined" || prNum == "undefined" || prPIN == "undefined" || prUnit == "undefined") {
-        			if (prUnit =="?" || prUnit == "undefined") {
-            			def String unit =  (String) "undefined"
-        			}    
-                    else {
-                        if (prNum>0){
-                            def getTxt = getUnitText(prUnit, prNum)     
-                            numText = getTxt.text
-                            prUnit = getTxt.unit
-                        }
-                    }
-                	if (prNum > 0 && prProfile!= "undefined" && prCommand == "undefined") {
-                    prCommand = "set"
-                	}
-        			if (state.pinTry != null) {
-                    	if (prCommand == "undefined" && prProfile== "undefined") {
-                        	outputTxt = pinHandler(prPIN, prCommand, prNum, prUnit)
-                        	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                    	}
-                        else {
-                        state.pinTry = null
-                        state.pTryAgain = false  
-                        }
-        			}
-                	if (prCommand != "undefined") {
-                    	outputTxt = getCustomCmd(prCommand, prUnit, prGroup, prNum) //added prNum 1/27/2017
-                        if (outputTxt!= null ) {
-                            if (outputTxt == "Pin number please") {pPIN = true}
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                        }
-                        else {
-                            def  getCMD = getCommand(prCommand, prUnit) 
-                            deviceType = getCMD.deviceType
-                            command = getCMD.command
-                            if (debug) log.debug "Received command data for Profile Control: deviceType= '${deviceType}', command= '${command}' "+
-                                                                " _____>>>>> STARTING MAIN PROFILE CONTROL PROCESS <<<<<< ______"
-                        }
-                	}              
-                    if (command != "undefined" && command != "run") {
-                        if (prNum > 0 && prUnit == "minutes") {
-                            delay = true
-                            runIn(prNum*60, controlHandler, [data: [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]])
-                            if (command == "decrease") {outputTxt = "Ok, decreasing the " + profileMatch + " lights level in " + numText}
-                            else if (command == "increase") {outputTxt = "Ok, increasing the " + profileMatch + " lights level in " + numText}
-                            else if (command == "on" || command == "off" ) {outputTxt = "Ok, turning " + profileMatch + " lights " + command + ", in " + numText}
-							return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                        }
-						else {
-							delay = false
-                            data = [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]
-                            outputTxt = controlHandler(data)
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-						}                     
-                    }
-                    else {
-                        if (command == "run") {
-                            if (ctNum > 0 && ctUnit == "minutes") {
-                            	delay = true
-                                runIn(ctNum*60, controlHandler, [data: [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]])
-                                outputTxt = "Ok, running profile actions, for " + profileMatch + ", in " + numText
-								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                            }
-                            else {
-                                delay = false
-                                data = [type: "cProfiles", command: command, device: profileMatch, unit: prUnit, num: prNum]
-                                controlHandler(data)                
-                                outputTxt = "Ok, running profile actions, for " + profileMatch
-								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                            }
-                        }
-                    }
-                }
-                outputTxt = "Sorry, I didn't get that, "
-                state.pTryAgain = true
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-            }
-            else { 
-                if (state.pShort != true){
-                	outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + prProfile + " or the command may not be supported"
-                }
-                else {outputTxt = "I've heard " + prProfile + " , but I wasn't able to take any actions "}
-                state.pTryAgain = true
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-            }
-       	}
-		def hText = "control " + prProfile
-			if (state.pShort != true){ 
-				outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
-			}
-			else {outputTxt = "I've heard " + prProfile + " , but I wasn't able to take any actions "} 
-            state.pTryAgain = true
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-    }
-/*
-} catch (Throwable t) {
-        log.error t
-        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
-        state.pTryAgain = true
-        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-	}
-    */
-}
-/************************************************************************************************************
    TEXT TO SPEECH PROCESS - Lambda via page t
 ************************************************************************************************************/
 def processTts() {
@@ -2689,24 +2412,17 @@ def processTts() {
 		def ptts = params.ttstext 
         def pintentName = params.intentName
         //OTHER VARIABLES
-        def String profileMatch = (String) null
         def String outputTxt = (String) null 
- 		def pContCmds = false
-        def String pContCmdsR = (String) null
+ 		def String pContCmdsR = (String) null
+        def pContCmds = false
         def pTryAgain = false
         def pPIN = false
-        	if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
         def dataSet = [:]
+        if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
+                
         pContCmdsR = "profile"
 		def tProcess = true
-try {
-	if (pintentName != "undefined") {
-    def checkPoint = "tell " + app.label.toLowerCase()
-    def worngIntent = ptts.startsWith("${checkPoint}")
-   	if (worngIntent == false ){
-        if(state.pContCmdsR == "feedback" && ptts == "yes") {
-            ptts = state.lastAction
-        }
+//	try {
         if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes" && state.pContCmdsR != "wrongIntent"){
         	if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it"){
                 outputTxt = "ok, I am here if you need me"
@@ -2724,7 +2440,7 @@ try {
                 if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
                     if (debug) log.debug "Found a profile: '${pintentName}'"
                     pintentName = child.label
-                    //recording last message
+                    // recording last message
                     state.lastMessage = ptts
                     state.lastIntent = pintentName
                     state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
@@ -2755,22 +2471,14 @@ try {
 			pTryAgain = true
 			return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]              
     	}
-    }
-    else {
-    	outputTxt = "Sorry, it sounds like you tried to use the Main skill, are you sure you want to send this message to " + pintentName
-        state.lastAction = ptts
-        state.pContCmdsR = "feedback"
-        pPIN = true
-        return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-	}
-	}
+/*
 } catch (Throwable t) {
-	log.error t
-	outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
-	state.pTryAgain = true
-	return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-} 
-
+        log.error t
+        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
+        state.pTryAgain = true
+        return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+    } 
+*/
 }
 /***********************************************************************************************************
 		SMART HOME MONITOR STATUS AND KEYPAD HANDLER
@@ -2995,59 +2703,6 @@ private deviceMatchHandler(fDevice) {
                 return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": "", "tText": timeText.tText,  "mainCap": "battery"]
             } 
      	}
-}
-/******************************************************************************
-	 FEEDBACK SUPPORT - PROFILE MATCH											
-******************************************************************************/
-private profileMatchHandler(fProfile) {
-
-    def String deviceType = (String) null
-    def String outputTxt = (String) null
-	def String switchesOn = (String) null
-    def currState
-    def stateDate
-    def stateTime
-	def deviceMatch
-		state.pTryAgain = false	
-	childApps.each {child ->
-		if (child.label.toLowerCase() == fProfile.toLowerCase()) { 
-			if (debug) log.debug "Found a profile, generating feedback data: '${fProfile}'"
-			if (child?.gSwitches){
-				def devList = []
-				def fCommand = "on"
-				if (child?.gSwitches.latestValue("switch").contains(fCommand)) {
-					child?.gSwitches.each { deviceName ->
-						if (deviceName.latestValue("switch")=="${fCommand}") {
-							String device  = (String) deviceName
-							devList += device
-						}
-					}
-				}
-			} 
-			if (devList != null) {
-				if (devList.size() == 1) {
-					switchesOn = "is one switch on"                          			
-				}
-				else {
-					switchesOn = "are " + devList.size() + " switches on"
-				}
-			}
-			else switchesOn = "are no switches on"
-/*            
-            if (child?.sMedia){
-                deviceType = "cMedia"
-                currState = child?.sMedia.currentState("currentActivity").value 
-                currState = currState == "--" ? " all activities are off " : " The " + currState + " activity has been on"
-                stateDate = child?.sMedia.currentState("currentActivity").date
-                stateTime = child?.sMedia.currentState("currentActivity").date.time
-                def timeText = getTimeVariable(stateTime, deviceType)
-            }                
-*/        
-        
-        }        
-    }
-	outputTxt  =  switchesOn //+ " and the Harmony Hub is " +  currState + " since " + Text
-   	return outputTxt  
 }
 /******************************************************************************
 	 FEEDBACK SUPPORT - DEVICE CAPABILITIES											
@@ -3717,13 +3372,31 @@ private void processSms(number, message) {
    Custom Color Filter
 ************************************************************************************************************/       
 private getColorName(cName, level) {
-	if (cName == "random") {    	
+	if (cName == "random") {
+    def randomColor = [:]
+    def bulbName
+    	log.warn "color is random"
+        
+        child?.gHues.each { bulb ->
+            int hueLevel = color.l
+            int hueHue = Math.random() *100 as Integer
+            bulbName = bulb.name
+            randomColor = [hue: hueHue, saturation: 100, level: hueLevel]
+            log.warn "setting ${bulbName} to ${randomColor}"
+            //child?.gHues.setColor(hueSetVals)
+            bulb.setColor(randomColor)
+       	}
+        log.warn "setting bulb to ${randomColor}"
+        log.warn "setting ${bulbName} to ${randomColor}"
+        /*
         for (bulb in child?.gHues) {    
             int hueLevel = !level ? 100 : level
             int hueHue = Math.random() *100 as Integer
             def randomColor = [hue: hueHue, saturation: 100, level: hueLevel]
-            bulb.setColor(hueSetVals)
+            log.warn "setting bulb to ${randomColor}"
+            bulb.setColor(randomColor) 
         }
+        */
         return "executed"
 	}    
     for (color in fillColorSettings()) {
@@ -3987,14 +3660,6 @@ private def textLicense() {
 /***********************************************************************************************************************
  		UI - SKILL DETAILS
  ***********************************************************************************************************************/
-private getProfileDetails() {
-	def c = "" 
-	def children = getChildApps()	
-    	children?.each { child -> 
-			c +=child.label +"\n" } 
-	def ProfileDetails = "${c}" 
-    	return  ProfileDetails
-}
 private getControlDetails() {
 	def sec = [] 
 	def modes = location.modes.name.sort()
