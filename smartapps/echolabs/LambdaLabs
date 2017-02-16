@@ -1,6 +1,7 @@
 /**
  *  EchoSistant - Lambda Code
  *
+ *  Version 4.1.12 -2/15/2017 removed Profile Control from Main Intent
  *  Version 4.1.11 -2/10/2017 added short answers option
  *  Version 4.1.10 -2/07/2017 Completed 4.0 Engine
  *  Version 4.1.9 - 1/27/2017 Added security intent
@@ -34,8 +35,8 @@
 exports.handler = function( event, context ) {
     var https = require( 'https' );
     // Paste app code here between the breaks------------------------------------------------
-    var STappID = '21a23bf0-aab9-4b66-8e49-xxx';
-    var STtoken = '1937a5fa-0b00-4b56-941b-xxx';
+    var STappID = '21a23bf0-aab9-4b66-8e49-fc519099e12d';
+    var STtoken = '1937a5fa-0b00-4b56-941b-b54b4b5cefe9';
     var url='https://graph.api.smartthings.com:443/api/smartapps/installations/' + STappID + '/' ;
         //---------------------------------------------------------------------------------------
         var cardName ="";
@@ -131,33 +132,19 @@ exports.handler = function( event, context ) {
                     process = true;
                     cardName = "EchoSistant Security";
                 }
-
-//-------- Profile Control Type Request------------------------------------------------------------------
-                else if (intentName == "profile"){           
-                    var pCommand = event.request.intent.slots.cCommand.value;
-                    var pProfile = event.request.intent.slots.pProfile.value;
-                    var pNum = event.request.intent.slots.cNum.value;
-                    var pUnit = event.request.intent.slots.cUnit.value;
-                    var pPIN = event.request.intent.slots.cPIN.value;
-                    var pGroup = event.request.intent.slots.cGroup.value;
-                    url += 'p?pCommand=' + pCommand + '&pNum=' + pNum + '&pPIN=' + pPIN + '&pProfile=' + pProfile + '&pGroup=' + pGroup + '&pUnit=' + pUnit + '&intentName=' + intentName;
-                    process = true;
-                    cardName = "EchoSistant Profile Control";
-                }
 //-------- Feedback Type Request------------------------------------------------------------------
                 else if (intentName == "feedback"){           
-                    var fProfile = event.request.intent.slots.pProfile.value;
                     var fDevice = event.request.intent.slots.cDevice.value;
                     var fQuery = event.request.intent.slots.fQuery.value;
                     var fOperand = event.request.intent.slots.fOperand.value;
                     var fCommand = event.request.intent.slots.cCommand.value;
 
-                    url += 'f?fProfile=' + fProfile + '&fDevice=' + fDevice + '&fCommand=' + fCommand + '&fQuery=' + fQuery + '&fOperand=' + fOperand + '&intentName=' + intentName;
+                    url += 'f?fDevice=' + fDevice + '&fCommand=' + fCommand + '&fQuery=' + fQuery + '&fOperand=' + fOperand + '&intentName=' + intentName;
                     process = true;
                     cardName = "EchoSistant Feedback";
                 }
 //-------- TTS Type Request------------------------------------------------------------------
-                else if (intentName != "main" || intentName != "security" || intentName != "feedback" || intentName != "profile") {
+                else if (intentName != "main" || intentName != "security" || intentName != "feedback") {
                     var ttstext = event.request.intent.slots.ttstext.value;
                     url += 't?ttstext=' + ttstext + '&intentName=' + intentName;
                     process = true;
