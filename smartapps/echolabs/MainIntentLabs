@@ -30,41 +30,8 @@
             ]
         },
         {
-            "intent": "profile",
-            "slots": [
-                {
-                    "name": "pProfile",
-                    "type": "LIST_OF_PROFILES"
-                },
-                {
-                    "name": "cNum",
-                    "type": "AMAZON.NUMBER"
-                },
-                {
-                    "name": "cUnit",
-                    "type": "LIST_OF_UNITS"
-                },
-                {
-                    "name": "cCommand",
-                    "type": "LIST_OF_COMMANDS"
-                },
-                {
-                    "name": "cPIN",
-                    "type": "AMAZON.NUMBER"
-                },
-                {
-                    "name": "cGroup",
-                    "type": "LIST_OF_GROUPS"
-                }              
-            ]
-        },
-        {
             "intent": "feedback",
             "slots": [
-                {
-                    "name": "pProfile",
-                    "type": "LIST_OF_PROFILES"
-                },
                 {
                     "name": "fOperand",
                     "type": "LIST_OF_OPERANDS"
