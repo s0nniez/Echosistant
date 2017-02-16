@@ -90,11 +90,6 @@ feedback {fQuery} {fOperand}
 feedback {fQuery} {cDevice}
 feedback {fQuery} was the last time I {fOperand} {cDevice} 
 feedback {fQuery} I {fOperand} {cDevice} 
-feedback {fQuery} {fOperand} are on in the {pProfile}
-feedback {fQuery} {fOperand} are on in {pProfile}
-feedback to tell me {fQuery} {pProfile}
-feedback to tell me {fQuery} the {pProfile}
-feedback to {fQuery} me the status of {pProfile}
 feedback {fQuery} many {fOperand} are {cCommand}
 feedback if {cDevice} is {cCommand}
 feedback for {fOperand} {cCommand}
@@ -112,11 +107,5 @@ feedback {fQuery} any one at the {cDevice}
 feedback {fQuery} any motion at the {cDevice}
 feedback {cDevice} is {fOperand}
 feedback {fQuery} was {cDevice} last {fOperand}
-
-profile {cCommand} {pProfile}
-profile {cCommand} {pProfile} in {cNum} {cUnit}
-profile is {cCommand} in the {pProfile}
-profile make the {pProfile} {cGroup} {cCommand}
-profile turn the {pProfile} {cGroup} {cCommand} in {cNum} {cUnit}
-profile {cCommand} the {pProfile} {cGroup} to {cNum}
-profile the {pProfile} {cGroup} are {cCommand}
+feedback {fQuery} do I have to {cCommand} the filters
+feedback {fQuery} do I need to {cCommand} the filters
