@@ -204,6 +204,7 @@ page name: "mIntent"
                 dynamicPage(name: "mSecurity", title: "",install: false, uninstall: false) {
                 section ("Set PIN Number to Unlock Security Features") {
                     input "cPIN", "password", title: "Use this PIN for ALL Alexa Controlled Controls", default: false, required: false, submitOnChange: true
+                    //input "cTempPIN", "password", title: "Guest PIN (expires in 24 hours)", default: false, required: false, submitOnChange: true
                 }                                
                 if (cPIN) {
                     section ("Configure Security Options for Alexa") {
@@ -1912,7 +1913,7 @@ def controlHandler(data) {
     		newSetPoint = numN
             int cNewSetPoint = newSetPoint
     		if (newSetPoint > currentTMP) {
-    			if (currentMode == "cool" || currentMode == "off") {
+    			if (currentMode == "off") { // currentMode == "cool" || removed so it does't change Modes as frequently 2/16/2017
     				deviceD?."heat"()
 					if (debug) log.trace 	"Turning heat on because requested temperature of '${newSetPoint}' "+
                     						"is greater than current temperature of '${currentTMP}' " 
@@ -1925,11 +1926,11 @@ def controlHandler(data) {
                     }
             }
  			else if (newSetPoint < currentTMP) {
-				if (currentMode == "heat" || currentMode == "off") {
+				if (currentMode == "off") { //currentMode == "heat" || removed so it does't change Modes as frequently 2/16/2017
 					deviceD?."cool"()
 					if (debug) log.trace "Turning AC on because requested temperature of '${newSetPoint}' is less than current temperature of '${currentTMP}' "    
 				}
-				deviceTMatch?.setCoolingSetpoint(newSetPoint)                 
+				deviceD?.setCoolingSetpoint(newSetPoint)                 
 				if (debug) log.trace "Adjusting Cooling Set Point to '${newSetPoint}' because requested temperature is less than current temperature of '${currentTMP}'"
                 result = "Ok, setting " + deviceD + " cooling to " + cNewSetPoint + " degrees "
                     if (delayD == false) { 

@@ -1,6 +1,7 @@
 /* 
  * Profile - EchoSistant Add-on 
  *
+ *		02/16/2017		Release 4.1.5	Added routines, thermostats and variables
  *		02/14/2017		Release 4.1.4	Removed weather alerts and added mode change notifications
  *		02/12/2017		Release 4.1.3	Bug fix: Scheduled events not executing properly
  *		02/07/2017		Release 4.1.2	Updates... lots and lots of updates
@@ -68,53 +69,65 @@ page name: "mainProfilePage"
 			}
 
         if (actionType == "Custom") {
-        section ("Send this message...") {
-            input "message", "text", title: "Play this message...", required:false, multiple: false, defaultValue: ""
-        	}
+            section ("Send this message...") {
+                input "message", "text", title: "Play this message...", required:false, multiple: false, defaultValue: ""
+                if (message) {
+                    paragraph "You can use the following variables in your custom message: &device, &action , &event and &time \n" +
+                    "\nFor Example: \n&event sensor &device is &action and the event happened at &time \n" +
+                    "Translates to: 'Contact' sensor 'Bedroom' is 'Open' and the event happened at '1:00 PM'"  
+                }
+            }
         }
-        section ("Using These Triggers") {
+        section ("Using These Triggers", hideWhenEmpty: true) {
+        	def actions = location.helloHome?.getPhrases()*.label.sort()
             input "timeOfDay", "time", title: "At this time every day", required: false
-            input "mySwitch", "capability.switch", title: "Choose Switches...", required: false, multiple: true, submitOnChange: true
+            input "mySwitch", "capability.switch", title: "Choose Switch(es)...", required: false, multiple: true, submitOnChange: true
             input "myContact", "capability.contactSensor", title: "Choose Doors and Windows..", required: false, multiple: true, submitOnChange: true
             input "myLocks", "capability.lock", title: "Choose Locks..", required: false, multiple: true, submitOnChange: true
             input "myMotion", "capability.motionSensor", title: "Choose Motion Sensors..", required: false, multiple: true, submitOnChange: true
             input "myPresence", "capability.presenceSensor", title: "Choose Presence Sensors...", required: false, multiple: true, submitOnChange: true
-            input "pMode", "enum", title: "Choose Modes...", options: location.modes.name.sort(), multiple: true, required: false 
-            	def actions = location.helloHome?.getPhrases()*.label 
-                }    
-        section ("and these output methods...") {    
-			input "sonos", "capability.musicPlayer", title: "On this Sonos type music player", required: false, multiple: true, submitOnChange: true
-            if (sonos) {
-			input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+            input "myTstat", "capability.thermostat", title: "Choose Thermostats...", required: false, multiple: true, submitOnChange: true
+            input "myMode", "enum", title: "Choose Modes...", options: location.modes.name.sort(), multiple: true, required: false 
+            input "myRoutine", "enum", title: "Choose Routines...", options: actions, multiple: true, required: false
+        }    
+        section ("and these output methods..." , hideWhenEmpty: true) {    
+			input "sonos", "capability.musicPlayer", title: "On this Music Player", required: false, multiple: true, submitOnChange: true
+            	if (sonos) {
+					input "sonosVolume", "number", title: "Temporarily change volume", description: "0-100%", required: false
 				}
-			input "speechSynth", "capability.speechSynthesis", title: "Speech Synthesis Device (may not work)", required: false, multiple: true, submitOnChange: true
-          	href "SMS", title: "Send SMS & Push Messages...", description: pSendComplete(), state: pSendSettings()
-                        }
+			if (actionType == "Custom" && message) {
+                input "speechSynth", "capability.speechSynthesis", title: "On this Speech Synthesis Device", required: false, multiple: true, submitOnChange: true
+                    if (speechSynth) {
+                        input "speechVolume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+                    }
+            }
+            
+            href "SMS", title: "Send SMS & Push Messages...", description: pSendComplete(), state: pSendSettings()
+        }
         section ("Using these Restrictions") {
             href "pRestrict", title: "Use these restrictions...", description: pRestComplete(), state: pRestSettings()
-            }
-            section ("Name and/or Remove this Profile") {
+        }
+		section ("Name and/or Remove this Profile") {
  		   	label title:"              Rename Profile ", required:false, defaultValue: "Notification Profile"  
-        	} 
-		}
+		} 
 	}
+}
 page name: "SMS"
     def SMS(){
         dynamicPage(name: "SMS", title: "Send SMS and/or Push Messages...", uninstall: false) {
         section ("Push Messages") {
-            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-            input "timeStamp", "bool", title: "Add time stamp to Push Messages", required: false, defaultValue: false  
+            input "push", "bool", title: "Send Push Notification...", required: false, defaultValue: false
+            input "timeStamp", "bool", title: "Add time stamp to Push Messages...", required: false, defaultValue: false  
             }
-        section ("Text Messages" ) {
-           	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true,    
-               	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-            if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-        		input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true,      
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Text.png" 
-            if (sendText){      
-                paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122;8046663344"
-                input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
+        section ("Text Messages" , hideWhenEmpty: true) {
+            input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
+                if (sendContactText){
+                    input "recipients", "contact", title: "Send text notifications to...", multiple: true, required: false
+                }
+            input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true      
+                if (sendText){      
+                    paragraph "You may enter multiple phone numbers separated by semicolon to deliver the Alexa message as a text and a push notification. E.g. 8045551122;8046663344"
+                    input name: "sms", title: "Send text notification to...", type: "phone", required: false
                 }
             }    
         }        
@@ -123,17 +136,14 @@ page name: "pRestrict"
     def pRestrict(){
         dynamicPage(name: "pRestrict", title: "", uninstall: false) {
 			section ("Mode Restrictions") {
-                input "modes", "mode", title: "Only when mode is", multiple: true, required: false, submitOnChange: true,
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                input "modes", "mode", title: "Only when mode is", multiple: true, required: false, submitOnChange: true
             }        
             section ("Days - Audio only on these days"){	
                 input "days", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
-                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                    image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             }
             section ("Time - Audio only during these times"){
-                href "certainTime", title: "Only during a certain time", description: pTimeComplete(), state: pTimeSettings(),
-                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Extra.png"
+                href "certainTime", title: "Only during a certain time", description: pTimeComplete(), state: pTimeSettings()
             }   
 	    }
 	}
@@ -171,70 +181,104 @@ def updated() {
 }
 def initialize() {
     	subscribeToEvents()
-        subscribe(location, modeChangeHandler)
-	    subscribe(location, locationHandler) 
 }    
 /************************************************************************************************************
 		Subscriptions
 ************************************************************************************************************/
 def subscribeToEvents() {
-	loadText()
 	if (timeOfDay) {
-    log.debug "Time of Day subscribed to for ${timeOfDay}"
-		schedule(timeOfDay, scheduledTimeHandler)
+		schedule(timeOfDay, "scheduledTimeHandler")
 	} 
-    if (runDay) {
-   		subscribe(runDay, location.day, location.currentDay)
-	}
     if (actionType) {
-    if (pMode) {subscribe(location, "mode", locationHandler)}
+    if (myRoutine) {subscribe(location, "routineExecuted",alertsHandler)}
+    if (myMode) {subscribe(location, "mode", alertsHandler)}
    	if (mySwitch) {subscribe(mySwitch, "switch.on", alertsHandler)}
     if (myContact) {subscribe(myContact, "contact.open", alertsHandler)}
-    if (myLocks) {subscribe(myLocks, "lock.locked", alertsHandler)}
-    if (myLocks) {subscribe(myLocks, "lock.unlocked", alertsHandler)}
+    if (myMotion) {subscribe(myMotion, "motion.active", alertsHandler)}
+    if (myLocks) {
+    	subscribe(myLocks, "lock.locked", alertsHandler)}
+    	subscribe(myLocks, "lock.unlocked", alertsHandler)
+    }
     if (myPresence) {subscribe(myPresence, "presenceSensor", alertsHandler)}
+    if (myTstat) {    
+		subscribe(TheThermostat, "heatingSetpoint", alertsHandler)
+        subscribe(TheThermostat, "coolingSetpoint", alertsHandler)
+    }
+}
+/************************************************************************************************************
+   TIME OF DAY HANDLER
+************************************************************************************************************/
+def scheduledTimeHandler() {
+	def data = [:]
+		if (getDayOk()==true && getModeOk()==true && getTimeOk()==true) {	
+			data = [value:"time", name:"time of day", device:"schedule"] 
+            unschedule()
+    		alertsHandler(data)
+    	}
+}
+/************************************************************************************************************
+   EVENTS HANDLER
+************************************************************************************************************/
+def alertsHandler(evt) {
+	def eVal = evt.value
+    def eName = evt.name
+    def eDev = evt.device
+    def eTxt
+    log.debug "Received event"		
+    if (getDayOk()==true && getModeOk()==true && getTimeOk()==true) {
+		def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
+        log.debug "Event Data: name ${evt.name}, value:  ${evt.value}, device: ${evt.device}, stamp: ${stamp}"	
+        if (message){      
+            eTxt = message ? "$message".replace("&device", "${evt.device}").replace("&event", "${evt.name}").replace("&action", "${evt.value}").replace("&time", "${stamp}") : null
+        	if(recipients?.size()>0 || sms?.size()>0) {
+            	sendtxt(eTxt)
+        	}
+        }
+        takeAction(eTxt)
 	}
 }
-private dayString(Date date) {
-	def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
-	if (location.timeZone) {
-		df.setTimeZone(location.timeZone)
-	}
-	else {
-		df.setTimeZone(TimeZone.getTimeZone("America/New_York"))
-	}
-	df.format(date)
-}
-/***********************************************************************************************************************
-    MODE CHANGE HANDLER
-***********************************************************************************************************************/
-def locationHandler(evt) {
-	if (pMode) {
-  		log.debug "Location Mode changed to: ${evt.value}"
-//    	def result = !modes || modes?.contains(location.mode)
-		takeAction()
-	}
-} 
 /***********************************************************************************************************************
     CUSTOM SOUNDS HANDLER
 ***********************************************************************************************************************/
-private takeAction(evt) {
-def CustomMessage = message
-	log.trace "takeAction()"
-    	if (speechSynth) {
-        speechSynth?.playSoundAndTrack(state.sound.uri, state.sound.duration, state.selectedSong)
-    	log.info "Playing this message: '${message}', on the speech synthesizer'${speechSynth}'"
+private takeAction(eTxt) {
+	def sVolume
+	log.debug "received message (eTxt) = ${eTxt}"
+	
+    if (actionType == "Custom") {
+		if(message){
+        	state.sound = textToSpeech(eTxt instanceof List ? eTxt[0] : eTxt)
+      	}
+        else {
+           	state.sound = textToSpeech("Attention, Attention. You selected the custom message option but did not enter a message in the ${app.label} Smart App")
         }
-        if (sonos) {
-        sonos?.playSoundAndTrack(state.sound.uri, state.sound.duration, state.selectedSong, volume)
-		log.info "Playing message: '${CustomMessage}', on the music player '${sonos}' at volume '${volume}'"
-		}
-        if (resumePlaying){
-		sonos.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
-		}
-    log.trace "Exiting takeAction()"
-	}
-private loadText() {
+ 	}
+    else loadSound()
+    //Playing Audio Message
+        if (speechSynth) {
+            def currVolLevel = speechSynth.latestValue("level")
+            def currMute = speechSynth.latestValue("mute")
+                log.debug "vol switch = ${currVolSwitch}, vol level = ${currVolLevel}, currMute = ${currMute} "
+                sVolume = settings.speechVolume ?: 30 
+                speechSynth?.playTextAndResume(eTxt, sVolume)
+                log.info "Playing message on the speech synthesizer'${speechSynth}' at volume '${volume}'"
+        }
+        if (sonos) { 
+            def currVolLevel = sonos.latestValue("level")
+            def currMuteOn = sonos.latestValue("mute").contains("muted")
+                log.debug "currVolSwitchOff = ${currVolSwitchOff}, vol level = ${currVolLevel}, currMuteOn = ${currMuteOn} "
+                if (currMuteOn) { 
+                    log.warn "speaker is on mute, sending unmute command"
+                    sonos.unmute()
+                }
+                sVolume = settings.sonosVolume ?: 30
+                sonos?.playTrackAndResume(state.sound.uri, state.sound.duration, sVolume)
+                log.info "Playing message on the music player '${sonos}' at volume '${volume}'"
+        }
+}
+/***********************************************************************************************************************
+    CUSTOM SOUNDS HANDLER
+***********************************************************************************************************************/
+private loadSound() {
 	switch (actionType) {
 		case "Bell 1":
 			state.sound = [uri: "http://s3.amazonaws.com/smartapp-media/sonos/bell1.mp3", duration: "10"]
@@ -271,14 +315,6 @@ private loadText() {
 			break;
 		case "Lightsaber":
 			state.sound = [uri: "http://s3.amazonaws.com/smartapp-media/sonos/lightsaber.mp3", duration: "10"]
-			break;
-		case "Custom":
-			if (message) {
-            	state?.sound = textToSpeech(message instanceof List ? message[0] : message) // not sure why this is (sometimes) needed)
-				}
-            else {
-				state?.sound = textToSpeech("Attention, Attention. You selected the custom message option but did not enter a message in the $app.label Smart App")
-			}
 			break;
 		default:
 			state?.sound = [uri: "http://s3.amazonaws.com/smartapp-media/sonos/bell1.mp3", duration: "10"]
@@ -360,58 +396,36 @@ private timeIntervalLabel() {
     SMS HANDLER
 ***********************************************************************************************************************/
 private void sendtxt(message) {
-def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
-    if (debug) log.debug "Request to send sms received with message: '${message}'"
-    if (sendContactText) {
-       log.debug "Sending sms to selected reipients"
+	def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
+    if (parent.debug) log.debug "Request to send sms received with message: '${message}'"
+    if (sendContactText) { 
+        sendNotificationToContacts(message, recipients)
+            if (parent.debug) log.debug "Sending sms to selected reipients"
     } 
-    if (push && !timeStamp) {
-	    sendPush message
+    else {
+    	if (push) {
+        	message = timeStamp==true ? message + " at " + stamp : message
+    		sendPush message
+            	if (parent.debug) log.debug "Sending push message to selected reipients"
         }
-	if (push && timeStamp) {
-     	sendPush (message + " at " + stamp)
-       	log.debug "Sending push message to selected reipients with timestamp"
-        }
-	if (sms || sendContactText) {
+    } 
+    if (notify) {
+        sendNotificationEvent(message)
+             	if (parent.debug) log.debug "Sending notification to mobile app"
+    }
+    if (sms) {
         sendText(sms, message)
-        log.debug "Processing message for selected phones"
-		}
+        if (parent.debug) log.debug "Processing message for selected phones"
 	}
+}
 private void sendText(number, message) {
     if (sms) {
-        def phones = sms.split("\\,")
+        def phones = sms.split("\\;")
         for (phone in phones) {
             sendSms(phone, message)
-            log.debug "Sending sms to selected phones"
-        	}
-    	}        
-	}
-/************************************************************************************************************
-   Time of Day Scheduler Handler
-************************************************************************************************************/
-def scheduledTimeHandler() {
-	if (getDayOk()==true && getModeOk()==true && getTimeOk()==true) {
-		sendtxt(message)
-    	takeAction()
-    	}
-    }    
-/************************************************************************************************************
-   Alerts Handler
-************************************************************************************************************/
-def alertsHandler(evt) {
-	def eVal = evt.value
-    def eName = evt.name
-    def eDev = evt.device
-    def eTxt = " "
-    log.debug "Received event name ${evt.name} with value:  ${evt.value}, from: ${evt.device}"
-
-	if (getDayOk()==true && getModeOk()==true && getTimeOk()==true) {
-	def stamp = state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
-        if (eVal == "present" || eVal == "open" || eVal == "locked" || eVal == "active" || eVal == "on") {
-        	takeAction(evt)
-            sendtxt(message)
+            if (parent.debug) log.debug "Sending sms to selected phones"
         }
-	}        
+    }
 }
 /************************************************************************************************************
    Page status and descriptions 

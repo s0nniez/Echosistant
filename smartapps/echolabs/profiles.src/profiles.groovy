@@ -372,8 +372,10 @@ def profileEvaluate(params) {
 	def recordingNow = tts.startsWith("record a message")
     def recordingNowNoA = tts.startsWith("record message")
     //Reminders
-    def reminder = tts.startsWith("set a reminder")
-    def reminderNoA = tts.startsWith("set reminder")	
+    def reminder = tts.startsWith("set a reminder ") ? "set a reminder " : tts.startsWith("set reminder ") ? "set reminder" : tts.startsWith("remind me ") ? "remind me " : null
+    log.warn "start - reminder = ${reminder}"
+    //def reminderNoA = tts.startsWith("set reminder")
+    //def remindMeNow = tts.startsWith("remind me")
     def cancelReminder = tts.startsWith("cancel reminder") ? true : tts.startsWith("cancel the reminder") ? true : tts.startsWith("cancel a reminder") ? true : false
     def whatReminders = tts.startsWith("what reminders")
     def cancelReminderNum = tts.startsWith("cancel reminder 1") ?  "reminder1" : tts.startsWith("cancel reminder 2") ? "reminder2" : tts.startsWith("cancel reminder 3") ? "reminder3" : null
@@ -452,21 +454,21 @@ def profileEvaluate(params) {
 					if (state.reminderAnsPend == 1)	{
                     	ttsR = state.reminder1
                         scheduler = "reminderHandler1"
-                        outputTxt = "I have scheduled a reminder to " + ttsR + " in " + tts
+                        outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
                         if(parent.debug) log.debug "scheduling reminder 1 with outputTxt = ${outputTxt}"
                     }
                 	else {
                         if (state.reminderAnsPend == 2)	{
                             ttsR = state.reminder2
                             scheduler = "reminderHandler2"
-                            outputTxt = "I have scheduled a reminder to " + ttsR + " in " + tts
+                            outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
                             if(parent.debug) log.debug "scheduling reminder 2 with outputTxt = ${outputTxt}"
                         }
                         else {
                             if (state.reminderAnsPend == 3)	{
                                 tts = state.reminder3
                                 scheduler = "reminderHandler3"
-                                outputTxt = "I have scheduled a reminder to " + ttsR + " in " + tts
+                                outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
                                 if(parent.debug) log.debug "scheduling reminder 3 with outputTxt = ${outputTxt}"
                             }
                         }
@@ -532,7 +534,7 @@ def profileEvaluate(params) {
             	}
             }
             //Record a Message
-            if (recordingNow == true || reminder == true || whatReminders == true) {  
+            if (recordingNow == true || reminder || whatReminders == true) {  
                 if (recordingNow == true || recordingNowNoA == true) {
                 def record
                 	if (recordingNow == true) {
@@ -544,8 +546,9 @@ def profileEvaluate(params) {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }
 				//Set a reminder        	
-                if (reminder == true) {
-                def remindMe = tts.replace("set a reminder to", "")
+                if (reminder) {
+                log.warn "reminder not blank = ${reminder}"
+                def remindMe = tts.replace("${reminder}", "")
                 if (parent.debug) log.debug "Setting Reminder: (remindMe) = '${remindMe}' for (intent) = '${intent}'" 
                     if (state.reminder1 == null || state.reminder2 == null || state.reminder3 == null) {
                         if(state.reminder1 == null || state.reminder1 == "" ) {
@@ -963,8 +966,7 @@ def ttsActions(tts) {
             }
             if (sonosDevice){
                 def currVolLevel = sonosDevice.latestValue("level")
-                	//if (parent.debug) log.debug "Current volume level is: '${currVolLevel}'"
-                def newVolLevel = volume//-(volume*10/100)
+                def newVolLevel = volume
                 	if (parent.debug) log.debug "Setting volume to: '${newVolLevel}'"
                 sonosDevice.setLevel(newVolLevel)
                 sonosDevice.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
@@ -1121,14 +1123,6 @@ private txtFormat (message, eDev, eVal) {
             if (debug) log.debug "Processed Alert: ${eTxt} "
     		
             return eTxt
-}
-/************************************************************************************************************
-   Play Sonos Alert
-************************************************************************************************************/
-def playAlert(message, speaker) {
-    state.sound = textToSpeech(message instanceof List ? message[0] : message)
-    speaker.playTrackAndResume(state.sound.uri, state.sound.duration, volume)
-    if (debug) log.debug "Sending message: ${message} to speaker: ${speaker}"
 }
 /***********************************************************************************************************************
     MISC. - REMINDERS HANDLER
@@ -1328,7 +1322,7 @@ private getCommand(text){
     	}
 	}
 //Volume
-	else if  (text.contains("mute") || text.contains("be quiet")){
+	else if  (text.contains("mute") || text.contains("be quiet") || text.contains("pause speaker")){
         	command = "mute"
         	deviceType = "volume"
     }
