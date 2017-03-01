@@ -18,8 +18,8 @@
  * //UPDATE VERSION
 /**********************************************************************************************************************************************/
 definition(
-	name			: "EchoSistant",
-    namespace		: "Echo",
+	name			: "EchoSistantLabs",
+    namespace		: "EchoLabs",
     author			: "JH/BD",
 	description		: "The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.",
 	category		: "My Apps",
