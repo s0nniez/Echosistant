@@ -141,16 +141,30 @@ page name: "mIntent"
     page name: "mFeedbackRpt"
     	def mFeedbackRpt(){
         	dynamicPage(name: "mFeedbackRpt", title: "", install: false, uninstall: false) {
-            	section ("Configure Home Report One", hideWhenEmpty: true) {
-                	input "fReportOne", "enum", title: "Home Report One", 
+            	section ("Configure Home Reports", hideWhenEmpty: true) {
+                	input "fReport1", "enum", title: "Home Report One", 
                         	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-							}
+                	input "fReport2", "enum", title: "Home Report Two", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport3", "enum", title: "Home Report Three", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport4", "enum", title: "Home Report Four", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport5", "enum", title: "Home Report Five", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport6", "enum", title: "Home Report Six", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport7", "enum", title: "Home Report Seven", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport8", "enum", title: "Home Report Eight", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport9", "enum", title: "Home Report Nine", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                	input "fReport10", "enum", title: "Home Report Ten", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                            }
 						}
 					}                        
-                
-                
-                
-                
     page name: "mDevices"    
         def mDevices(){
             dynamicPage(name: "mDevices", title: "",install: false, uninstall: false) {
@@ -4344,4 +4358,6 @@ def mSecurityD() {def text = "Tap here to configure settings"
     	text = "Configured"}
     	else text = "Tap to Configure"
 		text}
-    
+        
+      
+
