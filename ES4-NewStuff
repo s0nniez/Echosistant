@@ -18,8 +18,8 @@
  * //UPDATE VERSION
 /**********************************************************************************************************************************************/
 definition(
-	name			: "EchoSistantLabs",
-    namespace		: "EchoLabs",
+	name			: "EchoSistant",
+    namespace		: "Echo",
     author			: "JH/BD",
 	description		: "The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.",
 	category		: "My Apps",
@@ -33,7 +33,8 @@ preferences {
     		page name: "mIntent"				
             	page name: "mDevices"
                 	page name: "mFeedback"
-                    	page name: "mFeedbackRpt"
+                    	page name: "mAssessment"
+                        page name: "mAssessmentGrp"
                 page name: "mDefaults" 
             	page name: "mSHMSec"
                 	page name: "mSecuritySuite" // links Parent to Security Add-ON
@@ -95,76 +96,126 @@ page name: "mIntent"
     page name: "mFeedback"
     	def mFeedback(){
         	dynamicPage(name: "mFeedback", title: "", install: false, uninstall: false) {
-            	section ("Tell Me About My Home Reports") {
-            		href "mFeedbackRpt", title: "Configure Your Feedback Reports", descritpion: none
+				section ("Home Assessments") {
+            		href "mAssessment", title: "Configure Home Assessments"//, description: none
             		}
-				section ("Allow these Windows", hideWhenEmpty: true) {
+                section ("Device Groups") {
+                	href "mAssessmentGrp", title: "Configure Home Assessment Device Groups"//, description: none
+                    }
+                }
+            }
+    page name: "mAssessmentGrp"
+    	def mAssessmentGrp(){
+        	dynamicPage(name: "mAssessmentGrp", title: "", install: false, uninstall: false) {
+				section ("Allow these Doors and Windows", hideWhenEmpty: true) {
                     input "fWindow", "capability.contactSensor", title: "Allow Contacts that are ONLY on a Window(s)...", multiple: true, required: false      
-                	}
-                section ("Allow these Doors", hideWhenEmpty: true) {
                 	input "fDoor", "capability.contactSensor", title: "Allow Contacts that are ONLY on a Door(s)...", multiple: true, required: false      
 					}
-                section ("Allow these Lights", hideWhenEmpty: true) {
+                section ("Allow these Lights and Switches", hideWhenEmpty: true) {
                 	input "fLight", "capability.switch", title: "Allow Switches that are used as ACTUAL Lights...", multiple: true, required: false
+                	input "fSwitch", "capability.switch", title: "Allow Switches that are used as On/Off devices...", multiple: true, required: false
                 	}
                 section ("Allow these Fans and Ceiling Fans", hideWhenEmpty: true) {
                 	input "fFan", "capability.switch", title: "Allow these switches that control Fans and Ceiling Fans...", multiple: true, required: false
                 	}
-                section ("Allow these Switches", hideWhenEmpty: true) {
-                	input "fSwitch", "capability.switch", title: "Allow Switches that are used as On/Off devices...", multiple: true, required: false
-					}
-                section ("Allow these Presence Sensors", hideWhenEmpty: true) {
-                	input "fPresence", "capability.presenceSensor", title: "Allow these Presence Sensors...", multiple: true, required: false
-                    }
-                section ("Monitor these Devices Batteries", hideWhenEmpty: true ){
-                    input "fBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
-                }                     
                 section ("Allow these Locks and Garage Door Devices", hideWhenEmpty: true){ 
                 	input "fLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
                     input "fGarage", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
 					input "fRelay", "capability.switch", title: "Allow These Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
                     if (fRelay) input "fContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false                
-                }    
+	                }    
                 section ("Monitor Your Climate Control", hideWhenEmpty: true){ 
                  	input "fTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
                     input "fIndoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
                  	input "fOutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
                     input "fVent", "capability.switchLevel", title: "Allow These Smart Vent(s)...", multiple: true, required: false
-                } 
+	                } 
                 section ("Misc Sensors", hideWhenEmpty: true) {
                  	input "fMotion", "capability.motionSensor", title: "Allow These Motion Sensor(s)...", multiple: true, required: false
                     input "fContact", "capability.contactSensor", title: "Allow These Contact Sensor(s) that are NOT Doors or Windows...", multiple: true, required: false      
             		input "fWater", "capability.waterSensor", title: "Allow These Water Sensor(s)...", multiple: true, required: false                       
+                	input "fPresence", "capability.presenceSensor", title: "Allow these Presence Sensor(s)...", multiple: true, required: false
+                	}
+                section ("Monitor these Devices Batteries", hideWhenEmpty: true ){
+                    input "fBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
+	                }                     
                 }
 			}		                
-		}
-    page name: "mFeedbackRpt"
-    	def mFeedbackRpt(){
-        	dynamicPage(name: "mFeedbackRpt", title: "", install: false, uninstall: false) {
-            	section ("Configure Home Reports", hideWhenEmpty: true) {
-                	input "fReport1", "enum", title: "Home Report One", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport2", "enum", title: "Home Report Two", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport3", "enum", title: "Home Report Three", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport4", "enum", title: "Home Report Four", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport5", "enum", title: "Home Report Five", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport6", "enum", title: "Home Report Six", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport7", "enum", title: "Home Report Seven", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport8", "enum", title: "Home Report Eight", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport9", "enum", title: "Home Report Nine", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                	input "fReport10", "enum", title: "Home Report Ten", 
-                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks","fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts","fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
-                            }
-						}
-					}                        
+	page name: "mAssessment"
+    	def mAssessment(){
+        	dynamicPage(name: "mAssessment", title: "", install: false, uninstall: false) {
+            	section ("Configure Home Assessment One", hideWhenEmpty: true, install: true, uninstall: true) {
+                	input "fReport1", "enum", title: "Choose your device groups...", description: "",
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haOne", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+                section ("Configure Home Assessment Two", hideWhenEmpty: true) {                
+                    input "fReport2", "enum", title: "Choose your device groups...", description: "", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haTwo", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+            	section ("Configure Home Assessment Three", hideWhenEmpty: true) {
+                	input "fReport3", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haThree", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+                section ("Configure Home Assessment Four", hideWhenEmpty: true) {                
+                    input "fReport4", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haFour", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+            	section ("Configure Home Assessment Five", hideWhenEmpty: true) {
+                	input "fReport5", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haFive", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+                section ("Configure Home Assessment Six", hideWhenEmpty: true) {                
+                    input "fReport6", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haSix", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+            	section ("Configure Home Assessment Seven", hideWhenEmpty: true) {
+                	input "fReport7", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haSeven", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+                section ("Configure Home Assessment Eight", hideWhenEmpty: true) {                
+                    input "fReport8", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haEight", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+            	section ("Configure Home Assessment Nine", hideWhenEmpty: true) {
+                	input "fReport9", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haNine", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+                section ("Configure Home Assessment Ten", hideWhenEmpty: true) {                
+                    input "fReport10", "enum", title: "Choose your device groups...", 
+                        	options: ["fWindow":"Windows","fDoor":"Doors","fLight":"Lights","fFan":"Fans","fSwitch":"Switches","fPresence":"Presence","fBattery":"Batteries","fLock":"Locks",
+                            "fGarage":"Garage Doors","fRelay":"Garage Relays","fTstat":"Thermostats","fIndoor":"Indoor Temp","fOutDoor":"Outdoor Temp","fVent":"Vents","fMotion":"Motion Sensors","fContact":"Misc Contacts",
+                            "fWater":"Water Detectors"], multiple: true, required: false, submitOnChange: true
+                             input "haTen", "text", title: "Name this Assessment...", multiple: false, required: false
+                                }
+							}
+						}                        
     page name: "mDevices"    
         def mDevices(){
             dynamicPage(name: "mDevices", title: "",install: false, uninstall: false) {
@@ -1125,76 +1176,25 @@ def feedbackHandler() {
                     outputTxt = "Your Smart Home Monitor Status is " +  sSHM
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]				
             }
-//>>> Lights >>>>            
-/*            if (fOperand == "lights" && fCommand != "undefined") { 
-                if(fLight){
+//>>> Switches >>>>            
+            if (fOperand == "switches" && fCommand != "undefined") { 
+                if(fSwitch){
                     def devList = []
-                    if (fLight?.latestValue("switch")?.contains(fCommand)) {
-                        fLight?.each { deviceName ->
+                    if (fSwitch?.latestValue("switch")?.contains(fCommand)) {
+                        fSwitch?.each { deviceName ->
                                     if (deviceName.latestValue("switch")=="${fCommand}") {
                                         String device  = (String) deviceName
                                         devList += device
                                     }
                         }
                     }
-                    if (fQuery == "how" || fQuery.contains ("if") || fQuery == "are there" || fQuery == "how many") { // removed fQuery == "undefined" 2/13/2017
+                    if (fQuery == "how" || fQuery.contains ("if") || fQuery == "are there" || fQuery == "how many" || fQuery == "about") { // removed fQuery == "undefined" 2/13/2017
                         if (devList?.size() > 0) {
                             if (devList?.size() == 1) {
-                                outputTxt = "There is one light " + fCommand + " , would you like to know which one"                           			
+                                outputTxt = "There is one switch " + fCommand + " , would you like to know which one"                           			
                             }
                             else {
-                                outputTxt = "There are " + devList?.size() + " lights " + fCommand + " , would you like to know which ones"
-                            }
-                        data.devices = devList
-                        data.cmd = fCommand
-                        data.deviceType = "fLight"
-                        state.lastAction = data
-                        state.pContCmdsR = "feedback"
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-
-                        }
-                        else {outputTxt = "There are no lights " + fCommand}
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-
-                    }
-                    else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
-                        def devNames = []
-                        if (fLight?.latestValue("switch")?.contains(fCommand)) {
-                            fLight?.each { deviceName ->
-                                        if (deviceName.latestValue("switch")=="${fCommand}") {
-                                            String device  = (String) deviceName
-                                            devNames += device
-                                        }
-                            }
-                        outputTxt = "The following lights are " + fCommand + "," + devNames.sort().unique()
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-
-                        }
-                        else {outputTxt = "There are no lights " + fCommand}
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                    }     
-                }
-            }*/
-//>>> Lights & Switches >>>>            
-            if ((fOperand == "switches" || fOperand == "lights") && fCommand != "undefined") { 
-                if(fSwitch || fLight){
-                    def theSwitches = "${fOperand}"
-                    def devList = []
-                    if (theSwitches?.latestValue("switches")?.contains(fCommand)) {
-                        theSwitches?.each { deviceName ->
-                                    if (deviceName.latestValue("switch")=="${fCommand}") {
-                                        String device  = (String) deviceName
-                                        devList += device
-                                    }
-                        }
-                    }
-                    if (fQuery == "how" || fQuery.contains ("if") || fQuery == "are there" || fQuery == "how many") { // removed fQuery == "undefined" 2/13/2017
-                        if (devList?.size() > 0) {
-                            if (devList?.size() == 1) {
-                                outputTxt = "There is one " + fOperand + fCommand + " , would you like to know which one"                           			
-                            }
-                            else {
-                                outputTxt = "There are " + devList?.size() + fOperand +  fCommand + " , would you like to know which ones"
+                                outputTxt = "There are " + devList?.size() + " switches " + fCommand + " , would you like to know which ones"
                             }
                         data.devices = devList
                         data.cmd = fCommand
@@ -1222,6 +1222,56 @@ def feedbackHandler() {
 
                         }
                         else {outputTxt = "There are no switches " + fCommand}
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    }     
+                }
+            }
+//>>> Lights>>>>            
+            if (fOperand == "lights") { 
+                if(fLight){
+                    def devList = []
+                    if (fLight.latestValue("switch")=="${fCommand}") {
+                        fLight?.each { deviceName ->
+                                    if (deviceName.latestValue("switch")=="${fCommand}") {
+                                        String device  = (String) deviceName
+                                        devList += device
+                                    }
+                        		}
+                    		}                    
+                    if (fQuery == "how" || fQuery.contains ("if") || fQuery == "are there" || fQuery == "how many") { // removed fQuery == "undefined" 2/13/2017
+                        if (devList?.size() > 0) {
+                            if (devList?.size() == 1) {
+                                outputTxt = "There is one " + fOperand + fCommand + " , would you like to know which one"                           			
+                            }
+                            else {
+                                outputTxt = "There are " + devList?.size() + fOperand +  fCommand + " , would you like to know which ones"
+                            }
+                        data.devices = devList
+                        data.cmd = fCommand
+                        data.deviceType = "fLight"
+                        state.lastAction = data
+                        state.pContCmdsR = "feedback"
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+
+                        }
+                        else {outputTxt = "There are no lights " + fCommand}
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+
+                    }
+                    else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
+                        def devNames = []
+                        if (fLight?.latestValue("switch")?.contains(fCommand)) {
+                            fLight?.each { deviceName ->
+                                        if (deviceName.latestValue("switch")=="${fCommand}") {
+                                            String device  = (String) deviceName
+                                            devNames += device
+                                        }
+                            }
+                        outputTxt = "The following " + fOperand + " are " + fCommand + "," + devNames.sort().unique()
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+
+                        }
+                        else {outputTxt = "There are no " + fOperand + "'s" + fCommand}
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                     }     
                 }
