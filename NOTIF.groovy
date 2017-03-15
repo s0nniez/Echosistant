@@ -114,50 +114,42 @@ page name: "triggers"
             if(actionType != "Default"){
                 section("Time") {
                     input "frequency", "enum", title: "Choose a Frequency", submitOnChange: true, required: fale, 
-            			options: ["Minutes", "Hourly", "Daily", "Weekly", "Monthly"]
+            			options: ["Minutes", "Hourly", "Daily", "Weekly", "Monthly", "Yearly"]
                 	if(frequency == "Minutes"){
-                        input "xMinutes", "number", title: "Every X number of minutes", range: "1..59", submitOnChange: true, required: false
-                        input "xMinutesSelected", "enum", title: "OR each selected minute", submitOnChange: true, required: false, multiple: true,
-                                options: [	 "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",
-                                            "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-                                            "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
-                                            "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
-                                            "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
-                                            "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"]
+                        input "xMinutes", "number", title: "Every X minute(s) - maximum 60", range: "1..59", submitOnChange: true, required: false
                 	}
                     if(frequency == "Hourly"){
-                        input "xHours", "number", title: "Every X number of hours", range: "1..23", submitOnChange: true, required: false
+                        input "xHours", "number", title: "Every X hour(s) - maximum 24", range: "1..23", submitOnChange: true, required: false
                             if(xHours) input "xHoursStarting", "time", title: "starting at time...", submitOnChange: true, required: false
-                        input "xHoursSelected", "enum", title: "OR each selected hour", submitOnChange: true, required: false, multiple: true,
-                                options: [	 "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",
-                                            "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-                                            "20", "21", "22", "23"]
-                            if(xHoursSelected) input "xHoursSelectedStarting", "number", title: "...starting minutes after the hour", submitOnChange: true, required: false, range: "0..59"
                     }	
                     if(frequency == "Daily"){
-                        input "xDays", "number", title: "Every X number of days", range: "1..31", submitOnChange: true, required: false
-                        input "xDaysSelected", "enum", title: "OR each selected day of the month...", submitOnChange: true, required: false, multiple: true,
-                                    options: [	       "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",
-                                                "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-                                                "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
-                                                "30", "31"]
-                        input "xDaysOfWeekSelected", "enum", title: "OR each selected day of the week", submitOnChange: true, required: false, multiple: true,
-                                    options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-                        
-                        if(xDays || xDaysSelected || xDaysOfWeekSelected){
-                        	input "xDaysStarting", "time", title: "starting at time...", submitOnChange: true, required: false
-                    	}
+                        input "xDays", "number", title: "Every X day(s) - maximum 31", range: "1..31", submitOnChange: true, required: false
+						input "xDaysWeekDay", "bool", title: "Every Week Day (MON-FRI)", required: false, defaultValue: false
+                        if(xDays){input "xDaysStarting", "time", title: "starting at time...", submitOnChange: true, required: false}
+                    }
+                    if(frequency == "Weekly"){
+						input "xWeeks", "enum", title: "Every selected day of the week", submitOnChange: true, required: false, multiple: true,
+							options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+						if(xWeeks){input "xWeeksStarting", "time", title: "starting at time...", submitOnChange: true, required: false}
                     }
                     if(frequency == "Monthly"){
-                        input "xMonths", "number", title: "Every X number of months", range: "1..12", submitOnChange: true, required: false
-                        input "xMonthsSelected", "enum", title: "OR each selected month", submitOnChange: true, required: false, multiple: true,
-                                options: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-                        if(xMonths || xMonthsSelected){
+                    	//TO DO add every (First-Fourth), (Mon-Fri) of every (X) month
+                        input "xMonths", "number", title: "Every X month(s) - maximum 12", range: "1..12", submitOnChange: true, required: false
+                        if(xMonths){
                             input "xMonthsDay", "number", title: "...on this day of the month", range: "1..31", submitOnChange: true, required: false
                             input "xMonthsStarting", "time", title: "starting at time...", submitOnChange: true, required: false
                         }
                     }
-				}
+                    if(frequency == "Yearly"){
+                    	//TO DO add the (First-Fourth), (Mon-Fri) of (Jan-Dec)
+                        input "xYears", "enum", title: "Every selected month of the year", submitOnChange: true, required: false, multiple: true,
+                                options: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+                        if(xYears){
+                            input "xYearsDay", "number", title: "...on this day of the month", range: "1..31", submitOnChange: true, required: false
+                            input "xYearsStarting", "time", title: "starting at time...", submitOnChange: true, required: false                     
+						}
+                	}
+                }
 			}                
             if(actionType != "Default"){
                 section ("Location Event", hideWhenEmpty: true) {
@@ -282,7 +274,7 @@ page name: "certainTime"
 ************************************************************************************************************/
 def installed() {
 	log.debug "Installed with settings: ${settings}"
-    state.NotificationRelease = Notification + ": " + release()
+    state.NotificationRelease = "Notification: " + release()
 
 	if (timeOfDay) {
 		schedule(timeOfDay, "scheduledTimeHandler")
@@ -296,7 +288,8 @@ def installed() {
 }
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	if(state.NotificationRelease == null) state.NotificationRelease = Notification + ": " + release()
+	state.NotificationRelease = "Notification: " + release()
+    state.lastPlayed = now()
 	unschedule()
     unsubscribe()
     initialize()
@@ -633,21 +626,23 @@ private takeAction(eTxt) {
                     sonos.unmute()
                 }
                 sVolume = settings.sonosVolume ?: 20
-                	if(state.sound){
-                		state.sound = sTxt
-                		runIn(state.sound.duration, delayMessage)
+                def elapsed = now() - state.lastPlayed
+                log.warn "elapsed = $elapsed"
+                	if(state.sound !=null && elapsed < 3000 ){
+                        state.sound = sTxt
+                        def delaySound = Math.max((state.sound.duration as Integer),3)
+                        log.error "message playing, delaying message by $delaySound"
+                		runIn(delaySound, "delayMessage")
                 	}
                     else {                
-                		sonos?.playTrackAndResume(sTxt.uri, Math.max((sTxt.duration as Integer),1), sVolume) 
-                //sonos?.playTrackAndResume(sTxt.uri, sTxt.duration, sVolume)  Retired Bobby 3/15/2017
+                		sonos?.playTrackAndResume(sTxt.uri, Math.max((sTxt.duration as Integer),1), sVolume)  
                 		state.sound = sTxt
+                        state.lastPlayed = now()
                 	}
-                //sonos?.playTrackAndResume(state.sound.uri, state.sound.duration, sVolume) // Retired to use direct variable Bobby 3/13/2017
                 log.info "Playing message on the music player '${sonos}' at volume '${sonosVolume}'"
         }
 }
-
-private delayMessage() {
+def delayMessage() {
 	def sVolume = settings.sonosVolume ?: 20
 		sonos?.playTrackAndResume(state.sound.uri, state.sound.duration, sVolume)
 		state.sound = null
