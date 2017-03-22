@@ -1,0 +1,633 @@
+/* 
+ * Reminders and Events - EchoSistant Add-on 
+ *
+ *		3/21/2017		Version:4.0 R.0.3.2	    	added: &set (sunset), &rise (sunrise)
+ *		3/18/2017		Version:4.0 R.0.3.1a	    added: &motion, &cooling, &heating
+ *		3/16/2017		Version:4.0 R.0.3.0	    	Cron Scheduling and Reporting
+ *
+ *  Copyright 2016 Jason Headley & Bobby Dobrescu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+/**********************************************************************************************************************************************/
+definition(
+	name			: "RemindersProfile",
+    namespace		: "Echo",
+    author			: "JH/BD",
+	description		: "EchoSistant Add-on",
+	category		: "My Apps",
+    parent			: "Echo:EchoSistant", 
+	iconUrl			: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png",
+	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
+	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
+/**********************************************************************************************************************************************/
+private release() {
+	def text = "R.0.3.2"
+}
+
+preferences {
+
+    page name: "mainProfilePage"
+}
+/******************************************************************************************************
+   SPEECH AND TEXT PROCESSING INTERNAL
+******************************************************************************************************/
+def profileEvaluate(params) {
+	def tts = params.ptts
+	def intent = params.pintentName        
+	def childName = app.label       
+	//Data for CoRE 
+	def data = [args: tts]
+    def dataSet = [:]
+    //Output Variables
+    def pTryAgain = false
+    def pPIN = false
+    def String pContCmdsR = (String) "tts"
+	def String outputTxt = (String) null 
+	def String scheduler = (String) null     
+	def String ttsR = (String) null
+	def String command = (String) null
+	def String deviceType = (String) null
+    def String colorMatch = (String) null 
+
+    //Recorded Messages
+	def repeat = tts.startsWith("repeat last message") ? true : tts.contains("repeat last message") ? true : tts.startsWith("repeat message") ? true : false
+    def whatsUP = "what's up"
+	def play = tts.startsWith("play message") ? true : tts.startsWith("play the message") ? true : tts.startsWith("play recording") ? true : tts.startsWith("play recorded") ? true : false
+	def recordingNow = tts.startsWith("record a message") ? "record a message" : tts.startsWith("record message") ? "record message" : tts.startsWith("leave a message") ? "leave a message" : tts.startsWith("leave message") ? "leave message" : null
+    def whatMessages = tts.startsWith("what messages") ? true : tts.startsWith("how many messages") ? true : tts.contains("have messages") ? true : tts.contains("have any messages") ? true : false
+    def deleteMessages = tts.startsWith("delete message 1") ?  "recording" : tts.startsWith("delete message 2") ? "recording1" : tts.startsWith("delete message 3") ? "recording2" : tts.startsWith("delete all messages") ? "all" : tts.startsWith("delete messages") ? "all" : null
+	log.warn "Delete messages = ${deleteMessages}"
+    //Reminders
+    def reminder = tts.startsWith("set a reminder ") ? "set a reminder " : tts.startsWith("set reminder ") ? "set reminder" : tts.startsWith("remind me ") ? "remind me " : tts.startsWith("set the reminder") ? "set the reminder" : null
+    def cancelReminder = tts.startsWith("cancel reminder") ? true : tts.startsWith("cancel the reminder") ? true : tts.startsWith("cancel a reminder") ? true : false
+    def whatReminders = tts.startsWith("what reminders")
+    def cancelReminderNum = tts.startsWith("cancel reminder 1") ?  "reminder1" : tts.startsWith("cancel reminder 2") ? "reminder2" : tts.startsWith("cancel reminder 3") ? "reminder3" : null
+    // Hue Scenes / Colored Lights   
+    def hueSet = tts.startsWith("set the color") ? true : tts.startsWith("set color") ? true : tts.startsWith("set lights color") ? true : tts.startsWith("set the lights to color") ? true : false
+    def hueChange = tts.startsWith("change the color") ? true : tts.startsWith("change the lights") ? true : tts.startsWith("change color") ? true : tts.startsWith("change lights to ") ? true : false
+    def feelLucky = tts.startsWith("I feel lucky") ? true : tts.startsWith("I am feeling lucky") ? true : tts.startsWith("I'm feeling lucky") ? true : tts.contains("feeling lucky") ? true : tts.startsWith("pick a random color") ? true : false
+    def read = tts.contains("reading") ? true : tts.contains("studying") ? true : false 
+    def concentrate = tts.contains("cleaning") ? true : tts.contains("working") ? true : tts.contains("concentrate") ? true : tts.contains("concentrating") ? true : false
+    def relax = tts.contains("relax") ? true : tts.contains("relaxing") ? true : tts.contains("chilling") ? true : false    
+    //Voice Activation Settings
+    def muteAll = tts.contains("disable sound") ? "mute" : tts.contains("disable audio") ? "mute" : tts.contains("mute audio") ? "mute" : tts.contains("silence audio") ? "mute" : null
+    	muteAll = tts.contains("activate sound") ? "unmute" : tts.contains("enable audio") ? "unmute" : tts.contains("unmute audio") ? "unmute" : muteAll
+    def muteAlexa = tts.contains("disable Alexa") ? "mute" : tts.contains("silence Alexa") ? "mute" : tts.contains("mute Alexa") ? "mute" : null
+    	muteAlexa = tts.contains("enable Alexa") ? "unmute" : tts.contains("start Alexa") ? "unmute" : tts.contains("unmute Alexa") ? "unmute" : muteAll
+	def test = tts.contains("this is a test") ? true : tts.contains("a test") ? true : false
+    
+    if (parent.debug) log.debug "Message received from Parent with: (tts) = '${tts}', (intent) = '${intent}', (childName) = '${childName}', current app version: ${release()}"  
+    
+    if (pSendSettings() == "complete" || pGroupSettings() == "complete"){
+        if (intent == childName){
+			if (test){
+				outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
+				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]       
+    		}
+            def  getCMD = getCommand(tts) 
+                deviceType = getCMD.deviceType
+                command = getCMD.command 
+                if(parent.debug) log.debug "received a control command: ${command}, deviceType:  ${deviceType}"
+            //Voice Activated Commands
+            if(muteAll == "mute" || muteAll == "unmute"){
+                if(muteAll == "mute"){
+                    state.pMuteAll = true
+                    outputTxt = "Ok, audio messages have been disabled"       
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                
+                }
+                else { 
+                    state.pMuteAll = false
+                    outputTxt = "Ok, audio messages have been enabled"       
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+                }
+            }
+            if(muteAlexa == "mute" || muteAlexa == "unmute"){
+                if(muteAlexa == "mute"){
+                    state.pMuteAlexa = true
+                    outputTxt = "Ok, Alexa Feedback Responses have been disabled"       
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                
+                }
+                else { 
+                    state.pMuteAlexa = false
+                    outputTxt = "Ok, Alexa Feedback Responses have been enabled"       
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+                }
+            } 
+            //Repeat Message
+            if (repeat == true || play == true  || tts == whatsUP) {
+                if (tts == repeat || tts == whatsUP) {
+                    outputTxt = getLastMessage()          
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
+                else {
+                    def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
+                    if (numMessages == "3 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
+                    else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
+                    else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
+                    else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
+                    //"Your last recording was, " + state.recording
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
+            }  
+            else {
+                //Schedule Reminders
+                if(state.reminderAnsPend >0){
+                    int iLength
+                    def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
+                    def length = tts.findAll( /\d+/ )*.toInteger()
+                    if(length[0] !=null) {
+                        iLength = (int)length.get(0)                    
+                    }
+                    else {
+                        outputTxt = "sorry, I was unable to get the number,  "
+                        state.reminderAnsPend = 0
+                        pTryAgain = true
+                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }	
+                    if(unit !="undefined" && iLength != null){
+                        if (state.reminderAnsPend == 1)	{
+                            ttsR = state.reminder1
+                            scheduler = "reminderHandler1"
+                            outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
+                            if(parent.debug) log.debug "scheduling reminder 1 with outputTxt = ${outputTxt}"
+                        }
+                        else {
+                            if (state.reminderAnsPend == 2)	{
+                                ttsR = state.reminder2
+                                scheduler = "reminderHandler2"
+                                outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
+                                if(parent.debug) log.debug "scheduling reminder 2 with outputTxt = ${outputTxt}"
+                            }
+                            else {
+                                if (state.reminderAnsPend == 3)	{
+                                    tts = state.reminder3
+                                    scheduler = "reminderHandler3"
+                                    outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
+                                    if(parent.debug) log.debug "scheduling reminder 3 with outputTxt = ${outputTxt}"
+                                }
+                            }
+                        }
+                        if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, scheduler)}
+                        else {
+                            if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, scheduler)}
+                                else{
+                                    if(unit == "days"){
+                                        def currDate = new Date(now() + location.timeZone.rawOffset)
+                                        runOnce(currDate + iLength , scheduler)
+                                    }
+                                }
+                        }
+                        state.reminderAnsPend = 0
+                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
+                    else {
+                        outputTxt = "sorry, I was unable to schedule your reminder, "
+                        state.reminderAnsPend = 0
+                        pTryAgain = true
+                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
+                }
+                //Cancel Reminders
+                 if (cancelReminder == true || cancelReminderNum != null) {
+                    def String cancelMeText = (String) null
+                    if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
+                                unschedule("reminderHandler2")
+                                cancelMeText = state.reminder2
+                                state.reminder2 = null
+                                state.reminderAnsPend = 0
+                            }
+                     if(cancelMe != "undefined" || cancelReminderNum != null) {
+                        if (cancelMe == "reminder1" || cancelReminderNum == "reminder1") {                        
+                            unschedule("reminderHandler1")
+                            cancelMeText = state.reminder1
+                            state.reminder1 = null
+                            state.reminderAnsPend = 0
+                         }
+                         else {
+                            if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
+                                unschedule("reminderHandler2")
+                                cancelMeText = state.reminder2
+                                state.reminder2 = null
+                                state.reminderAnsPend = 0
+                            }
+                            else {
+                                if (cancelMe == "reminder3" || cancelReminderNum == "reminder3") {
+                                unschedule("reminderHandler3")
+                                cancelMeText = state.reminder3
+                                state.reminder3 = null
+                                state.reminderAnsPend = 0
+                                }
+                            }
+                        }
+                        outputTxt = "Ok, canceling reminder to " + cancelMeText
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
+                    else {
+                        outputTxt = "sorry, I was unable to cancel your reminder "
+                        state.reminderAnsPend = 0
+                        pTryAgain = true
+                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
+                }
+                //Record a Message
+                if (recordingNow || reminder || whatReminders == true || whatMessages == true || deleteMessages != null) {  
+                    if (recordingNow) {
+                    def record
+                    record = tts.replace("record a message", "").replace("record message", "").replace("leave a message", "").replace("leave message", "")
+                    if (parent.debug) log.debug "Recording: (record) = '${record}' for (intent) = '${intent}'" 
+                    //state.recording = record
+                    if (state.recording == null || state.recording1 == null || state.recording2 == null) {    
+                            if(state.recording == null || state.recording == "" ) {
+                                state.recording = record
+                                //state.reminderAnsPend = 1
+                            }
+                            else if(state.recording1 == null || state.recording1 == "") {
+                                state.recording1 = record
+                                //state.reminderAnsPend = 2
+                            }  
+                            else if(state.recording2 == null || state.recording2 == "") {
+                                state.recording2 = record
+                                //state.reminderAnsPend = 3
+                            }
+                            outputTxt = "Ok, message recorded. To play it later, just say: play message."
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                        else {
+                            pTryAgain = true
+                            outputTxt = "You have reached the maximum allowed number of recordings. Please delete one or more messages before recording another one, "
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }            
+                    }                        
+					if (whatMessages == true) {
+                        def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
+						if(numMessages == "3 messages") outputTxt = outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
+                    	else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
+                    	else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
+                    	else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    } 
+                    //Delete Messages
+					if (deleteMessages != null) {
+                        def String deleteMeText = (String) null
+                        if (deleteMessages == "recording") {
+							deleteMeText = state.recording
+                            state.recording = null
+                       	}	
+                        else {
+                        	if (deleteMessages == "recording1") {
+                                deleteMeText = state.recording1
+                                state.recording1 = null
+                         	}
+							else {
+                            	if (deleteMessages == "recording2") {
+                                    deleteMeText = state.recording2
+                                    state.recording2 = null
+                                 }
+                                 else if (deleteMessages == "all"){
+									deleteMeText = "all messages"
+                                    state.recording = null
+                                    state.recording1 = null
+                                    state.recording2 = null
+                            	}
+                            }
+                            outputTxt = "Ok, deleted " + deleteMeText
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                    }                    
+                    //Set a reminder        	
+                    if (reminder) {
+                    def remindMe = tts.replace("${reminder}", "")
+                    if (parent.debug) log.debug "Setting Reminder: (remindMe) = '${remindMe}' for (intent) = '${intent}'" 
+                        if (state.reminder1 == null || state.reminder2 == null || state.reminder3 == null) {
+                            if(state.reminder1 == null || state.reminder1 == "" ) {
+                                state.reminder1 = remindMe
+                                state.reminderAnsPend = 1
+
+                            }
+                            else if(state.reminder2 == null || state.reminder2 == "") {
+                                state.reminder2 = remindMe
+                                state.reminderAnsPend = 2
+                            }  
+                            else if(state.reminder3 == null || state.reminder3 == "") {
+                                state.reminder3 = remindMe
+                                state.reminderAnsPend = 3
+                            }
+                            outputTxt = "For how long?"
+                            pContCmdsR = "reminder"
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                        else {
+                            pTryAgain = true
+                            outputTxt = "You have reached the maximum allowed numbers of reminders. Please cancel a reminder before scheduling another one."
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }            
+                    }
+                    if (whatReminders == true) {
+                            def numReminders = state.reminder3 != null ? "3 reminders" : state.reminder2 != null ? "2 reminders" : state.reminder1 != null ? "one reminder" : "no reminders" 
+                            outputTxt = "You have " + numReminders + "scheduled, " + state.reminder1 + " , " + state.reminder2 + " , " + state.reminder3
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }    
+                }
+                //EXECUTE PROFILE ACTIONS
+                 if (command == "run" && deviceType == "profile"){    	
+                    outputTxt = "Running profile"
+                    ttsActions(tts)
+                    pContCmdsR = "run"
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
+                //EXECUTE PROFILE ACTIONS WITH DELAY
+                if (command == "delay" && deviceType == "profile"){ 
+                    state.lastAction = "Running scheduled actions"
+                    state.delayAnsPend = 1
+                    outputTxt = "For how long?"
+                    pContCmdsR = "reminder"
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
+                //SCHEDULE ACTIONS WITH DELAY
+                if(state.delayAnsPend >0 ){
+                    int iLength
+                    def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
+                    def length = tts.findAll( /\d+/ )*.toInteger()
+                        if(length[0] !=null) {
+                            iLength = (int)length.get(0)                    
+                        }
+                        else {
+                            outputTxt = "sorry, I was unable to get the number,  "
+                            state.delayAnsPend = 0
+                            pTryAgain = true
+                            return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }	
+                    if(unit !="undefined" && iLength != null){ 
+                        outputTxt = "I have scheduled the actions for " + app.label + " to run in " + tts
+                        if(parent.debug) log.debug "scheduling delay with outputTxt = ${outputTxt}"
+                        if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, "ttsHandler")}
+                        else {
+                            if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, "ttsHandler")}
+                            else{
+                                if(unit == "days"){
+                                    def currDate = new Date(now() + location.timeZone.rawOffset)
+                                    runOnce(currDate + iLength , "ttsHandler")
+                                }
+                            }
+                         }
+                    }
+                    else {
+                        outputTxt = "sorry, I was unable to schedule your reminder, "
+                        state.reminderAnsPend = 0
+                        pTryAgain = true
+                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }       
+                    state.reminderAnsPend = 0
+                    return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
+                /**********************
+                FREE TEXT CONTROL ENGINE 
+                ***********************/
+                //Colored Lights
+                if (gHues?.size()>0) {
+                    //HUE SCENES
+                    if (read == true || concentrate == true || relax == true || feelLucky == true){
+                        def color = read == true ? "Warm White" : concentrate == true ? "Daylight White" : relax == true ? "Very Warm White" : feelLucky == true ? "random" : "undefined"
+                        if (color != "undefined" && command != "colorloopOn" && command != "colorloopOff" ){
+                            if (color != "random"){
+                                def hueSetVals = getColorName("${color}",level)
+                                gHues?.setColor(hueSetVals)
+                                outputTxt =  "Ok, changing your bulbs to " + color 
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                            }
+                            else  {
+                                setRandomColorName()
+                                outputTxt =  "Ok, changing your bulbs to random colors"
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                            }
+                        }
+                    }
+                    // CHANGING COLORS
+					if(hueSet == true || hueChange == true) {
+						def hueSetVals
+						tts = tts.replace("set the color to ", "").replace("set lights color to ", "").replace("set the lights to color ", "").replace("set color to ", "")
+                        tts = tts.replace("change the color to ", "").replace("change the lights to ", "").replace("change color to ", "").replace("change lights to ", "")
+                        tts = tts == "day light" ? "Daylight" : tts == "be light" ? "Daylight" : tts
+                        hueSetVals =  getColorName( tts , level)
+						if (hueSetVals) {
+							gHues?.setColor(hueSetVals)
+                            outputTxt =  "Ok, changing your bulbs to " + tts
+                       	}
+                        else {
+							outputTxt =  "Sorry, I wasn't able to change the color to " +  tts
+                            pTryAgain = true
+                        }
+						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
+					}	
+					if (command == "colorloopOn" || command == "colorloopOff") {
+                        //def loopOn = command == "colorloopOn" ? true : command == "colorloopOff" ? false : null
+						if(command == "colorloopOn"){ //loopOn == true
+							outputTxt = profileLoop(app.label)
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+						}
+                        else { 
+                            outputTxt =  profileLoopCancel(app.label)
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+						}
+                	}
+                }
+                if (command != null && deviceType != null && command != "undefined" ) {
+                //LIGHT SWITCHES && CUSTOM GROUPS
+                if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
+                    dataSet =  ["command": command, "deviceType": deviceType]
+                    outputTxt = advCtrlHandler(dataSet)
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                                  
+                }
+				//DISABLE SWITCHES
+                if (deviceType == "disable") {
+                    if (gDisable?.size()>0) {
+                        if (command == "on" || command == "off") {
+                            if (reverseDisable == true) { command = command == "on" ? "off" : command == "off" ? "on" : command } // added 2/19/17 per Jason's request 
+                            gDisable?."${command}"()
+                            outputTxt = "Ok, turning " + childName + " automation " + command
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                    }
+                }            
+                //FANS CONTROL
+                if (deviceType == "fan"){
+                    if (gFans?.size()>0) {
+                        if (command == "on" || command == "off") {
+                            gFans?."${command}"()
+                            outputTxt = "Ok, turning the fan " + command
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                        else if (command == "decrease" || command == "increase" || command == "high" || command == "medium" || command == "low"){
+                            dataSet =  ["command": command, "deviceType": deviceType]
+                            outputTxt = advCtrlHandler(dataSet)
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }     
+                }          
+                //VENTS AND WINDOWS CONTROL
+                if (deviceType == "vent" || deviceType == "shade") { 
+                        if (command == "open"  || command == "close") {
+                            if (command == "open") {
+                            	if(deviceType == "vent"){
+                                gVents.on()
+                                	gVents.setLevel(100)
+                                	outputTxt = "Ok, opening the vents"
+                                }
+                                else {
+                                	gShades.open()
+                                	outputTxt = "Ok, opening the window coverings"
+                            	}
+                            }
+                            else {   
+                            	if(deviceType == "vent"){
+                                	gVents.off()
+                                	outputTxt = "Ok, closing the vents"
+                                }
+                                else {
+                                	gShades.close()
+                                    outputTxt = "Ok, closing the window coverings"
+                            	}
+                           }  
+                           return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
+                } 
+                if (deviceType == "tv") {
+                    if(sMedia){
+                        if (command == "startActivity"){
+                            if(state.lastActivity != null){
+                                def activityId = null
+                                def activities = sMedia.currentState("activities").value
+                                def activityList = new groovy.json.JsonSlurper().parseText(activities)
+                                    activityList.each { it ->  
+                                        def activity = it
+                                        if(activity.name == state.lastActivity) {
+                                            activityId = activity.id
+                                        }    	
+                                    }
+                                    log.warn "starting activity id = ${activityId}, command = ${command}, lastActivity ${state.lastActivity}"
+                                    sMedia."${command}"(activityId)
+                                    sMedia.refresh()
+                                    outputTxt = "Ok, starting " + state.lastActivity + " activity "
+                                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                            }
+                            else { 
+                                outputTxt = "Sorry for the trouble, but in order for EchoSistant to be able to start where you left off, the last activity must be saved"
+                                pTryAgain = true
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                            }
+                        }
+                        else {
+                            if (command == "activityoff"){
+                                def activityId = null
+                                def currState = sMedia.currentState("currentActivity").value
+                                def activities = sMedia.currentState("activities").value
+                                def activityList = new groovy.json.JsonSlurper().parseText(activities)
+                                    if (currState != "--"){
+                                        activityList.each { it ->  
+                                            def activity = it
+                                            if(activity.name == currState) {
+                                                activityId = activity.id
+                                            }    	
+                                        }
+                                        state.lastActivity = currState
+                                        sMedia."${command}"()
+                                        sMedia.refresh()
+                                        outputTxt = "Ok, turning off " + currState
+                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                                    }
+                                    else {
+                                        outputTxt = sMedia.label + " is already off"
+                                        pTryAgain = true
+                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                                    }
+                            }
+                        }
+                    }
+                }
+                if (deviceType == "volume") {
+                    if(sSpeaker || sSynth){
+                    def deviceD = sSpeaker? sSpeaker : sSynth? sSynth : "undefined"
+                        if (command == "increase" || command == "decrease" || command == "mute" || command == "unmute"){
+                            def currLevel = deviceD.latestValue("level")
+                            def currState = deviceD.latestValue("switch")
+                            def newLevel = parent.cVolLevel*10  
+                            if (command == "mute" || command == "unmute") {
+                                deviceD."${command}"()
+                                def volText = command == "mute" ? "muting" : command == "unmute" ? "unmuting" : "adjusting" 
+                                outputTxt = "Ok, " + volText + " the " + deviceD.label
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                            }
+                            if (command == "increase") {
+                                newLevel =  currLevel + newLevel
+                                newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+                            }
+                            if (command == "decrease") {
+                                newLevel =  currLevel - newLevel
+                                newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+                            }                        
+                            if (newLevel > 0 && currState == "off") {
+                                deviceD.on()
+                                deviceD.setLevel(newLevel)
+                            }
+                            else {                                    
+                                if (newLevel == 0 && currState == "on") {deviceD.off()}
+                                else {deviceD.setLevel(newLevel)}
+                            } 
+                            outputTxt = "Ok, setting  " + deviceD.label + " volume to " + newLevel + " percent"
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        } 
+                    }
+                }
+                }
+                if (parent.debug) {log.debug "end of control engine, command=${command}, ${deviceType}"}
+                if (sonosDevice || synthDevice || recipients || sms) { //added 2/19/17 Bobby  
+                    state.lastMessage = tts
+                    state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
+                    outputTxt = ttsHandler(tts)
+                    pContCmdsR = "profile"
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
+            }
+        }
+	}
+    else {
+		outputTxt = "Sorry, you must first set up your profile before trying to execute it."
+		pTryAgain = true
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+	}
+}
+/***********************************************************************************************************************
+    LAST MESSAGE HANDLER
+***********************************************************************************************************************/
+def getLastMessage() {
+	def cOutputTxt = "The last message sent to " + app.label + " was," + state.lastMessage + ", and it was sent at, " + state.lastTime
+	return  cOutputTxt 
+	if (parent.debug) log.debug "Sending last message to parent '${cOutputTxt}' "
+}
+/***********************************************************************************************************************
+    MISC. - REMINDERS HANDLER
+***********************************************************************************************************************/
+private reminderHandler1() {
+def text = state.reminder1
+state.reminder1 = null
+ttsActions(text)
+}
+private reminderHandler2() {
+def text = state.reminder2
+state.reminder2 = null
+ttsActions(text)
+}
+private reminderHandler3() {
+def text = state.reminder3
+state.reminder3 = null
+ttsActions(text)
+}
