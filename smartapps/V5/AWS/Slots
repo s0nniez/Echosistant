@@ -1,0 +1,31 @@
+LIST_OF_CALENDARS
+< add here calendar names >
+
+LIST_OF_UNITS
+hourly
+daily
+monthly
+weekly
+yearly
+every week
+every day
+every month
+hours
+hour
+day
+days
+month
+months
+yes
+no
+cancel
+
+LIST_OF_EVENTS
+reminder
+recurring
+recurring reminder
+event
+calendar event
+
+LIST_OF_PROFILES
+< insert her names of profiles to send events to >
