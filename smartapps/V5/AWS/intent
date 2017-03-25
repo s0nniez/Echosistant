@@ -1,0 +1,50 @@
+{
+  "intents": [
+    {
+      "intent": "message",
+      "slots": [
+        {
+          "name": "ttstext",
+          "type": "AMAZON.LITERAL"
+        }
+      ]
+    },
+    {
+      "intent": "mDetails",
+      "slots": [
+        {
+          "name": "calendarName",
+          "type": "LIST_OF_CALENDARS"
+        },
+        {
+          "name": "type",
+          "type": "LIST_OF_EVENTS"
+        },
+        {
+          "name": "profile",
+          "type": "LIST_OF_PROFILES"
+        },
+        {
+          "name": "unit",
+          "type": "LIST_OF_UNITS"
+        },
+        {
+          "name": "startingD",
+          "type": "AMAZON.DATE"
+        },
+        {
+          "name": "startingT",
+          "type": "AMAZON.TIME"
+        },
+        {
+          "name": "endingD",
+          "type": "AMAZON.DATE"
+        },
+        {
+          "name": "duration",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    }
+  ]
+}
