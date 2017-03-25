@@ -25,7 +25,7 @@
  * //UPDATE VERSION
 /**********************************************************************************************************************************************/
 definition(
-	name			: "EchoSistant-5",
+	name			: "EchoSistant",
     namespace		: "Echo",
     author			: "JH/BD",
 	description		: "The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.",
