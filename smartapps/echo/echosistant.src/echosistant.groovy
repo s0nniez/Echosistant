@@ -67,6 +67,7 @@ preferences {
                 	page name: "mDashConfig"
                     page name: "pageTwo"
                     page name: "mWeatherConfig"
+                    page name: "scheduled"
 }            
 //dynamic page methods
 page name: "mainParentPage"
@@ -511,8 +512,11 @@ page name: "mBonus"
 page name: "mDashboard"
 	def mDashboard(){
         dynamicPage(name: "mDashboard", uninstall: false) {
+        section("Scheduled Reminders and Events"){
+        	href "scheduled", title: "Tap here to view scheduled reminders and events", description: "", state: complete
+            }
         if (mLocalWeather) {
-            section("Today's Forecat"){
+            section("Today's Forecast"){
                 paragraph (mGetWeather())
         }
         }
@@ -570,7 +574,25 @@ page name: "mDashboard"
             	paragraph "The temperature of the ${tempSens5} is ${Sens5temp}°."
 			}
 		} 
-	} 
+	}
+page name: "scheduled"  // display scheduled events on the dashboard add by JH 3/26/2017
+	def scheduled(){
+    	dynamicPage(name: "scheduled", uninstall: false) {
+    	def remMsg = state.esEvent.eText
+        def remDate = state.esEvent.eStartingDate
+        def remTime = state.esEvent.eStartingTime
+    	section ("Scheduled Events") {
+        	if (state.filterNotif != null) {
+            paragraph "${state.filterNotif}"
+            }
+        }
+        section ("Upcoming Reminders") {
+			if (remMsg != null) {
+			paragraph "Reminder Scheduled: $remMsg on $remDate at $remTime"
+            }
+    	}
+    }    
+}
 page name: "mDashConfig"
 	def mDashConfig(){
         dynamicPage(name: "mDashConfig", uninstall: false) {
@@ -687,9 +709,9 @@ def initialize() {
 			//def event = [name:"alarmSystemStatus", value: location.currentState("alarmSystemStatus").value, //removed as event no longer used // ...2/18/17 Bobby 
 			//			displayed: true, description: "System Status is ${evt.value}"]
         //State Variables            
-            state.lastMessage = null
-            state.lastIntent  = null
-            state.lastTime  = null
+//            state.lastMessage = null
+//            state.lastIntent  = null
+//            state.lastTime  = null
             state.lambdaReleaseTxt = "Not Set"
             state.lambdaReleaseDt = "Not Set" 
             state.lambdatextVersion = "Not Set"
@@ -710,9 +732,9 @@ def initialize() {
             state.pinTry = null
         //Other Settings
             state.scheduledHandler
-            state.filterNotif = null
-            state.lastAction = null
-			state.lastActivity = null
+//            state.filterNotif = null
+//            state.lastAction = null
+//			state.lastActivity = null
 			unschedule("startLoop")
             unschedule("continueLoop")
 
