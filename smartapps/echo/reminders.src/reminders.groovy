@@ -8,6 +8,7 @@
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
+ *		3/25/2017		Version:5.0 R.0.0.1a	Addition of AWS skill information
  *		3/24/2017		Version:5.0 R.0.0.1		Alpha Release
  * 
  *  Copyright 2016 Jason Headley & Bobby Dobrescu
@@ -44,6 +45,7 @@ preferences {
         	page name: "pActions"
         	page name: "pConfig"
         	page name: "pRestrict"
+            page name: "mProfileDetails"
 
 }
 //dynamic page methods
@@ -59,7 +61,7 @@ def mainProfilePage() {
         section("Before Due Date Notifications") {
             href "pConfigDue", title: "Before Due Date Output Settings", description: pConfigComplete(), state: pConfigSettings()
 		}
-        section ("Defaults Settings") {    
+        section ("General Settings") {    
         	href "mDefaults", title: "Change Defaults", description: mDefaultsD(), state: mDefaultsS()
 		}
 		section ("Notification Restrictions") {
@@ -92,7 +94,21 @@ page name: "pSend"
             input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false
             }        
     	}                 
-    }   
+    }
+page name: "mProfileDetails" 				// added 3/25/2017 JH
+    def mProfileDetails(){
+            dynamicPage(name: "mProfileDetails", uninstall: false) {
+ 			section ("LIST_OF_PROFILES - Reminders Intent") { 
+                def profileList = getProfileDetails()
+                	def url = "${getApiServerUrl()}/api/smartapps/installations/${app.id}/proList?access_token=${state.accessToken}"
+                    	paragraph ("${profileList}")
+                        log.info "\nLIST_OF_PROFILES - Reminders Intent \ncopy/paste this link in a browser: " + url +
+                        "\n${profileList}"
+                        href "", title: "Open LIST_OF_PROFILES in a Browser", style: "external", url: url, required: false, 
+                        description: "Click here"                            
+                        }
+                    }
+               }    
 page name: "pActions"
     def pActions() {
         dynamicPage(name: "pActions", uninstall: false) {
@@ -165,7 +181,10 @@ page name: "mDefaults"
                     section ("Other Defaults") {
 						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false
                      
-                     }                    
+                     } 
+                section ("List of Profiles - For AWS Skill") {
+                	href "mProfileDetails", title: "View your List of Profiles Custom Slot for copy & paste to the 'Reminders' AWS Skill...", description: "", state: "complete"
+                }                         
         	}
         }
 page name: "pDeviceControl"
@@ -287,6 +306,26 @@ page name: "certainTime"
             }
         }
     }
+/*************************************************************************************************************
+   LAMBDA DATA MAPPING
+************************************************************************************************************/
+mappings {												// added 3/25/2017 JH
+    path("/proList") {action: [GET: "profileList"]}
+}
+/*************************************************************************************************************
+   LIST OF ITEMS FOR LAMBDA
+************************************************************************************************************/
+def profileList() {										// added 3/25/2017 JH							
+	def proList = ProfileListHtml()
+    def html = """
+		<!DOCTYPE HTML>
+				<html>
+					<head><title>LIST_OF_PROFILES</title></head>
+						<body><p>${proList}</p></body>
+				</html>
+		"""
+	render contentType: "text/html", data: html                             
+}
 /************************************************************************************************************
 		Base Process
 ************************************************************************************************************/    
@@ -1207,6 +1246,25 @@ def fillColorSettings() {
 		[ name: "Yellow",					rgb: "#FFFF00",		h: 60,		s: 100,		l: 50,	],
 		[ name: "Yellow Green",				rgb: "#9ACD32",		h: 80,		s: 61,		l: 50,	],
 	]
+}
+/***********************************************************************************************************************
+ 		UI - SKILL DETAILS    // added 3/25/2017 JH
+ ***********************************************************************************************************************/
+def getProfileDetails() {
+	 def Profiles = [] 
+        Apps?.each 	{Profiles << it.label +"\n"} 		// added 3/25/2017 JH
+        def dUniqueList = Profiles.unique(false)
+        dUniqueList = dUniqueList.sort()
+        def dUniqueListString = dUniqueList.join("")
+        return dUniqueListString
+}
+def ProfileListHtml() {
+	def ProfileList = []
+    	Apps?.each 	{ProfileList << it.label +"<br>"}	// added 3/25/2017 JH
+        def dUniqueList = ProfileList.unique(false)
+        dUniqueList = dUniqueList.sort()
+        def dUniqueListString = dUniqueList.join("")
+        return dUniqueListString
 }
 /************************************************************************************************************
    Page status and descriptions 
