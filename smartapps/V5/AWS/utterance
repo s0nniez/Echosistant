@@ -1,4 +1,6 @@
 message {van|ttstext}
+message {van dog|ttstext}
+message {remain go|ttstext}
 message {dinner's ready|ttstext}
 message {its dinner time|ttstext}
 message {its time for dinner|ttstext}
@@ -20,3 +22,4 @@ mDetails send to {profile}
 mDetails forward to {profile}
 mDetails {type} for {startingD} at {startingT}
 mDetails {type} for {startingD}
+mDetails {type}
