@@ -1362,8 +1362,9 @@ def cronHandler(var) {
             def mn = hrmn[3..4]
         	if(xDays) result = "0 $mn $hr 1/${xDays} * ? *"
             if(xDaysWeekDay && xDaysStarting) result = "0 $mn $hr 1/${xDays} * MON-FRI *"
-            else log.error " unable to schedule your reminder due to missing required variables"
-		}
+			else log.error " unable to schedule your reminder due to missing required variables"
+		    schedule(result, "scheduledTimeHandler")
+            }
         if(var == "Weekly") {
         // 	0 0 2 ? * TUE,SUN *
         	def hrmn = hhmm(xWeeksStarting, "HH:mm")
@@ -1374,7 +1375,8 @@ def cronHandler(var) {
             def weekDays = weekDaysList.join(",")
             if(xWeeks && xWeeksStarting) { result = "0 $mn $hr ? * ${weekDays} *" }
             else log.error " unable to schedule your reminder due to missing required variables"
-		}
+		    schedule(result, "scheduledTimeHandler")
+            }
 		if(var == "Monthly") { 
         // 0 30 5 6 1/2 ? *
         	def hrmn = hhmm(xMonthsStarting, "HH:mm")
@@ -1382,7 +1384,8 @@ def cronHandler(var) {
             def mn = hrmn[3..4]
         	if(xMonths && xMonthsDay) { result = "0 $mn $hr ${xMonthsDay} 1/${xMonths} ? *"}
             else log.error "unable to schedule your reminder due to missing required variables"
-		}
+		    schedule(result, "scheduledTimeHandler")
+            }
 		if(var == "Yearly") {
         //0 0 4 1 4 ? *
         	def hrmn = hhmm(xYearsStarting, "HH:mm")
@@ -1390,7 +1393,8 @@ def cronHandler(var) {
             def mn = hrmn[3..4]           
         	if(xYears) {result = "0 $mn $hr ${xYearsDay} ${xYears} ? *"}
             else log.error "unable to schedule your reminder due to missing required variables"
-		}
+		    schedule(result, "scheduledTimeHandler")
+            }
     log.info "scheduled $var recurring event" //time period with expression: $result"
 //    schedule(result, "scheduledTimeHandler")
 }
