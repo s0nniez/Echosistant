@@ -1,7 +1,7 @@
 /* 
  * Notification - EchoSistant Add-on 
  *
- *		3/29/2017		Version:5.0 R.0.0.1			Expansion of Triggers (sunrise/sunset)
+ *		3/29/2017		Version:5.0 R.0.0.1a		Expansion of Triggers (sunrise/sunset)
  *		3/24/2017		Version:4.0 R.0.3.5	    	bug fix: custom sound, minor fixes
  *		3/21/2017		Version:4.0 R.0.3.3	    	added: &current for current temperature, frequency restriction
  *		3/21/2017		Version:4.0 R.0.3.2	    	added: &set (sunset), &rise (sunrise)
@@ -340,24 +340,24 @@ def sunriseTimeHandler(evt) {
 	scheduleTurnOff(evt.value)
     }
 def scheduleTurnOn(sunsetString) {
-    if (startingY == "sunrise" || startingY == "sunset") {
+    if (startingY == "Sunrise" || startingY == "Sunset") {
     def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
     def timeBeforeSunset = new Date(sunsetTime.time - (startSunsetOffsetY * 60 * 1000))
     log.info "Scheduling for: $timeBeforeSunset (sunset is $sunsetTime)"
     runOnce(timeBeforeSunset, scheduledTimeHandlerOn)
 	}
-    else if (startingXY) {
+    else if (startingY != "Sunrise" && startingY != "Sunset") {
     	runOnce(startingXY, scheduledTimeHandlerOn)
     }    
 }
 def scheduleTurnOff(sunriseString) {
-	if (endingY == "sunrise" || endingY == "sunset") {
+	if (endingY == "Sunrise" || endingY == "Sunset") {
 	def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
     def timeBeforeSunrise = new Date(sunriseTime.time - (endSunriseOffsetY * 60 * 1000))
     log.info "Scheduling for: $timeBeforeSunrise (sunrise is $sunriseTime)"
     runOnce(timeBeforeSunrise, scheduledTimeHandlerOff)
 	}
-    else if(endingXY) {
+    else if(endingY != "Sunrise" && endingY != "Sunset") {
     	runOnce(endingXY, scheduledTimeHandlerOff)
     }
 }    
