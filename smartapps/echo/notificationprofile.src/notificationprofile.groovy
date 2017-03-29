@@ -394,12 +394,13 @@ def initialize() {
     state.cycleOnA = false
     state.cycleOnB = false
     state.lastWeather
-	
+    
+    if(startingY || endingY) {	
     subscribe(location, "sunsetTime", sunsetTimeHandler)
 	subscribe(location, "sunriseTime", sunriseTimeHandler)
 	scheduleTurnOn(location.currentValue("sunsetTime")) 
     scheduleTurnOff(location.currentValue("sunriseTime"))
-    
+    }
     if (frequency) cronHandler(frequency)
     if (myWeatherAlert) {
 		runEvery5Minutes(mGetWeatherAlerts)
