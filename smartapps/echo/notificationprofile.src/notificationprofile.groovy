@@ -1,6 +1,7 @@
 /* 
  * Notification - EchoSistant Add-on 
  *
+ *		3/29/2017		Version:5.0 R.0.0.1			Expansion of Triggers (sunrise/sunset)
  *		3/24/2017		Version:4.0 R.0.3.5	    	bug fix: custom sound, minor fixes
  *		3/21/2017		Version:4.0 R.0.3.3	    	added: &current for current temperature, frequency restriction
  *		3/21/2017		Version:4.0 R.0.3.2	    	added: &set (sunset), &rise (sunrise)
