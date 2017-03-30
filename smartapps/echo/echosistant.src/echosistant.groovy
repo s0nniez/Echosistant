@@ -9,6 +9,7 @@
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
  *
+ *		3/30/2017		Version:5.0 R.0.0.2		Enhancements to Virtual Person Commands
  *		3/24/2017		Version:5.0 R.0.0.1		Alpha Release
  *		2/17/2017		Version:4.0 R.0.0.0		Public Release 
  *
@@ -41,7 +42,7 @@ private def textVersion() {
 	def text = "5.0"
 }
 private release() {
-    def text = "R.0.0.1"
+    def text = "R.0.0.2"
 }
 /**********************************************************************************************************************************************/
 preferences {   
@@ -2139,7 +2140,7 @@ try {
     // >>>> PRESENCE CHECKIN/CHECKOUT CONTROL <<<<        
             else if (deviceType == "cPresence") {
                 if (settings.cPresence?.size()>0) {     
-                    def deviceMatch = cPresence.find {f -> f.label.toLowerCase() == ctDevice.toLowerCase()}
+                    def deviceMatch = cPresence.find {f -> f.label?.toLowerCase() == ctDevice.toLowerCase()}
                     if (deviceMatch) {
                             device = deviceMatch
                                 delay = false
@@ -4036,7 +4037,7 @@ private getCommand(command, unit) {
             	command = "arrived"
                 deviceType = "cPresence" //"virtualPerson"
             }
-            if (command == "check out" || command == "checking out"|| command == "checked out"){
+            if (command == "check out" || command == "checking out"|| command == "checked out" || command == "departed" || command == "departing" || command == "leaving" || command == "left"){
             	command = "departed"
                 deviceType = "cPresence"
             }    
