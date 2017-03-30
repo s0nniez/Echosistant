@@ -8,8 +8,7 @@
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
- *
- *		3/30/2017		Version:5.0 R.0.0.2		Enhancements to Virtual Person Commands
+ *		3/28/2017		Version:5.0 R.0.0.2		Alpha 2 Release
  *		3/24/2017		Version:5.0 R.0.0.1		Alpha Release
  *		2/17/2017		Version:4.0 R.0.0.0		Public Release 
  *
@@ -764,7 +763,7 @@ def getChildSize(child) {
       	}
  	}
     return childList.size()
-} 
+}
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
@@ -1694,7 +1693,7 @@ def controlDevices() {
 	def ctProcess = true	
     state.pTryAgain = false 
 
-try {
+//try {
 
     if (ctIntentName == "main") {
     	if (ctCommand == "this is a test"){
@@ -1810,7 +1809,7 @@ try {
             if (deviceType == "color"){
             def color = command == "read"  ? "Warm White" : command == "concentrate" ? "Daylight White" : command == "relax" ? "Very Warm White" : command
                 if(ctDevice != "undefined" && ctGroup != "profile"){
-                    def deviceMatch = cSwitch.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}
+                    def deviceMatch = cSwitch.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}
                     if(deviceMatch){
                     	def capMatch = deviceMatch.capabilities.name.contains("Color Control") ?: null
                         def availableCommands = deviceMatch.supportedCommands.contains("colorloop") ?: null
@@ -1905,19 +1904,19 @@ try {
                         //def activityId = null 2/11/2017 moved as global variable
                         def dType = null
                             if (settings.cSpeaker?.size()>0) {
-                                deviceMatch = cSpeaker?.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}
+                                deviceMatch = cSpeaker?.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}
                                 if(deviceMatch) {
                                 if (debug) log.debug "found a speaker "
                                 dType = "v"}
                             }
                             if (deviceMatch == null && settings.cSynth?.size()>0) {
-                                deviceMatch = cSynth.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
+                                deviceMatch = cSynth.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}                 
                                 if(deviceMatch) {dType = "v"}
                             }
 							//HARMONY PROCESS//
 							if (deviceMatch == null && settings.cMedia?.size()>0) {
                                 //deviceMatch = cMedia.first()
-                                deviceMatch = cMedia.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
+                                deviceMatch = cMedia.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}                 
                                 if(deviceMatch) {
                                     dType = "m"
                                 }
@@ -1944,11 +1943,12 @@ try {
                                 deviceMatch = cMedia?.first()                   
                             }    
                             if (deviceMatch == null && settings.cSwitch?.size()>0 && state.pinTry == null) {
-                                deviceMatch = cSwitch.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
+                                def switchProblem
+                                deviceMatch = cSwitch.find {s -> s.label?.toLowerCase() == ctDevice?.toLowerCase()}     
                                 if(deviceMatch) {dType = "s"}
                             }
                             if (deviceMatch == null && settings.cMiscDev?.size()>0 && state.pinTry == null) {
-                                deviceMatch = cMiscDev.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}                 
+                                deviceMatch = cMiscDev.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}                 
                                 if(deviceMatch) { 
                             //>>>>>>>  CHECK FOR ENABLED PIN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                                 if(cPIN && state.usePIN_S == true && deviceMatch) {
@@ -2038,7 +2038,7 @@ try {
     // >>>> THERMOSTAT CONTROL <<<<
             else if (deviceType == "temp") {
                     if (settings.cTstat?.size() > 0) {           
-                        def deviceMatch = cTstat.find {t -> t.label.toLowerCase() == ctDevice.toLowerCase()}
+                        def deviceMatch = cTstat.find {t -> t.label?.toLowerCase() == ctDevice.toLowerCase()}
                         if (deviceMatch) {
                             device = deviceMatch 
                             if(state.usePIN_T == true) { // (THIS PIN VALIDATION HAS BEEN Deprecated as of 1/23/2017)
@@ -2073,7 +2073,7 @@ try {
     // >>>> LOCKS CONTROL <<<<
             else if (deviceType == "lock") {
                 if (settings.cLock?.size()>0) {   
-                    def deviceMatch = cLock.find {l -> l.label.toLowerCase() == ctDevice.toLowerCase()}             
+                    def deviceMatch = cLock.find {l -> l.label?.toLowerCase() == ctDevice.toLowerCase()}             
                     if (deviceMatch) {
                         device = deviceMatch
                     //Check Status
@@ -2117,7 +2117,7 @@ try {
     // >>>> FANS CONTROL <<<<        
             else if (deviceType == "fan") {
                 if (settings.cFan?.size()>0) {     
-                    def deviceMatch = cFan.find {f -> f.label.toLowerCase() == ctDevice.toLowerCase()}
+                    def deviceMatch = cFan.find {f -> f.label?.toLowerCase() == ctDevice.toLowerCase()}
                     if (deviceMatch) {
                             device = deviceMatch
                             if (ctNum && ctUnit == "minutes") {
@@ -2155,8 +2155,8 @@ try {
             else if (deviceType == "door") {
                 if (settings.cDoor?.size()>0 || cWindowCover) {
                 	def devMatchWin = null
-                    def deviceMatch = cDoor.find {d -> d.label.toLowerCase() == ctDevice.toLowerCase()}
-                    	if (!deviceMatch) devMatchWin = cWindowCover.find {d -> d.label.toLowerCase() == ctDevice.toLowerCase()}
+                    def deviceMatch = cDoor.find {d -> d.label?.toLowerCase() == ctDevice.toLowerCase()}
+                    	if (!deviceMatch) devMatchWin = cWindowCover.find {d -> d.label?.toLowerCase() == ctDevice.toLowerCase()}
                     //if (deviceMatch || devMatchWin) {
                         if (deviceMatch){
                             device = deviceMatch
@@ -2215,7 +2215,7 @@ try {
     	// >>>> RELAYS CONTROL <<<<            
                 if (cRelay !=null) {
                 //this is needed for Garage Doors that are set up as relays
-                    def deviceMatch = cRelay.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
+                    def deviceMatch = cRelay.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}             
                     if (deviceMatch) {
                         device = deviceMatch
                         def pinCheck
@@ -2275,7 +2275,7 @@ try {
     	// >>>> VENTS CONTROL <<<<            
                 if (settings.cVent?.size()>0) {
                 //this is needed to enable open/close command for Vents group
-                    def deviceMatch = cVent.find {s -> s.label.toLowerCase() == ctDevice.toLowerCase()}             
+                    def deviceMatch = cVent.find {s -> s.label?.toLowerCase() == ctDevice.toLowerCase()}             
                     if (deviceMatch) {
                         if (command == "open") {command = "onD"}
                         if (command == "close") {command = "offD"}
@@ -2314,14 +2314,14 @@ try {
 		state.pTryAgain = true
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     }
-
+/*
        } catch (Throwable t) {
         log.error t
         outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
         state.pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
-    
+*/    
 }
 /************************************************************************************************************
    DEVICE CONTROL HANDLER
@@ -2342,9 +2342,9 @@ def controlHandler(data) {
 	if (deviceType == "cSwitch" || deviceType == "cMiscDev") {
     	if (deviceCommand == "on" || deviceCommand == "off") {
             if (delayD == true ) {
-                if(deviceType == "cSwitch") {deviceD = cSwitch?.find {s -> s.label.toLowerCase() == deviceD.toLowerCase()}}
+                if(deviceType == "cSwitch") {deviceD = cSwitch?.find {s -> s.label?.toLowerCase() == deviceD.toLowerCase()}}
                 if (deviceType == "cMiscDev") {
-                	deviceD = cMiscDev?.find {s -> s.label.toLowerCase() == deviceD.toLowerCase()}            
+                	deviceD = cMiscDev?.find {s -> s.label?.toLowerCase() == deviceD.toLowerCase()}            
                 	deviceD."${deviceCommand}"()
                     result = "Ok, turning " + deviceD + " " + deviceCommand 
                 	return result          
@@ -2369,8 +2369,8 @@ def controlHandler(data) {
         }        
         else if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "setLevel" || deviceCommand == "set") {
  			if (delayD == true) {
-            	if(deviceType == "cSwitch") {deviceD = cSwitch?.find {s -> s.label.toLowerCase() == deviceD.toLowerCase()}}
-                else if (deviceType == "cMiscDev") {deviceD = cMiscDev?.find {s -> s.label.toLowerCase() == deviceD.toLowerCase()}}            
+            	if(deviceType == "cSwitch") {deviceD = cSwitch?.find {s -> s.label?.toLowerCase() == deviceD.toLowerCase()}}
+                else if (deviceType == "cMiscDev") {deviceD = cMiscDev?.find {s -> s.label?.toLowerCase() == deviceD.toLowerCase()}}            
             }            
             if(state.pContCmdsR == "repeat") {state.pContCmdsR == "level"}
             def currLevel = deviceD.latestValue("level")
@@ -2446,7 +2446,7 @@ def controlHandler(data) {
 	}
 	else if (deviceType == "cTstat") {
  		if (delayD == true || state.pinTry != null) {  
-                deviceD = cTstat.find {t -> t.label.toLowerCase() == deviceD.toLowerCase()} 
+                deviceD = cTstat.find {t -> t.label?.toLowerCase() == deviceD.toLowerCase()} 
         }
         state.pinTry = null
     	def currentMode = deviceD.latestValue("thermostatMode")
@@ -3094,21 +3094,64 @@ def remindersHandler() {
         def pTryAgain = false
         def pPIN = false
         def String messageType  = state.esEvent.eType //(String) null
-        def calendar = 3 // TO DO: get list of calendars & size from GCal
-        def multiCalendar = calendar > 1 ? true : false
-        
-        if (debug) log.debug 	"Reminders & Events Profile Data: (rCalendarName) = $rCalendarName, (rFrequency) = $rFrequency, (rStartingDate) = $rStartingDate," +
+		def multiCalendar = false
+		def String calendar = (String) null
+        String newTime
+        String newDate
+        def data = [:]
+
+        if (debug) log.debug 	"Reminders & Events Profile Data: (rCalendarName) = $rCalendarName,(rType) = $rType, (rFrequency) = $rFrequency, (rStartingDate) = $rStartingDate," +
         						" (rStartingTime) = $rStartingTime,(rEndingDate) = $rEndingDate,(rDuration) = $rDuration,(rMessage) = $rMessage"
     
+    if (rType != "undefined" &&  rType != null){
+    	rType = rType.contains("event") ? "event" : rType.contains("recurring") ? "recurring" : rType
+        state.esEvent.eType = rType
+        if(rStartingDate && !state.esEvent.eStartingDate && rStartingDate != "undefined" ) state.esEvent.eStartingDate = rStartingDate
+        if(rStartingTime && !state.esEvent.eStartingTime && rStartingTime != "undefined") state.esEvent.eStartingTime = rStartingTime
+        if (state.esEvent.eText && state.esEvent.eStartingDate && state.esEvent.eStartingTime && state.esEvent.eCalendar){
+			if(state.esEvent.eStartingDate && state.esEvent.eStartingTime){
+                def olddate = state.esEvent.eStartingDate + " " + state.esEvent.eStartingTime
+                Date date = Date.parse("yyyy-MM-dd HH:mm",olddate)
+                newTime = date.format( "h:mm aa" )
+                newDate = date.format( 'MM/dd/yyyy' )
+        	}
+            outputTxt = "Ok, scheduling event to $state.esEvent.eText on $newDate at $newTime, is that correct?"
+			pContCmdsR = "feedback"
+        }
+        else {
+			def missingField = !state.esEvent.eText ? "What is the event?" : !state.esEvent.eStartingDate ? "Starting on what date?" : !state.esEvent.eStartingTime ? "Starting at what time?" : !state.esEvent.eCalendar ? "Which calendar?" : !state.esEvent.eDuration ? "For fow long?" : null
+            outputTxt = missingField
+			pContCmdsR = "feedback" 
+    	}
+		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+
+    }
+    if(state.esEvent.eText && state.esEvent.eType == "quickReminder" && !state.esEvent.eDuration){
+    	if(rDuration != null && rDuration != "undefined" && rFrequency != "undefined" && rFrequency != null){
+			state.esEvent.eDuration = rDuration
+			state.esEvent.eFrequency = rFrequency
+            outputTxt = "Ok, scheduling quick reminder to $state.esEvent.eText$state.esEvent.eDuration $state.esEvent.eFrequency is that correct?"
+			pContCmdsR = "feedback"            
+    	}
+        else {
+            outputTxt = "Sorry, I still didn't get the number, "
+            pTryAgain = true
+        }
+		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+	}
     if (rMessage != "undefined" &&  rMessage != null){
     	def tts = rMessage
-		//reminder - fields required: rStartingDate & rStartingTime & rMessage
-            /* 
-            What is the reminder?
-            For what date and time?
-            */
+        def quickMessage
+        int iLength
+        def test = tts.contains("this is a test") ? true : tts.contains("a test") ? true : false 
+        if (test){
+			outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
+			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]       
+   		}
+        
         def reminder = tts.startsWith("set a reminder to") ? "set a reminder to " : tts.startsWith("set reminder to") ? "set reminder to " : null
         if (reminder == null) reminder = tts.startsWith("remind me to") ? "remind me to " : tts.startsWith("set the reminder to") ? "set the reminder to " : null 
+        if (reminder == null) reminder = tts.startsWith("i need to") ? "i need to " : tts.startsWith("need to") ? "need to " : null 
 		if (reminder == null) reminder = tts.startsWith("add a reminder to") ? "add a reminder to " : tts.startsWith("add reminder to") ? "add reminder to " : null         
        	if (reminder == null) reminder = tts.startsWith("schedule reminder to") ? "schedule reminder to " : tts.startsWith("add the reminder to") ? "add the reminder to " : null 	
         if (reminder == null) reminder = tts.startsWith("schedule a reminder to") ? "schedule a reminder to " : tts.startsWith("schedule the reminder to") ? "schedule the reminder to " : null
@@ -3116,7 +3159,39 @@ def remindersHandler() {
         if (reminder == null) reminder = tts.startsWith("remind me") ? "remind me " : tts.startsWith("set the reminder") ? "set the reminder " : null 
 		if (reminder == null) reminder = tts.startsWith("add a reminder") ? "add a reminder " : tts.startsWith("add reminder") ? "add reminder " : null         
        	if (reminder == null) reminder = tts.startsWith("schedule reminder") ? "schedule reminder " : tts.startsWith("add the reminder") ? "add the reminder " : null 	
-        if (reminder == null) reminder = tts.startsWith("schedule a reminder") ? "schedule a reminder " : tts.startsWith("schedule the reminder") ? "schedule the reminder " : null       
+        if (reminder == null) reminder = tts.startsWith("schedule a reminder") ? "schedule a reminder " : tts.startsWith("schedule the reminder") ? "schedule the reminder " : null           
+
+
+		//QUICK REMINDERS
+        def quickReminder = tts.endsWith("minute") ? "minutes" : tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
+        def quickReplace = tts.endsWith("minute") ? "minute" : tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hour" : tts.endsWith("day") ? "day" : tts.endsWith("days") ? "days" : "undefined"
+        tts = tts.replace("one", "1").replace("two", "2").replace("three", "3").replace("four", "4").replace("five", "5").replace("six", "6").replace("seven", "7").replace("eight", "8").replace("nine", "9")
+        def length = tts.findAll( /\d+/ )*.toInteger()
+			if(length[0] !=null && quickReminder !="undefined") {
+            	iLength = (int)length.get(0)                    
+                if(reminder){
+                	quickMessage = tts.replace("${reminder}", "").replace("in ${iLength}", "").replace("${quickReplace}", "")
+                }
+                else{
+               		quickMessage = tts ? tts.replace("in ${iLength}", "").replace("${quickReplace}", "") : null
+            	}
+                if(quickMessage) {
+                    state.esEvent.eText = quickMessage
+                    state.esEvent.eDuration = length[0]
+                    state.esEvent.eFrequency = quickReminder
+                    state.esEvent.eType = "quickReminder"
+                }
+                else {
+                    outputTxt = "sorry, I was unable to get the number,  "
+                    pTryAgain = true
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+                }
+            }
+            if(quickReminder !="undefined" && iLength != null){ 
+                outputTxt = "Ok, scheduling quick reminder to $state.esEvent.eText in $state.esEvent.eDuration $state.esEvent.eFrequency, is that correct?"
+				pContCmdsR = "feedback"            
+				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+            }   
 		//recurring reminders - fields required: rStartingDate & rStartingTime & rFrequency & rMessage & rDuration 
             /*
             What is the reminder? (rMessage)
@@ -3157,7 +3232,20 @@ def remindersHandler() {
         def message = reminder ? tts.replace("${reminder}", "") : recurring ? tts.replace("${recurring}", "") : event ? tts.replace("${event}", "") : null
         messageType = messageType ?: reminder ? "reminder" : recurring ? "recurring" : event ? "event" : null
 		log.warn "message type from state: $messageType"
-        
+
+        if(messageType == "event"){
+            children.each { child ->
+            	log.warn " label = $child.label"
+                if(child.label == "Reminders") {
+                def calendars = child.listGCalendars()
+                    multiCalendar = calendars.size() > 1 ? true : false
+                    if(multiCalendar == false){
+                    	state.esEvent.eCalendar = calendars
+                    } 
+                }
+            }
+        }
+        log.warn "multiCalendar = $multiCalendar"
         log.warn "messageType = $messageType, rMessage = $rMessage, reminder = $reminder, recurring = $recurring,  event = $event, message = $message"
 		state.esEvent.eType = state.esEvent.eType ?: messageType
 		if (message == null) message = rMessage
@@ -3191,16 +3279,28 @@ def remindersHandler() {
                     state.esEvent.eText = message
                     outputTxt = "Which Calendar?"
                     pContCmdsR = "feedback"
-                }        
+                }
+                if(!state.esEvent.eType) {
+                    state.esEvent.eText = message
+                	outputTxt = "Sorry, I didn't catch the type of event, is this a reminder, a recurring reminder or, an event?"
+                	pContCmdsR = "feedback"
+                }                   
+                
             }
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
     }
 	if (rStartingDate != "undefined" && rStartingTime != "undefined" && rStartingDate != null && rStartingTime != null){
 		state.esEvent.eStartingDate = rStartingDate
         state.esEvent.eStartingTime = rStartingTime
-		log.warn "check messageType = $messageType"
-		if (messageType == "reminder" && state.esEvent.eStartingDate && state.esEvent.eStartingTime && state.esEvent.eText){
-			outputTxt = "Ok, scheduling reminder to $state.esEvent.eText on $state.esEvent.eStartingDate at $state.esEvent.eStartingTime, is that correct?"
+		
+        if (messageType == "reminder" && state.esEvent.eStartingDate && state.esEvent.eStartingTime && state.esEvent.eText){
+			if(state.esEvent.eStartingDate && state.esEvent.eStartingTime){
+                def olddate = state.esEvent.eStartingDate + " " + state.esEvent.eStartingTime
+                Date date = Date.parse("yyyy-MM-dd HH:mm",olddate)
+                newTime = date.format( "h:mm aa" )
+                newDate = date.format( 'MM/dd/yyyy' )
+        	}
+            outputTxt = "Ok, scheduling reminder to $state.esEvent.eText on $newDate at $newTime, is that correct?"
 			pContCmdsR = "feedback"
     	} 
         if(!state.esEvent.eText) {
@@ -3208,7 +3308,7 @@ def remindersHandler() {
         	pContCmdsR = "feedback"
 		}
         else {
-            if (!state.esEvent.eDuration && messageType != "reminder"){
+            if (!state.esEvent.eDuration && messageType != "reminder" && state.esEvent.eType){
                     pContCmdsR = "feedback"
                     if(messageType == "event"){
                     	outputTxt = "For fow long?"
@@ -3218,15 +3318,20 @@ def remindersHandler() {
                     }
             }
             else{
+            log.warn "eType = $eType"
             	if(multiCalendar && !state.esEvent.eCalendar && messageType == "event"){
                 	outputTxt = "Which calendar?"
         			pContCmdsR = "feedback"
             	}
+                
+                else if (!state.esEvent.eType || state.esEvent.eType == null ){
+                	outputTxt = "Sorry, I didn't catch the type of event, is this a reminder, a recurring reminder or an event?"
+                	pContCmdsR = "feedback"
+               }                 
            	}
       	}
     	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]     
  	}
-     log.warn "check messageType = $messageType"
     if(rFrequency != "undefined" && rFrequency != null && messageType == "recurring"){
     	if(rFrequency == "hourly" || rFrequency == "daily" || rFrequency == "monthly" || rFrequency == "weekly"){
             def repeatUnit = rFrequency == "hourly" ? "hours" : rFrequency == "daily" ? "days" : rFrequency == "weekly" ? "days" : rFrequency == "monthly" ? "months" : rFrequency == "yearly" ? "months" : null
@@ -3249,26 +3354,56 @@ def remindersHandler() {
             	if(messageType == "recurring"){
                 	def frequency = state.esEvent.eFrequency
                     def repeatUnit = frequency == "hourly" ? "hours" : frequency == "daily" ? "days" : frequency == "weekly" ? "days" : frequency == "monthly" ? "months" : frequency == "yearly" ? "months" : null
-            		outputTxt = "Ok, scheduling $state.esEvent.eFrequency reminder to $state.esEvent.eText every $state.esEvent.eDuration"+
-                    			" $repeatUnit, starting on $state.esEvent.eStartingDate at $state.esEvent.eStartingTime, is that correct?"
+                    if(state.esEvent.eStartingDate && state.esEvent.eStartingTime){
+                        def olddate = state.esEvent.eStartingDate + " " + state.esEvent.eStartingTime
+                        Date date = Date.parse("yyyy-MM-dd HH:mm",olddate)
+                        newTime = date.format( "h:mm aa" )
+                        newDate = date.format( 'MM/dd/yyyy' )
+                    }
+                    outputTxt = "Ok, scheduling $state.esEvent.eFrequency reminder to $state.esEvent.eText every $state.esEvent.eDuration"+
+                    			" $repeatUnit, starting on $newDate at $newTime, is that correct?"
             		pContCmdsR = "feedback"
                 }
-                else if (messageType == "event"){
-            		outputTxt = "Ok, scheduling event to $state.esEvent.eText on $state.esEvent.eStartingDate at $state.esEvent.eStartingTime, is that correct?"
-            		pContCmdsR = "feedback"                
+                else {
+                	if(messageType == "event"){
+                        if (state.esEvent.eText && state.esEvent.eStartingDate && state.esEvent.eStartingTime && state.esEvent.eCalendar && messageType == "event"){
+                            if(state.esEvent.eStartingDate && state.esEvent.eStartingTime){
+                                def olddate = state.esEvent.eStartingDate + " " + state.esEvent.eStartingTime
+                                Date date = Date.parse("yyyy-MM-dd HH:mm", olddate)
+                                newTime = date.format( "h:mm aa" )
+                                newDate = date.format( 'MM/dd/yyyy' )
+                            }
+                            outputTxt = "Ok, scheduling event to $state.esEvent.eText on $newDate at $newTime, is that correct?"
+                            pContCmdsR = "feedback"                
+                        }
+                        else {
+							def missingField = !state.esEvent.eText ? "What is the event?" : !state.esEvent.eStartingDate ? "Starting on what date?" : !state.esEvent.eStartingTime ? "Starting at what time?" : !state.esEvent.eCalendar ? "Which calendar?" : !state.esEvent.eDuration ? "For fow long?" : null
+							log.warn "missingField = $missingField"
+            				outputTxt = missingField
+							pContCmdsR = "feedback" 			
+            			}
+            		}
                 }
- 			}
+            }
   	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]     
     }
     if(rCalendarName != "undefined" && rCalendarName != null && messageType == "event"){
     	state.esEvent.eCalendar = rCalendarName
         	if(state.esEvent.eText && state.esEvent.eStartingDate && state.esEvent.eStartingTime && state.esEvent.eDuration){
-            	outputTxt = "Ok, scheduling event to $state.esEvent.eText on $state.esEvent.eStartingDate at $state.esEvent.eStartingTime, is that correct?"
+                if(state.esEvent.eStartingDate && state.esEvent.eStartingTime){
+                    def olddate = state.esEvent.eStartingDate + " " + state.esEvent.eStartingTime
+                    Date date = Date.parse("yyyy-MM-dd HH:mm",olddate)
+                    newTime = date.format( "h:mm aa" )
+                    newDate = date.format( 'MM/dd/yyyy' )
+                }
+            	outputTxt = "Ok, scheduling event to $state.esEvent.eText on $newDate at $newTime, is that correct?"
             	pContCmdsR = "feedback"         
             }
             else {
-            	outputTxt = "Something is missing!"
-				pContCmds = true
+				def missingField = !state.esEvent.eText ? "What is the event?" : !state.esEvent.eStartingDate ? "Starting on what date?" : !state.esEvent.eStartingTime ? "Starting at what time?" : !state.esEvent.eCalendar ? "Which calendar?" : !state.esEvent.eDuration ? "For fow long?" : null
+				log.warn "missingField = $missingField"
+            	outputTxt = missingField
+				pContCmdsR = "feedback" 
  			}
   	return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]     
     }
@@ -3277,15 +3412,43 @@ def remindersHandler() {
 		outputTxt = "Ok, scheduling reminder to $state.esEvent.eText on $state.esEvent.eStartingDate at $state.esEvent.eStartingTime, is that correct?"
 		pContCmdsR = "feedback"
     }
-    
-    if (rFrequency == "yes" || rFrequency == "no" || rFrequency == "cancel"){
-		if (rFrequency == "yes"){
+    if (rFrequency == "yes" || rFrequency == "yup" || rFrequency == "yeah" || rFrequency == "you got it" || rFrequency == "no" || rFrequency == "cancel" || rFrequency == "neh" || rFrequency == "nope"){
+		if (rFrequency == "yes" || rFrequency == "yup" || rFrequency == "yeah" || rFrequency == "you got it" ){
         	def event = messageType == "recurring" ? "${state.esEvent.eFrequency} reminder" : messageType
-        	outputTxt = "Great! The $event has been scheduled"
-			pContCmds = state.pContCmds
-            
-			state.esEvent = [:]
-    	    return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+			if(event){
+                if(state.esEvent.eStartingDate && state.esEvent.eStartingTime){
+                    def olddate = state.esEvent.eStartingDate + " " + state.esEvent.eStartingTime
+                    Date date = Date.parse("yyyy-MM-dd HH:mm",olddate)
+                    newTime = date.format( "h:mm aa" )
+                    newDate = date.format( 'MM/dd/yyyy' )
+                }
+                if(event == "event"){
+                	data = ["eCalendar": state.esEvent.eCalendar, "eStartingDate": state.esEvent.eStartingDate , "eStartingTime": state.esEvent.eStartingTime, "eDuration": state.esEvent.eDuration, "eText": state.esEvent.eText]
+                    sendLocationEvent(name: "echoSistant", value: "addEvent", data: data, displayed: true, isStateChange: true, descriptionText: "echoSistant add event request")
+                    pContCmds = state.pContCmds
+                    outputTxt = "Great! I sent the event to G Cal to be added on your calendar"
+                }
+                else {
+					data = ["eStartingDate": state.esEvent.eStartingDate , "eStartingTime": state.esEvent.eStartingTime, "eDuration": state.esEvent.eDuration, "eFrequency": state.esEvent.eFrequency, "eText": state.esEvent.eText, "eType": state.esEvent.eType]
+                    children.each { child ->
+                    	def ch = child.label
+                        log.debug "ch"
+                 		if(child.label == "Reminders") {
+						outputTxt = profileEvaluate(data) 
+						log.warn "sending reminder"
+                        }
+                    }
+                }
+                pContCmds = state.pContCmds
+                state.esEvent = [:]
+                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+            }
+            else {
+				def missingField = !state.esEvent.eText ? "What is the event?" : !state.esEvent.eStartingDate ? "Starting on what date?" : !state.esEvent.eStartingTime ? "Starting at what time?" : !state.esEvent.eCalendar ? "Which calendar?" : !state.esEvent.eDuration ? "For fow long?" : null
+				log.warn "missingField = $missingField"
+            	outputTxt = missingField
+				pContCmdsR = "feedback" 
+        	}
         }
 		else {
 			outputTxt = "Ok, canceling"
@@ -3295,7 +3458,7 @@ def remindersHandler() {
     	}
     } 
     else {
-    	outputTxt = "Sorry, I didn't get that"
+    	outputTxt = "Sorry, I didn't get that, could you please repeat?"
     	pTryAgain = true 
    	}
     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
@@ -4037,7 +4200,7 @@ private getCommand(command, unit) {
             	command = "arrived"
                 deviceType = "cPresence" //"virtualPerson"
             }
-            if (command == "check out" || command == "checking out"|| command == "checked out" || command == "departed" || command == "departing" || command == "leaving" || command == "left"){
+            if (command == "check out" || command == "checking out"|| command == "checked out"){
             	command = "departed"
                 deviceType = "cPresence"
             }    
