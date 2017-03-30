@@ -340,6 +340,7 @@ def sunriseTimeHandler(evt) {
 	scheduleTurnOff(evt.value)
     }
 def scheduleTurnOn(sunsetString) {
+
     if (startingY == "Sunrise" || startingY == "Sunset") {
     def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
     def timeBeforeSunset = new Date(sunsetTime.time - (startSunsetOffsetY * 60 * 1000))
@@ -351,17 +352,18 @@ def scheduleTurnOn(sunsetString) {
     }    
 }
 def scheduleTurnOff(sunriseString) {
+if(endingY != null) { 
 	if (endingY == "Sunrise" || endingY == "Sunset") {
 	def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
     def timeBeforeSunrise = new Date(sunriseTime.time - (endSunriseOffsetY * 60 * 1000))
     log.info "Scheduling for: $timeBeforeSunrise (sunrise is $sunriseTime)"
     runOnce(timeBeforeSunrise, scheduledTimeHandlerOff)
 	}
-    else if(endingY != "Sunrise" && endingY != "Sunset") {
+    else if(endingY != "Sunrise" && endingY != "Sunset" && endingY != "null") {
     	runOnce(endingXY, scheduledTimeHandlerOff)
     }
 }    
-
+}
 /************************************************************************************************************
 		
 ************************************************************************************************************/
