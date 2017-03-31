@@ -8,6 +8,7 @@
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
+ *		3/30/2017		Version:5.0 R.0.0.2a	Move Security Suite to Profiles
  *		3/28/2017		Version:5.0 R.0.0.2		Alpha 2 Release
  *		3/24/2017		Version:5.0 R.0.0.1		Alpha Release
  *		2/17/2017		Version:4.0 R.0.0.0		Public Release 
@@ -220,9 +221,9 @@ page name: "mIntent"
                             	if(uPIN_L == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Locks"}                             
                     }
                 }
-                    section ("Access Security Suite") {
-                        href "mSecuritySuite", title: "Tap to configure your Home Security Suite module", description: ""
-                    } 
+// Moved to                   section ("Access Security Suite") {
+// location of                       href "mSecuritySuite", title: "Tap to configure your Home Security Suite module", description: ""
+// other profiles                   } 
                         	
                 section ("Smart Home Monitor Status Change Feedback", hideWhenEmpty: true, hideable: true, hidden: true){
                     input "fSecFeed", "bool", title: "Activate SHM status change announcements.", default: false, submitOnChange: true
@@ -260,13 +261,13 @@ page name: "mIntent"
                         dynamicPage (name: "mSecuritySuite", title: "", install: true, uninstall: false) {
                             if (childApps?.size()) {  
                                 section("Security Suite",  uninstall: false){
-                                    app(name: "security", appName: "SecuritySuite", namespace: "Echo", title: "Configure Security Suite", multiple: false,  uninstall: false)
+                                    app(name: "security", appName: "SecuritySuite", namespace: "Echo", title: "Configure Security Suite", multiple: true,  uninstall: false)
                                 }
                             }
                             else {
                                 section("Security Suite",  uninstall: false){
                                     paragraph "NOTE : Looks like you haven't created any Profiles yet.\n \nPlease make sure you have installed the Rooms Smart App Add-on before creating a new Room!"
-                                    app(name: "security", appName: "SecuritySuite", namespace: "Echo", title: "Configure Security Suite", multiple: false,  uninstall: false)
+                                    app(name: "security", appName: "SecuritySuite", namespace: "Echo", title: "Configure Security Suite", multiple: true,  uninstall: false)
                                 }
                             }
                        }
@@ -290,8 +291,13 @@ page name: "mIntent"
 				}
 				if (remindOn) {
         			section ("Reminders & Events") {
-  						app(name: "reminder", appName: "Reminders", namespace: "Echo", title: "Access Reminders & Events", multiple: false,  uninstall: false)
+  						app(name: "reminder", appName: "Reminders", namespace: "Echo", title: "Access Reminders & Events...", multiple: false,  uninstall: false)
 					}
+                }    
+                if (securityOn) {
+                	section ("Security Suite") {
+                    	href "mSecuritySuite", title: "View and Configure the Security Suite Profiles...", description: ""
+                    }    
                 }                   
             }            
 		}

@@ -136,11 +136,11 @@ page name: "triggers"
             			options: ["Minutes", "Hourly", "Daily", "Weekly", "Monthly", "Yearly"]
                 	if(frequency == "Minutes"){
                         input "xMinutes", "number", title: "Every X minute(s) - maximum 60", range: "1..59", submitOnChange: true, required: false
-                		input "xMinutesOff", "number", title: "And again in X minute(s) - maximum 60", range: "1..59", submitOnChange: true, required: false
+// Removed by JH  		input "xMinutesOff", "number", title: "And again in X minute(s) - maximum 60", range: "1..59", submitOnChange: true, required: false
                     }
                     if(frequency == "Hourly"){
                         input "xHours", "number", title: "Every X hour(s) - maximum 24", range: "1..23", submitOnChange: true, required: false
-                    	input "xHoursOff", "number", title: "And again in X hour(s) - maximum 24", range: "1..23", submitOnChange: true, required: false
+// Removed by JH  		input "xHoursOff", "number", title: "And again in X hour(s) - maximum 24", range: "1..23", submitOnChange: true, required: false
                     }	
                     if(frequency == "Daily"){
                         input "xDays", "number", title: "Every X day(s) - maximum 31", range: "1..31", submitOnChange: true, required: false
@@ -172,7 +172,7 @@ page name: "triggers"
                 }
 			} 
             section ("Sunrise, Sunset, and Specific Times"){
-                href "certainTimeX", title: "Sunrise/Sunset/Specific Time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
+                href "certainTimeX", title: "Choose Events...", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
             }   
             if(actionType != "Default"){
                 section ("Location Event", hideWhenEmpty: true) {
@@ -251,18 +251,18 @@ page name: "triggers"
 	}
 page name: "certainTimeX"
     def certainTimeX() {
-        dynamicPage(name:"certainTimeX",title: "Only during a certain time", uninstall: false) {
-            section("Beginning at....") {
-                input "startingY", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
-                if(startingY in [null, "A specific time"]) input "startingXY", "time", title: "Start time", required: false, submitOnChange: true
+        dynamicPage(name:"certainTimeX",title: "Trigger on these Events", uninstall: false) {
+            section("Trigger At this time...") {
+                input "startingY", "enum", title: "Choose an event", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
+                if(startingY in [null, "A specific time"]) input "startingXY", "time", title: "Trigger One", required: false, submitOnChange: true
                 else {
                     if(startingY == "Sunrise") input "startSunriseOffsetY", "number", range: "*..*", title: "Offset in minutes (+/-)", defaultValue: 0, required: false, submitOnChange: true
                     else if(startingY == "Sunset") input "startSunsetOffsetY", "number", range: "*..*", title: "Offset in minutes (+/-)", defaultValue: 0,required: false, submitOnChange: true
                 }
             }
-            section("Ending at....") {
-                input "endingY", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
-                if(endingY in [null, "A specific time"]) input "endingXY", "time", title: "End time", required: false, submitOnChange: true
+            section("...and then again at this time") {
+                input "endingY", "enum", title: "Choose a Second Event", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
+                if(endingY in [null, "A specific time"]) input "endingXY", "time", title: "Trigger Two", required: false, submitOnChange: true
                 else {
                     if(endingY == "Sunrise") input "endSunriseOffsetY", "number", range: "*..*", title: "Offset in minutes (+/-)", defaultValue: 0, required: false, submitOnChange: true
                     else if(endingY == "Sunset") input "endSunsetOffsetY", "number", range: "*..*", title: "Offset in minutes (+/-)", defaultValue: 0, required: false, submitOnChange: true
@@ -1342,9 +1342,9 @@ def cronHandler(var) {
         	if(xMinutes) { result = "0 0/${xMinutes} * 1/1 * ? *"
 			    schedule(result, "scheduledTimeHandler")
                 }
-            if(xMinutesOff) { result = "0 0/${xMinutesOff} * 1/1 * ? *"
-                schedule(result, "scheduledTimeHandlerOff")
-				}
+//            if(xMinutesOff) { result = "0 0/${xMinutesOff} * 1/1 * ? *"      // removed by JH 3/30/2017 (faulty logic)
+//                schedule(result, "scheduledTimeHandlerOff")
+//				}
             else log.error " unable to schedule your reminder due to missing required variables"
         }
 		if(var == "Hourly") {
@@ -1352,9 +1352,9 @@ def cronHandler(var) {
 			if(xHours) { result = "0 0 0/${xHours} 1/1 * ? *"
             	schedule(result, "scheduledTimeHandler")
                 }
-			if(xHoursOff) { result = "0 0 0/${xHoursOff} 1/1 * ? *"
-            	schedule(result, "scheduledTimeHandlerOff")
-                }
+//			if(xHoursOff) { result = "0 0 0/${xHoursOff} 1/1 * ? *"      // removed by JH 3/30/2017 (faulty logic)
+//            	schedule(result, "scheduledTimeHandlerOff")
+//                }
             else log.error " unable to schedule your reminder due to missing required variables"
 		}
 		if(var == "Daily") {
