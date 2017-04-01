@@ -351,25 +351,14 @@ def initialize() {
 		subscribe(location, "Gcal", GCalHandler)
         state.GCalendars = state.GCalendars ? state.GCalendars : []
         state.newReminder
-    	state.lastTime
-        state.recording = null
-        state.recording1
-        state.recording2
-        state.recording3
-        state.lastAction = null
-        state.lastActivity
-        state.reminderAnsPend = 0
-        state.delayAnsPend = 0
+        state.quickReminder
+    	state.lastReminder
         state.reminder1
         state.reminder2
         state.reminder3
-        //Alexa Voice Settings
-		state.pContCmds = settings.pContCmdsProfile == false ? true : settings.pContCmdsProfile == true ? false : true
-        state.pContCmdsR = "init"
-        state.pTryAgain = false
-        //Sound Cancellation    
-        state.pMuteAlexa = settings.pDisableAlexaProfile ?: false
-        state.pMuteAll = settings.pDisableALLProfile ?: false
+        state.rReminder1
+        state.rReminder2
+        state.rReminder3
 }
 
 /******************************************************************************************************
@@ -395,195 +384,60 @@ def profileEvaluate(data) {
     def pTryAgain = false
     def pPIN = false
     def String pContCmdsR = (String) "tts"
-	def String outputTxt = (String) null 
 	def String scheduler = (String) null     
 	def String ttsR = (String) null
- 
-//result = "
-
+    def result
     log.debug "Message received from Parent with: (tts) = '${tts}', (eStartingTime) = '${eStartingTime}', (eStartingDate) = '${eStartingDate}', "+
     							"(eDuration) = '${eDuration}', (eFrequency) = '${eFrequency}', (eType) = '${eType}' current app version: ${release()}"  
-outputTxt = "Great! The reminder has been scheduled"
-return outputTxt
 
-            //Repeat Last Added
-	if (tts == repeat || tts == whatsUP) {
-    	outputTxt = getLastMessage()          
-	}
-	else {
-		def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
-		if (numMessages == "3 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
-		else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
-		else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
-		else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
-       	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-	}
-	//Schedule Reminders
-	if(state.reminderAnsPend >0){
-		if(unit !="undefined" && iLength != null){
-			if (!state.reminder1)	{
-				ttsR = state.reminder1
-				scheduler = "reminderHandler1"
-				outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
-				if(parent.debug) log.debug "scheduling reminder 1 with outputTxt = ${outputTxt}"
-			}
-			else {
-                if (!state.reminder2)	{
-                    ttsR = state.reminder2
-                    scheduler = "reminderHandler2"
-                    outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
-                    if(parent.debug) log.debug "scheduling reminder 2 with outputTxt = ${outputTxt}"
-                }
-                else {
-                    if (!state.reminder3)	{
-                        tts = state.reminder3
-                        scheduler = "reminderHandler3"
-                        outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
-                        if(parent.debug) log.debug "scheduling reminder 3 with outputTxt = ${outputTxt}"
-                    }
-					else {
-                        outputTxt = "Sorry your reminder slots are full"
-                    }
-                }
-			}
-			if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, scheduler)}
-			else {
-				if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, scheduler)}
-				else{
-					if(unit == "days"){
-						def currDate = new Date(now() + location.timeZone.rawOffset)
-						runOnce(currDate + iLength , scheduler)
-					}
-                }
-           	}
-   		}
+	//Quick Reminders
+	if (!state.quickReminder && eType == "quickReminder"){
+    	state.quickReminder = tts
+    	if(eFrequency && eDuration >0 ){
+        if (eFrequency == "minutes" && eDuration>0 ) {
+        	runIn(eDuration*60, scheduler)
+			
+        }
+		if (eFrequency == "hours" && eDuration>0 ) { 
+        	result = "Great! Quick reminder scheduled"
+        	runIn(eDuration*3600, scheduler)}
+		if(eFrequency == "days"){
+			def currDate = new Date(now() + location.timeZone.rawOffset)
+			runOnce(currDate + eDuration , scheduler)
+			result = "Great! Quick reminder scheduled"
+        }
+      }
+    else result = "sorry, a quick reminder is already in progress, say overwite reminder"    
+    return result 
+    }   
+    if(eType == "reminder") {
+		if (!state.reminder1)	{
+			state.reminder1 = tts
+			scheduler = "reminderHandler1"
+			result = "I have scheduled a reminder to " + tts
+		}
 		else {
-			outputTxt = "sorry, I was unable to schedule your reminder, "
-			pTryAgain = true
-		}
-		return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-	}
-    //Cancel Reminders
-	if (cancelReminder == true || cancelReminderNum != null) {
-    	def String cancelMeText = (String) null
-		if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
-			unschedule("reminderHandler2")
-			cancelMeText = state.reminder2
-			state.reminder2 = null
-		}
-		if(cancelMe != "undefined" || cancelReminderNum != null) {
-			if (cancelMe == "reminder1" || cancelReminderNum == "reminder1") {                        
-				unschedule("reminderHandler1")
-				cancelMeText = state.reminder1
-				state.reminder1 = null
-          	}
+			if (!state.reminder2)	{
+				state.reminder2 = tts
+				scheduler = "reminderHandler2"
+				result = "I have scheduled a reminder " + tts
+			}
 			else {
-				if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
-					unschedule("reminderHandler2")
-                    cancelMeText = state.reminder2
-                    state.reminder2 = null
+				if (!state.reminder3)	{
+					tts = state.reminder3
+					scheduler = "reminderHandler3"
+					result = "I have scheduled a reminder " + tts
 				}
 				else {
-					if (cancelMe == "reminder3" || cancelReminderNum == "reminder3") {
-						unschedule("reminderHandler3")
-                        cancelMeText = state.reminder3
-                        state.reminder3 = null
-                   	}
+					result = "Sorry your reminder slots are full"
 				}
 			}
-			outputTxt = "Ok, canceling reminder to " + cancelMeText
-			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
 		}
-		else {
-			outputTxt = "sorry, I was unable to cancel your reminder "
-			pTryAgain = true
-			return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-		}
-	}
-
-	if (state.recording == null || state.recording1 == null || state.recording2 == null) {    
-		if(state.recording == null || state.recording == "" ) {
-			state.recording = record
-		}
-		else if(state.recording1 == null || state.recording1 == "") {
-			state.recording1 = record
-		}  
-		else if(state.recording2 == null || state.recording2 == "") {
-			state.recording2 = record
-		}
-		outputTxt = "Ok, message recorded. To play it later, just say: play message."
-		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-	}
-	else {
-		pTryAgain = true
-		outputTxt = "You have reached the maximum allowed number of recordings. Please delete one or more messages before recording another one, "
-		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-	}                                   
-	//FEEDBACK
-    if (whatMessages == true) {
-		def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
-		if(numMessages == "3 messages") outputTxt = outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
-        else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
-        else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
-        else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
-        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-	} 
-                    //Delete Messages
-					if (deleteMessages != null) {
-                        def String deleteMeText = (String) null
-                        if (deleteMessages == "recording") {
-							deleteMeText = state.recording
-                            state.recording = null
-                       	}	
-                        else {
-                        	if (deleteMessages == "recording1") {
-                                deleteMeText = state.recording1
-                                state.recording1 = null
-                         	}
-							else {
-                            	if (deleteMessages == "recording2") {
-                                    deleteMeText = state.recording2
-                                    state.recording2 = null
-                                 }
-                                 else if (deleteMessages == "all"){
-									deleteMeText = "all messages"
-                                    state.recording = null
-                                    state.recording1 = null
-                                    state.recording2 = null
-                            	}
-                            }
-                            outputTxt = "Ok, deleted " + deleteMeText
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }
-                    }                    
-if (whatReminders == true) {
-def numReminders = state.reminder3 != null ? "3 reminders" : state.reminder2 != null ? "2 reminders" : state.reminder1 != null ? "one reminder" : "no reminders" 
-outputTxt = "You have " + numReminders + "scheduled, " + state.reminder1 + " , " + state.reminder2 + " , " + state.reminder3
-return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-}    
-}
-/******************************************************************************************************
-   SPEECH AND TEXT ALEXA RESPONSE
-******************************************************************************************************/
-def ttsHandler(tts) {
-	def result = tts
-    def cm = app.label
-	//Preparing Alexa Response
-    if(parent.debug) log.debug " ttshandler settings: pAlexaCustResp=${pAlexaCustResp},pAlexaRepeat=${pAlexaRepeat},tts=${tts}"
-    if (pAlexaCustResp) {
-			result = settings.pAlexaCustResp
-	}
-	else {
-    	if (pAlexaRepeat) {
-        	result = "I have delivered the following message to " + cm + " , " + tts
-        }
-        else {
-       	    result = "Message sent to " + cm + " , " 
-        }
+		def olddate = eStartingDate + " " + state.esEvent.eStartingTime
+                Date date = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", olddate)
+				runOnce(date , scheduler)
+	    return result 
     }
-	ttsActions(tts)
-    if(parent.debug) log.debug "running actions, sending result to Parent = ${result}"
-    return result
 }
 /******************************************************************************************************
    SPEECH AND TEXT ACTION
@@ -851,7 +705,6 @@ def profileDeviceControl() {
 			sOtherDimmers?.setLevel(otherLevel) }
 	}
 }
-
 private toggle() {
 	if (sSwitches) {
         if (sSwitches?.currentValue('switch').contains('on')) {
