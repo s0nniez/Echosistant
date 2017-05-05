@@ -1,0 +1,315 @@
+LIST_OF_COMMANDS
+
+activate 
+all off
+arrived
+arriving
+brighten
+brighter
+cancel
+change
+changed
+check in
+check out
+checked in  
+checked out
+checking in
+checking out
+chilling
+cleaning
+close
+closed
+colder
+color
+concentrate
+concentrating
+cooler
+darker
+deactivate
+decrease
+delete
+departed
+departing
+dim
+disable
+down
+enable
+energize
+feeling lucky
+feeling romantic
+freezing
+going home
+high
+hotter
+increase
+leaving
+left
+lock
+low
+medium
+mute
+not bright enough
+not cold enough
+not dark enough
+not hot enough
+not loud enough
+off
+on
+open
+play
+quiet
+reading
+relax
+relaxing
+repeat
+replace
+replaced
+run
+slow down
+speed up
+start
+stop
+switch
+this is a test
+too bright
+too chilly
+too cold
+too dark
+too fast
+too hot
+too loud
+too quiet
+too slow
+too warm
+trigger 
+try again
+unlock
+unmute
+up
+warmer
+working
+shot 
+fed
+bathed
+walked
+medicated
+
+
+
+LIST_OF_GROUPS
+
+activities
+batteries
+devices
+doors
+fans
+lights
+locks
+profile
+security
+switches
+thermostats
+vents
+
+
+LIST_OF_OPERANDS
+
+active
+alarm
+alert
+alerts
+at home
+audio
+batteries
+battery
+cat
+change in weather forecast
+changes to the forecast
+changes to the weather
+cleaned
+closed
+cold outside
+current condition
+current conditions
+current forecast
+current temperature
+current weather
+door
+doors
+doors open
+dry
+feed
+forecast for today
+forecast for tomorrow
+forecast for tonight
+forecast update
+forecast updates
+here
+home
+home monitor
+hot outside
+hourly forcast
+humid is outside
+humidity
+humidity outside
+in
+inactive
+indoor temperature
+is
+light
+lights
+locked
+messages
+mode
+muted
+not here
+not home
+not present
+off
+on
+open
+outdoor temperature
+outside humidity
+precipitation
+precipitation for the next hour
+present
+rain
+rain fall
+rainfall
+raining
+report
+running
+security
+settings
+smart home monitor
+switches
+temperature
+temperature inside
+temperature is inside
+temperature is outside
+temperature outside
+text
+thunderstorm
+today
+today's forecast
+today's weather
+tomorrow
+tomorrow's forecast
+tomorrow's weather
+tonight
+tonight's forecast
+tonight's weather
+tornado
+unlock
+unlocked
+unmuted
+updates to the forecast
+updates to the weather
+UV
+uv index
+warning
+warnings
+weather
+weather alert
+weather alerts
+weather condition for the next hour
+weather conditions
+weather today
+weather tomorrow
+weather tonight
+weather update
+weather updates
+wet
+wind
+wind intensity
+window
+windows
+windy
+dog
+
+
+
+
+LIST_OF_QUERIES
+
+about
+are there
+create
+did I
+generate
+get
+give
+how
+how many
+if
+if my
+if the
+is
+is my
+is the
+is there
+many
+what
+what is
+what's
+when
+where
+which
+who
+was
+
+
+LIST_OF_TYPES
+
+mode
+modes
+routine
+security
+
+
+LIST_OF_UNITS
+
+AC
+audio
+blue
+cat
+color
+conversation
+cool white
+cooling
+dark blue
+dark green
+dark red
+daylight
+degrees
+dog
+feedback
+filters
+flash
+green
+heat
+heating
+hour
+hours
+light blue
+light green
+loop
+looping
+minute
+minutes
+number
+orange
+percent
+pin
+pin number
+pink
+red
+reminder
+schedule
+short answer
+short answers
+soft white
+text
+timer
+warm white
+yellow
