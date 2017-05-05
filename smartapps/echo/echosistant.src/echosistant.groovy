@@ -8,7 +8,7 @@
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
- *		4/24/2017		Version:4.0 R.0.3.4		Added Pet Reminders, code optimization
+ *		4/24/2017		Version:4.0 R.0.3.4		Added Pet Notes, code optimization
  *		4/05/2017		Version:4.0 R.0.3.3d	Minor UI changes & added "cut on/cut off" commands
  *		4/03/2017		Version:4.0 R.0.3.3c 	Bug Fixes and various other things
  *		3/29/2017		Version:4.0 R.0.3.3b	change to virtual person commands
@@ -60,6 +60,7 @@ preferences {
     				page name: "mNotifyProfile" // links Parent to Notification Add-ON
                     page name: "mThermoManager" // links Parent to Thermostat Manager Add-ON
             		page name: "mProfiles" // links Parent to Profiles Add-ON 
+            page name: "mPetNotes"
             page name: "mFacebook"
             page name: "mSupport"
             page name: "mSettings"
@@ -109,7 +110,10 @@ page name: "mIntent"
 			}
             section ("EchoSistant Security") {
             	href "mSecurity", title: "Configure EchoSistant Security Options", description: mSecurityD(), state: mSecurityS()
-            }   
+            }
+            section ("Pet Notes") {
+            	href "mPetNotes", title: "Configure the Pet Notes", description: mPetNotesD(), state: mPetNotesS()
+            }    
             section ("FaceBook Messenger Control") {
                 href "mFacebook", title: "Enter Credentials for Facebook Messenger Control", description: "", state: complete
             }
@@ -180,23 +184,7 @@ page name: "mIntent"
                         input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
                         input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
                     }
-                    section ("Pet Notes") {
-                    	input "pPet", "enum", title: "Choose your pet...", options: ["cat":"Cat","dog":"Dog","snake":"Snake","bird":"Bird"], required: false, submitOnChange: true
-                        if (pPet) {
-                        input "petAction", "enum", title: "What are you reminding that has been done?", options: ["fed":"Feeding","bath":"Bathing","walk":"Walking","shot":"Shot"], required: true 
-                        input "pSMS", "bool", title: "Do you want to send an SMS when notes are made?", required: false, defaultValue: false, submitOnChange: true
-                        	if (pSMS) {
-            					input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
-                				if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-           							input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
-                				if (psendText){      
-                    				paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
-                    			input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
-                				}    
-                        	}
-                    	}
-            			href "pReset", title: "Reset all Pet Notifications to blank...", description: none
-                    }    
+                        
                     section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {
 						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
                         input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
@@ -217,7 +205,7 @@ page name: "mIntent"
                         href "mWeatherConfig", title: "Tap here to configure the Weather defaults", description: "", state: complete
                     }
                 }
-        }
+            }    
         page name: "mFacebook"
         	def mFacebook(){
             	dynamicPage(name: "mFacebook", title: "", install: false, uninstall: false) {
@@ -229,6 +217,28 @@ page name: "mIntent"
          				}
 					}                        
 				}
+		page name: "mPetNotes"
+        	def mPetNotes(){
+            	dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
+                    section ("Pet Notes") {
+                    	input "pCat", "text", title: "Name your Cat...", required: false, default: null
+                        input "pCat1", "text", title: "Name your other Cat...", required: false, default: null
+                        input "pDog", "text", title: "Name your Dog...", required: false, default: null
+                        input "pDog1", "text", title: "Name your other Dog...", required: false, default: null
+                        input "pSMS", "bool", title: "Do you want to send an SMS when notes are made?", required: false, defaultValue: false, submitOnChange: true
+                        	if (pSMS) {
+            					input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
+                				if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+           							input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
+                				if (psendText){      
+                    				paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                    				input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
+                						}
+                                    }    
+                                    input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
+                            		}
+                                }    
+                			}
         page name: "mSecurity"    
             def mSecurity(){
                 dynamicPage(name: "mSecurity", title: "",install: false, uninstall: false) {
@@ -630,11 +640,19 @@ page name: "scheduled"  // display scheduled events on the dashboard add by JH 3
         if (state.dogBathNotify.contains ("last")) {href "dogBathReset", title: "${state.dogBathNotify}", description: "Tap here to reset this note"}
         if (state.dogFedNotify.contains ("last")) {href "dogFedReset", title: "${state.dogFedNotify}", description: "Tap here to reset this note"}
         if (state.dogMedNotify.contains ("last")) {href "dogMedReset", title: "${state.dogMedNotify}", description: "Tap here to reset this note"}
+        if (state.catShot1Notify.contains ("last")) {href "catShot1Reset", title: "${state.catShot1Notify}", description: "Tap here to reset this note"}
+        if (state.catWalk1Notify.contains ("last")) {href "catWalk1Reset", title: "${state.catWalk1Notify}", description: "Tap here to reset this note"}
+        if (state.catBath1Notify.contains ("last")) {href "catBath1Reset", title: "${state.catBath1Notify}", description: "Tap here to reset this note"}
+        if (state.catFed1Notify.contains ("last")) {href "catFed1Reset", title: "${state.catFed1Notify}", description: "Tap here to reset this note"}
+        if (state.catMed1Notify.contains ("last")) {href "catMed1Reset", title: "${state.catMed1Notify}", description: "Tap here to reset this note"}
+        if (state.dogShot1Notify.contains ("last")) {href "dogShot1Reset", title: "${state.dogShot1Notify}", description: "Tap here to reset this note"}
+        if (state.dogWalk1Notify.contains ("last")) {href "dogWalk1Reset", title: "${state.dogWalk1Notify}", description: "Tap here to reset this note"}
+        if (state.dogBath1Notify.contains ("last")) {href "dogBath1Reset", title: "${state.dogBath1Notify}", description: "Tap here to reset this note"}
+        if (state.dogFed1Notify.contains ("last")) {href "dogFed1Reset", title: "${state.dogFed1Notify}", description: "Tap here to reset this note"}
+        if (state.dogMed1Notify.contains ("last")) {href "dogMed1Reset", title: "${state.dogMed1Notify}", description: "Tap here to reset this note"}
         }    
         section ("Upcoming Reminders") {
-		//	if (remMsg != null) {
 			paragraph "Reminder Scheduled: ${params.rMessage} on ${state.esEvent.eStartingDate} at ${state.esEvent.eStartingTime}"
-        //    }
     	}
     }    
 }
@@ -730,6 +748,7 @@ def installed() {
     runEvery1Hour(mGetWeatherUpdates)
     //Reminders
     state.esEvent = [:]
+    initialize()
 }
 def updated() { 
 	if (debug) log.debug "Updated with settings: ${settings}"
@@ -785,6 +804,16 @@ def initialize() {
             state.dogBathNotify
             state.dogFedNotify
             state.dogMedNotify
+            state.catShot1Notify
+            state.catWalk1Notify
+            state.catBath1Notify
+            state.catFed1Notify
+            state.catMed1Notify
+            state.dogShot1Notify
+            state.dogWalk1Notify
+            state.dogBath1Notify
+            state.dogFed1Notify
+            state.dogMed1Notify
 			state.pendingConfirmation = false
             unschedule("startLoop")
             unschedule("continueLoop")
@@ -983,7 +1012,8 @@ def feedbackHandler(fbResponseTxt) {
     def stateDate
     def stateTime
     def data = [:]
-    	fDevice = fDevice?.replaceAll("[^a-zA-Z0-9 ]", "") 
+    	if (fDevice != null) {
+    	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") }
     if (debug){
     	log.debug 	"Feedback data: (fbMessage) = '${fbResponseTxt}', (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
@@ -1004,16 +1034,16 @@ def feedbackHandler(fbResponseTxt) {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}    
     else {
-  		if (fDevice != "undefined" && (fQuery == "get" ||  fQuery == "create" || fQuery == "generate" || fQuery == "give" || fbMessage?.contains("what"))){
+  		if (fDevice != "undefined" && (fQuery == "get" ||  fQuery == "create" || fQuery == "generate" || fQuery == "give" || fbMessage.contains("what"))){
             def pintentName
            		childApps.each {child ->
                         def ch = child.label
                         	ch = ch.replaceAll("[^a-zA-Z0-9 ]", "")
-                		if (ch.toLowerCase() == fDevice?.toLowerCase()) { 
+                		if (ch.toLowerCase() == fDevice.toLowerCase()) { 
                     		if (debug) log.debug "Found a profile"
                             pintentName = child.label
                             def dataSet = [ptts:ptts, pintentName:pintentName] 
-                            def childRelease = child?.checkRelease()
+                            def childRelease = child.checkRelease()
                             log.warn "childRelease = $childRelease"
                             outputTxt = child.runProfile(pintentName)
 						}
@@ -1023,22 +1053,22 @@ def feedbackHandler(fbResponseTxt) {
          }
          if (fDevice != "undefined" && fQuery != "undefined" && fOperand != "undefined") {
          if (fbMessage.contains ("what is open") || fQuery.contains ("is ") || fQuery.contains ("if ") || fQuery == "is" || fQuery == "if" || fQuery == "is the") {
-                def deviceMatch = cRelay?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                def deviceMatch = cRelay.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                     if(deviceMatch && cContactRelay) {// changed by Jason 2/24/2017
                         outputTxt =  cContactRelay.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
                     else {
                         if (deviceMatch == null && cDoor1) {// changed by Jason 2/24/2017
-                            deviceMatch = cDoor1?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                            deviceMatch = cDoor1.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                              if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         }
                         if (deviceMatch == null && cContact) {// changed by Jason 2/24/2017
-                           deviceMatch = cContact?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                           deviceMatch = cContact.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         } 
                     	if (deviceMatch == null && cLock) {// changed by Jason 2/24/2017
-                        	deviceMatch = cLock?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                        	deviceMatch = cLock.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                         	if(deviceMatch) {
                             	currState = deviceMatch.latestValue("lock")
                             	currState = currState == "${fOperand}" ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
@@ -1046,11 +1076,11 @@ def feedbackHandler(fbResponseTxt) {
                         	}
                     	}                        
                         if (deviceMatch == null && cSwitch) {// changed by Jason 2/24/2017
-                            deviceMatch = cSwitch?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()} 
+                            deviceMatch = cSwitch.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()} 
                             if(deviceMatch) outputTxt = deviceMatch.latestValue("switch").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         }
                         if (deviceMatch == null && cMotion) {// changed by Jason 2/24/2017
-                            deviceMatch = cMotion?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                            deviceMatch = cMotion.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                             if(deviceMatch) {
                                 currState = deviceMatch.currentValue("motion")
                                 currState = currState == "active" ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
@@ -1058,21 +1088,21 @@ def feedbackHandler(fbResponseTxt) {
                             }
                         }
 						if (deviceMatch == null && cPresence) {  // changed by Jason 2/24/2017
-                            deviceMatch = cPresence.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                            deviceMatch = cPresence.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                             	if(fOperand == "home" || fOperand == "here" || fOperand == "present" || fOperand == "in" || fOperand == "at home") {
                                 	outputTxt = deviceMatch.latestValue("presence")?.contains("not") ? "no, ${deviceMatch} is not ${fOperand}" : "yes, ${deviceMatch} is ${fOperand}"
 									}
                                 }
                         if (deviceMatch == null && cWater) {// changed by Jason 2/24/2017
-                            deviceMatch = cWater?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}	
+                            deviceMatch = cWater.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}	
                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("water").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         }
                         if (deviceMatch == null && cSpeaker) {// changed by Jason 2/24/2017
-                            deviceMatch = cSpeaker?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}	
+                            deviceMatch = cSpeaker.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}	
                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("mute").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         }
                         if (deviceMatch == null && fOperand == "running" && cTstat ) {// changed by Jason 2/24/2017
-                            deviceMatch = cTstat?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                            deviceMatch = cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                             if(deviceMatch) {
                                 currState = deviceMatch.latestValue("thermostatOperatingState")
                                 currState = currState == "cooling" ? "yes, ${deviceMatch} is ${fOperand}" : currState == "heating" ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
@@ -1091,10 +1121,10 @@ def feedbackHandler(fbResponseTxt) {
         	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
       	}
         else {
-        	def dDevice = dMatch?.deviceMatch
-            def dType = dMatch?.deviceType
-            def dState = dMatch?.currState
-            def dMainCap = dMatch?.mainCap
+        	def dDevice = dMatch.deviceMatch
+            def dType = dMatch.deviceType
+            def dState = dMatch.currState
+            def dMainCap = dMatch.mainCap
             def dCapCount = getCaps(dDevice,dType, dMainCap, dState)
             state.pContCmdsR = "caps"
                 	
@@ -1106,7 +1136,7 @@ def feedbackHandler(fbResponseTxt) {
             }
         }   
         if (fOperand == "undefined" && fQuery != "undefined" && fQuery != "who" && !fQuery.contains ("when")) {        
-                def deviceMatch=cTstat?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+                def deviceMatch=cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
                     if(deviceMatch)	{
                             deviceType = "cTstat"
                             def currentMode = deviceMatch.latestValue("thermostatMode")
@@ -1126,14 +1156,14 @@ def feedbackHandler(fbResponseTxt) {
                         if (fDevice != "undefined") {
                              if (fDevice != "undefined"){
                                 def rSearch = deviceMatchHandler(fDevice)
-                                    if (rSearch?.deviceMatch == null) { 
+                                    if (rSearch.deviceMatch == null) { 
                                         outputTxt = "Sorry, I couldn't find any details about " + fDevice
                                         state.pTryAgain = true
         								return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                                     }
                                     else {
                                         deviceM = rSearch?.deviceMatch
-                                        outputTxt = deviceM + " has been " + rSearch?.currState + " since " + rSearch?.tText
+                                        outputTxt = deviceM + " has been " + rSearch.currState + " since " + rSearch.tText
                                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                                     }                  
                                 if (rSearch.deviceType == "cBattery") {
@@ -1158,7 +1188,10 @@ def feedbackHandler(fbResponseTxt) {
         else {
 //>>> Temp >>>>      
             if(fOperand == "temperature") {
-                if(cTstat){
+         		if(cTstat == null){
+                	outputTxt = "I'm sorry, it seems that you have not selected any temperature devices in the EchoSistant app"
+                    }
+           			else if(cTstat){
                     cTstat?.find {s -> 
                         if(s.label.toLowerCase() == fDevice?.toLowerCase()){
                             deviceType = "cTstat"
@@ -1169,9 +1202,10 @@ def feedbackHandler(fbResponseTxt) {
                             def timeText = getTimeVariable(stateTime, deviceType)            
                             outputTxt = "The temperature " + fDevice + " is " + temp + " degrees and was recorded " + timeText.currDate + " at " + timeText.currTime
                         }
-                    }
+                    
                     if (outputTxt != null) {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                    	}
                     }            
                 }
                 if(cMotion){
@@ -1222,7 +1256,7 @@ def feedbackHandler(fbResponseTxt) {
                     	if(state.pShort != true) {
                      		outputTxt = "Sorry, I couldn't quite get that, what device would you like to use to get the indoor temperature?"
                         }
-                        else {outputTxt = "Oops, I didn't get that, what device?"}
+                        else {outputTxt = "I'm sorry, it seems that you have not selected any devices with the temperature attribute"}
                 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
                 } 
@@ -1230,7 +1264,7 @@ def feedbackHandler(fbResponseTxt) {
 //>>> Temp >>>>>
             if (fOperand == "temperature inside" || fOperand == "indoor temperature" || fOperand == "temperature is inside"){
                 if(cIndoor){
-                    def sensors = cIndoor?.size()
+                    def sensors = cIndoor.size()
                     def tempAVG = cIndoor ? getAverage(cIndoor, "temperature") : "undefined device"          
                     def currentTemp = tempAVG
                     outputTxt = "The indoor temperature is " + currentTemp
@@ -1244,7 +1278,7 @@ def feedbackHandler(fbResponseTxt) {
 //>>> Temp >>>>
             if (fOperand == "temperature outside" || fOperand == "outdoor temperature" || fOperand == "temperature is outside" || fOperand == "hot outside" || fOperand == "cold outside"){
                 if(cOutDoor){
-                    def sensors = cOutDoor?.size()
+                    def sensors = cOutDoor.size()
                     def tempAVG = cOutDoor ? getAverage(cOutDoor, "temperature") : "undefined device"          
                     def currentTemp = tempAVG
                     def forecastT = mGetWeatherTemps()
@@ -1301,11 +1335,11 @@ def feedbackHandler(fbResponseTxt) {
                             pintentName = child.label
                     		if(fCommand == "delete") ptts = "delete all messages "
                             else ptts = "how many messages "
-							def childRelease = child?.checkRelease()
+							def childRelease = child.checkRelease()
                             log.warn "childRelease = $childRelease"
                             def dataSet = [ptts:ptts, pintentName:pintentName] 
                     		def pResponse = child.profileEvaluate(dataSet)
-                            	outputTxt = pResponse?.outputTxt
+                            	outputTxt = pResponse.outputTxt
 						}
             	}
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
@@ -1326,21 +1360,23 @@ def feedbackHandler(fbResponseTxt) {
                 	fCommand = "off" }
                     if(cSwitch){
                     def devList = []
-                    if (cSwitch?.latestValue("switch")?.contains(fCommand)) {
-                        cSwitch?.each { deviceName ->
+                    if (cSwitch != null) {
+                    if (cSwitch.latestValue("switch").contains(fCommand)) {
+                        cSwitch.each { deviceName ->
                                     if (deviceName.latestValue("switch")=="${fCommand}") {
                                         String device  = (String) deviceName
                                         devList += device
                                     }
                         		}
 							}
+                    	}
                     if (fQuery == "what's" || fQuery == "what is" || fQuery == "what" || fQuery == "which" || fQuery == "any" || fQuery == "is") { // removed fQuery == "undefined" 2/13
-                        if (devList?.size() > 0) {
-                            if (devList?.size() == 1) {
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
                                 outputTxt = "There is one light " + fCommand + " , would you like to know which one? "                           			
                             }
                             else {
-                                outputTxt = "There are " + devList?.size() + " lights " + fCommand + " , would you like to know which lights? "
+                                outputTxt = "There are " + devList.size() + " lights " + fCommand + " , would you like to know which lights? "
                             }
 						data.devices = devList
                         data.cmd = fCommand
@@ -1357,7 +1393,7 @@ def feedbackHandler(fbResponseTxt) {
             if(fOperand == "batteries" || fOperand == "battery level" || fOperand == "battery" ) {
             	def cap = "bat"
             	def dMatch = deviceMatchHandler(fDevice)	
-                if (dMatch?.deviceMatch == null) { 		
+                if (dMatch.deviceMatch == null) { 		
                 def devList = getCapabilities(cap)
 					if(devList instanceof String){
                 	outputTxt = devList
@@ -1415,13 +1451,13 @@ def feedbackHandler(fbResponseTxt) {
                 }
                 else{
                 if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fQuery == "give" || fQuery == "get") {
-                        if (devList?.listSize > 0) {
-                            if (devList?.listSize == 1) {
+                        if (devList.listSize > 0) {
+                            if (devList.listSize == 1) {
                                 outputTxt = "There is one inactive device, would you like to know which one?"                           			
                             }
                             else {
                                 outputTxt = "There are " + devList.listSize + " inactive devices, would you like to know which devices"
-                            }
+                          	}
                         def sdevices = devList?.listDev
                         def devListString = sdevices.join(",")
                         data.list = devListString
@@ -1431,7 +1467,7 @@ def feedbackHandler(fbResponseTxt) {
                         else {outputTxt = "There are no inactive devices"}
                     }
                     else if (fQuery.contains ("what") || fQuery.contains ("which")) {
-                        	if (devList?.listSize > 0) {
+                        	if (devList.listSize > 0) {
                         		outputTxt = "The following devices have been inactive for more than " + cInactiveDev + " hours " + devList.listDev.sort()
                         	}
                         	else {outputTxt = "There are no inactive devices"
@@ -1456,26 +1492,22 @@ def feedbackHandler(fbResponseTxt) {
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
 //>>> Doors Feedback >>>>
-			if (fOperand.contains ("door")) { 
-            	outputTxt = doorsFeedback()
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                }               
+			if (fOperand.contains ("door")) {
+            	outputTxt = doorsFeedback() 
+                }
 //>>> Doors and Windows Feedback >>>>
 			if(fOperand.contains("anything") || fOperand.contains("open") || fOperand.contains("closed")) {
-            	if(fOperand == "open" && fCommand == "undefined") {
-                	fCommand = "open" }
-                if(fOperand == "closed" && fCommand == "undefined") {
-                	fCommand = "closed" }
-                    outputTxt = doorsWindowsFeedback() 
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                }               
+            	if(fOperand == "open" && fCommand == "undefined") {fCommand = "open" }
+                if(fOperand == "closed" && fCommand == "undefined") {fCommand = "closed" }
+                outputTxt = doorsWindowsFeedback()}               
 //>>> Pet Notes Feedback>>>>
-            if (fOperand == "dog" || fOperand == "cat" || fUnit == "dog" || fUnit == "cat") {
+           if (fOperand == "dog" || fOperand == "cat" || fOperand == "${pDog}" || fOperand == "${pCat}" || fOperand == "${pDog1}" || fOperand == "${pCat1}") { 
             	if (fQuery == "when") {
+                log.info "I hope we make it this far at line 1499"
                 outputTxt = petNotesFeedback()
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-                	}
-                }
+               	}
+            }
+		
 //>>> HVAC Filters Reminders >>>>	
 			if (fCommand == "change" && state.filterNotif !=null ) {
                 outputTxt = state.filterNotif
@@ -1510,14 +1542,7 @@ def doorsWindowsFeedback() {
    	def fQuery = params.fQuery
     def fOperand = params.fOperand 
     def fCommand = params.fCommand 
-    def String deviceType = (String) null
-    def String outputTxt = (String) null
-    def String result = (String) null
-    def String deviceM = (String) null
-	def currState
-    def stateDate
-    def stateTime
-    def data = [:]
+  	def String outputTxt = (String) null
 	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
             if(fOperand.contains("anything") || fOperand.contains("open") || fOperand.contains("closed")) {
             	if(fOperand == "open" && fCommand == "undefined") {
@@ -1559,7 +1584,7 @@ def doorsWindowsFeedback() {
                             else if (devListDoors.size() == 0 && devListWindows.size() > 0) {
                             	return outputTxt = "The following " + devListWindows.size() + " windows are open, " + devListWindows  
                                 }
-                            else if (devListDoors.size() == 0 && devListWindows.size() > 0) {
+                            else if (devListDoors.size() == 0 && devListWindows.size() == 0) {
                             	return outputTxt = "There are no doors or windows open"
                                 }
                             else {
@@ -1586,14 +1611,7 @@ def doorsFeedback() {
    	def fQuery = params.fQuery
     def fOperand = params.fOperand 
     def fCommand = params.fCommand 
-    def String deviceType = (String) null
-    def String outputTxt = (String) null
-    def String result = (String) null
-    def String deviceM = (String) null
-	def currState
-    def stateDate
-    def stateTime
-    def data = [:]
+  	def String outputTxt = (String) null
 	fDevice = fDevice?.replaceAll("[^a-zA-Z0-9 ]", "") 
             if(fOperand.contains("door")) { 
             	if(cDoor1 == null) {
@@ -1615,6 +1633,7 @@ def doorsFeedback() {
                             }
                             else {
                                 outputTxt = "There are " + devList.size() + " doors " + fCommand + " , would you like to know which doors? "
+                            	return outputTxt
                             }
                         data.devices = devList
                         data.cmd = fCommand
@@ -1623,8 +1642,7 @@ def doorsFeedback() {
                         state.pContCmdsR = "feedback"
                         }
                         else {outputTxt = "There are no doors " + fCommand}
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                    }
+                        return outputTxt                     }
                     else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
                         def devNames = []
                         fOperand = fOperand.contains("close") ? "closed" : fOperand.contains("open") ? "open" : fOperand 
@@ -1643,13 +1661,14 @@ def doorsFeedback() {
                                                 devNames += device
                                             }
                                 }
-                            return outputTxt = "The following doors are " + fCommand + "," + devNames.sort().unique()
-							}
+                            outputTxt = "The following doors are " + fCommand + "," + devNames.sort().unique()
+							return outputTxt
+                            }
                             else {outputTxt = "There are no doors " + fCommand}
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                    		}
+                            return outputTxt                     		
+                            }
             			}
-                    }
+                    }    
 /************************************************************************************************************
   SETTINGS FEEDBACK HANDLER
 ************************************************************************************************************/
@@ -1706,14 +1725,7 @@ def windowsFeedback() {
    	def fQuery = params.fQuery
     def fOperand = params.fOperand 
     def fCommand = params.fCommand 
-    def String deviceType = (String) null
-    def String outputTxt = (String) null
-    def String result = (String) null
-    def String deviceM = (String) null
-	def currState
-    def stateDate
-    def stateTime
-    def data = [:]
+  	def String outputTxt = (String) null
 	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
 	state.pTryAgain = false
 	def devList = []
@@ -1777,14 +1789,7 @@ def presenceFeedback() {
    	def fQuery = params.fQuery
     def fOperand = params.fOperand 
     def fCommand = params.fCommand 
-    def String deviceType = (String) null
-    def String outputTxt = (String) null
-    def String result = (String) null
-    def String deviceM = (String) null
-	def currState
-    def stateDate
-    def stateTime
-    def data = [:]
+  	def String outputTxt = (String) null
 	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
 	state.pTryAgain = false
     		if(cPresence == null) {
@@ -1842,7 +1847,8 @@ def presenceFeedback() {
 ************************************************************************************************************/
 def petNotesFeedback() {
     //LAMBDA
-   	def fQuery = params.fQuery
+	def fUnit = params.fUnit
+	def fQuery = params.fQuery
     def fOperand = params.fOperand 
     def fCommand = params.fCommand 
     def fIntentName = params.intentName
@@ -1854,36 +1860,46 @@ def petNotesFeedback() {
     def stateDate
     def stateTime
     if (debug){
-    	log.debug "petNotesFeedback data: (fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
+    	log.debug "petNotesFeedback data: (pCat) = '${pCat}', (pdog) = '${pDog}', (pCat1) = '${pCat1}', (pdog1) = '${pDog1}', (fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fUnit) = '${fUnit}'"}
 	def pProcess = true
     state.pTryAgain = false
-            if (fOperand == "dog" || fOperand == "cat" || fUnit == "dog" || fUnit == "cat") {
             	if (fQuery == "when") {
-            //    outputTxt = petNotesFeedback()
-            //    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-            	if (fCommand == "shot" && fOperand == "cat" && state.catShotNotify != null ) {outputTxt = state.catShotNotify 
-            		return outputTxt}
-            	if (fCommand == "shot" && fOperand == "dog" && state.dogShotNotify != null ) {outputTxt = state.dogShotNotify 
-                	return outputTxt}
-                if (fCommand == "fed" && fOperand == "cat" && state.catFedNotify != null ) {outputTxt = state.catFedNotify
-                    return outputTxt}    
-                if (fCommand == "fed" && fOperand == "dog" && state.dogFedNotify != null ) {outputTxt = state.dogFedNotify
-                    return outputTxt}    
-                if (fCommand == "bathed" && fOperand == "cat" && state.catBathNotify != null ) {outputTxt = state.catBathNotify
+            	if (fOperand == "cat" || fOperand == "${pCat}") {
+                    if (fCommand == "shot" && state.catShotNotify != null ) {outputTxt = state.catShotNotify}
+                	else if (fCommand == "fed" && state.catFedNotify != null ) {outputTxt = state.catFedNotify}
+                	else if (fCommand == "bathed" && state.catBathNotify != null ) {outputTxt = state.catBathNotify}
+                	else if (fCommand == "walked" && state.catWalkNotify != null ) {outputTxt = state.catWalkNotify}
+                	else if (fCommand == "medicated" && state.catMedNotify != null ) {outputTxt = state.catMedNotify}
+            		return outputTxt
+                    }
+            	else if (fOperand == "${pCat1}") {
+                    if (fCommand == "shot" && state.catShot1Notify != null ) {outputTxt = state.catShot1Notify}
+                	else if (fCommand == "fed" && state.catFed1Notify != null ) {outputTxt = state.catFed1Notify}
+                	else if (fCommand == "bathed" && state.catBath1Notify != null ) {outputTxt = state.catBath1Notify}
+                	else if (fCommand == "walked" && state.catWalk1Notify != null ) {outputTxt = state.catWalk1Notify}
+                	else if (fCommand == "medicated" && state.catMed1Notify != null ) {outputTxt = state.catMed1Notify}
+            		return outputTxt
+                    }
+                }
+                if (fQuery == "when") {
+				if (fOperand == "dog" || fOperand == "${pDog}") {
+                    if (fCommand == "shot" && state.dogShotNotify != null ) {outputTxt = state.dogShotNotify} 
+                	else if (fCommand == "fed" && state.dogFedNotify != null ) {outputTxt = state.dogFedNotify}
+                    else if (fCommand == "bathed" && state.dogBathNotify != null ) {outputTxt = state.dogBathNotify}
+                    else if (fCommand == "walked" && state.dogWalkNotify != null ) {outputTxt = state.dogWalkNotify}
+                    else if (fCommand == "medicated" && state.dogMedNotify != null ) {outputTxt = state.dogMedNotify}
+                    return outputTxt
+            	}
+				//if (fQuery == "when") {
+				else if (fOperand == "${pDog1}") {
+                    if (fCommand == "shot" && state.dogShot1Notify != null ) {outputTxt = state.dogShot1Notify} 
+                	else if (fCommand == "fed" && state.dogFed1Notify != null ) {outputTxt = state.dogFed1Notify}
+                    else if (fCommand == "bathed" && state.dogBath1Notify != null ) {outputTxt = state.dogBath1Notify}
+                    else if (fCommand == "walked" && state.dogWalk1Notify != null ) {outputTxt = state.dogWalk1Notify}
+                    else if (fCommand == "medicated" && state.dogMed1Notify != null ) {outputTxt = state.dogMed1Notify}
                     return outputTxt}
-                if (fCommand == "bathed" && fOperand == "dog" && state.dogBathNotify != null ) {outputTxt = state.dogBathNotify
-                    return outputTxt}
-                if (fCommand == "walked" && fOperand == "cat" && state.catWalkNotify != null ) {outputTxt = state.catWalkNotify
-                    return outputTxt}
-                if (fCommand == "walked" && fOperand == "dog" && state.dogWalkNotify != null ) {outputTxt = state.dogWalkNotify
-                    return outputTxt}
-                if (fCommand == "medicated" && fOperand == "cat" && state.catMedNotify != null ) {outputTxt = state.catMedNotify
-                    return outputTxt}
-                if (fCommand == "medicated" && fOperand == "dog" && state.dogMedNotify != null ) {outputTxt = state.dogMedNotify
-                    return outputTxt}
+            	}
             }      
-		}
-    }    
 /************************************************************************************************************
    DEVICE CONTROL - from Lambda via page c
 ************************************************************************************************************/
@@ -4622,11 +4638,12 @@ private getCustomCmd(command, unit, group, num) {
 		return result
     }
     if (command == "shot" || command == "fed" || command == "walked" || command == "bathed" || command == "medicated") {
-    	if (operand == "cat" || operand == "dog" || unit == "cat" || unit == "dog") {
+    	if (operand == "cat" || operand == "dog" || operand == "${pCat}" || operand == "${pDog}"  || operand == "${pCat1}" || operand == "${pDog1}" || unit == "cat" || unit == "dog" || unit == "${pCat}" || unit == "${pDog}" || unit == "${pCat1}" || unit == "${pDog1}") {
                 result = petNotifyHandler(command, unit, operand)
               	}
                 return result
-            }    
+            	}
+                
     if (command == "cancel" || command == "stop" || command == "disable" || command == "deactivate" || command == "unschedule" || command == "disarm") {
     	if(group == "security"){
         	def param = [:]
@@ -4819,28 +4836,63 @@ private petNotifyHandler(command, unit, operand) {
 	def result
     def timeDate = new Date().format("hh:mm aa", location.timeZone)
     def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
-    if (operand == "cat" || unit == "cat") {
-    	if (command == "fed" || command == "shot" || command == "walked" || command == "bathed" || command == "medicated") {
-            if (unit != null) {result = "Ok, recording that the ${unit} was last ${command} on " + dateDate + " at " + timeDate}
-            if(command == "shot" && unit == "cat") {state.catShotNotify = "The ${unit} was last given a shot on " + dateDate + " at " + timeDate }
-            if(command == "fed" && unit == "cat") {state.catFedNotify = "The ${unit} was last fed on " + dateDate + " at " + timeDate }
-            if(command == "bathed" && unit == "cat") {state.catBathNotify = "The ${unit} was last bathed on " + dateDate + " at " + timeDate }
-            if(command == "walked" && unit == "cat") {state.catWalkNotify = "The ${unit} was last walked on " + dateDate + " at " + timeDate }
-			if(command == "medicated" && unit == "cat") {state.catMedNotify = "The ${unit} was last medicated on " + dateDate + " at " + timeDate }
-            return result
+    if (operand == "cat" || operand == "${pCat}"|| unit == "cat" || unit == "${pCat}") {
+        if (pCat != null) {
+        	unit = pCat
             }
-        }
-    if (unit == "dog" || operand == "dog") {
-    	if (command == "fed" || command == "shot" || command == "walked" || command == "bathed" || command == "medicated") {
-        	if (unit != null) {result = "Ok, recording that the ${unit} was last ${command} on " + dateDate + " at " + timeDate}
-			if(command == "shot" && unit == "dog") {state.dogShotNotify = "The ${unit} was last given a shot on " + dateDate + " at " + timeDate }
-			if(command == "fed" && unit == "dog") {state.dogFedNotify = "The ${unit} was last fed on " + dateDate + " at " + timeDate }
-			if(command == "bathed" && unit == "dog") {state.dogBathNotify = "The ${unit} was last bathed on " + dateDate + " at " + timeDate }
-			if(command == "walked" && unit == "dog") {state.dogWalkNotify = "The ${unit} was last walked on " + dateDate + " at " + timeDate }
-			if(command == "medicated" && unit == "dog") {state.dogMedNotify = "The ${unit} was last medicated on " + dateDate + " at " + timeDate }
-		return result
-		}
+            if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
+            if(command == "shot") {state.catShotNotify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+            if(command == "fed") {state.catFedNotify = "${unit} was last fed on " + dateDate + " at " + timeDate }
+            if(command == "bathed") {state.catBathNotify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
+            if(command == "walked") {state.catWalkNotify = "${unit} was last walked on " + dateDate + " at " + timeDate }
+			if(command == "medicated") {state.catMedNotify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
+        if(pSMS) { sendtxt(message, result) }
+		if(pPush) { sendPush result }
+        return result
+            }
+    if (operand == "${pCat1}" || unit == "${pCat1}") {
+    	if (pCat1 != null) {
+        	unit = pCat1
+            }
+            if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
+            if(command == "shot") {state.catShot1Notify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+            if(command == "fed") {state.catFed1Notify = "${unit} was last fed on " + dateDate + " at " + timeDate }
+            if(command == "bathed") {state.catBath1Notify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
+            if(command == "walked") {state.catWalk1Notify = "${unit} was last walked on " + dateDate + " at " + timeDate }
+			if(command == "medicated") {state.catMed1Notify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
+        if(pSMS) { sendtxt(message, result) }
+		if(pPush) { sendPush result }
+        return result
+            }
+		if (unit == "dog" || unit == "${pDog}" || operand == "dog" || operand == "${pDog}") {
+			if (pDog != null) {
+        	unit = pDog
+            }
+        	if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
+			if(command == "shot") {state.dogShotNotify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+			if(command == "fed") {state.dogFedNotify = "${unit} was last fed on " + dateDate + " at " + timeDate }
+			if(command == "bathed") {state.dogBathNotify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
+			if(command == "walked") {state.dogWalkNotify = "${unit} was last walked on " + dateDate + " at " + timeDate }
+			if(command == "medicated") {state.dogMedNotify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
+        if(pSMS || pPush) { sendtxt(message, result) }
+		if(pPush) { sendPush result }
+        return result
     }
+		if (unit == "${pDog1}" || operand == "${pDog1}") {
+			if (pDog1 != null) {
+        	unit = pDog1
+            }
+        	if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
+			if(command == "shot") {state.dogShot1Notify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+			if(command == "fed") {state.dogFed1Notify = "${unit} was last fed on " + dateDate + " at " + timeDate }
+			if(command == "bathed") {state.dogBath1Notify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
+			if(command == "walked") {state.dogWalk1Notify = "${unit} was last walked on " + dateDate + " at " + timeDate }
+			if(command == "medicated") {state.dogMed1Notify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
+        if(pSMS || pPush) { sendtxt(message, result) }
+		if(pPush) { sendPush result }
+        return result
+    }
+
 }
 /***********************************************************************************************************************
     Notifications and Reminders Variables Reset Handlers
@@ -4889,7 +4941,46 @@ page name: "dogMedReset"
 	def dogMedReset(){dynamicPage(name: "dogMedReset", title: "", uninstall: false) {
         	section ("Dog's Medication Note Reset") {paragraph "The dog's medication note has been reset, please tap Done"
 			state.dogMedNotify = "I'm sorry, I have not been told when the dog was medicated"}}}
-
+page name: "catShot1Reset"
+	def catShot1Reset(){dynamicPage(name: "catShot1Reset", title: "", uninstall: false) {
+        	section ("The Other Cat's Shot Note Reset") {paragraph "The other cats shot note has been reset, please tap Done"
+            state.catShot1Notify = "I'm sorry, I have not been told when the other cat was given a shot"}}}
+page name: "catFed1Reset"
+	def catFed1Reset(){dynamicPage(name: "catFed1Reset", title: "", uninstall: false) {
+        	section ("The Other Cat's Feeding Note Reset") {paragraph "The other cats feeding note has been reset, please tap Done"
+            state.catFed1Notify = "I'm sorry, I have not been told when the other cat was fed"}}}
+page name: "catBath1Reset"
+	def catBath1Reset(){dynamicPage(name: "catBath1Reset", title: "", uninstall: false) {
+        	section ("The Other Cat's Bath Note Reset") {paragraph "The other cats bath note has been reset, please tap Done"
+            state.catBath1Notify = "I'm sorry, I have not been told when the other cat was bathed"}}}
+page name: "catWalk1Reset"
+	def catWalk1Reset(){dynamicPage(name: "catWalk1Reset", title: "", uninstall: false) {
+        	section ("The Other Cat's Walk Note Reset") {paragraph "The other cats walk note has been reset, please tap Done"
+            state.catWalk1Notify = "I'm sorry, I have not been told when the other cat was walked"}}}
+page name: "catMed1Reset"
+	def catMed1Reset(){dynamicPage(name: "catMed1Reset", title: "", uninstall: false) {
+        	section ("The Other Cat's Medication Note Reset") {paragraph "The other cats medication note has been reset, please tap Done"
+            state.catMed1Notify = "I'm sorry, I have not been told when the other cat was medicated"}}}
+page name: "dogShot1Reset" 
+	def dogShot1Reset(){dynamicPage(name: "dogShot1Reset", title: "", uninstall: false) {
+        	section ("The Other Dog's Shot Note Reset") {paragraph "The other dog's shot note has been reset, please tap Done"
+			state.dogShot1Notify = "I'm sorry, I have not been told when the other dog was given a shot"}}}
+page name: "dogFed1Reset"
+	def dogFed1Reset(){dynamicPage(name: "dogFed1Reset", title: "", uninstall: false) {
+        	section ("The Other Dog's Feeding Note Reset") {paragraph "The other dog's feeding note has been reset, please tap Done"
+			state.dogFed1Notify = "I'm sorry, I have not been told when the other dog was fed"}}}
+page name: "dogBath1Reset"
+	def dogBath1Reset(){dynamicPage(name: "dogBath1Reset", title: "", uninstall: false) {
+        	section ("The Other Dog's Bath Note Reset") {paragraph "The other dog's bath note has been reset, please tap Done"
+			state.dogBath1Notify = "I'm sorry, I have not been told when the other dog was bathed"}}}
+page name: "dogWalk1Reset"
+	def dogWalk1Reset(){dynamicPage(name: "dogWalk1Reset", title: "", uninstall: false) {
+        	section ("The Other Dog's Walk Note Reset") {paragraph "The other dog's walk note has been reset, please tap Done"
+			state.dogWalk1Notify = "I'm sorry, I have not been told when the other dog was walked"}}}
+page name: "dogMed1Reset"
+	def dogMed1Reset(){dynamicPage(name: "dogMed1Reset", title: "", uninstall: false) {
+        	section ("The Other Dog's Medication Note Reset") {paragraph "The other dog's medication note has been reset, please tap Done"
+			state.dogMed1Notify = "I'm sorry, I have not been told when the other dog was medicated"}}}
 /***********************************************************************************************************************
     MISC. - FILTERS REMINDER
 ***********************************************************************************************************************/
@@ -5813,6 +5904,15 @@ def mDefaultsD() {def text = "Tap here to configure settings"
     	text = "Configured"}
     	else text = "Tap to Configure"
 		text}         
+def mPetNotesS() {def result = ""
+	if (pDog || pCat || pSMS || pPush) {
+    	result = "complete"}
+        result}
+def mPetNotesD() {def text = "Tap here to configure Pet Notes"
+	if (pDog || pCat || pSMS || pPush) {
+    	text = "Configured" }
+        else text = "Tap to Configure"
+        text}
 def mSecurityS() {def result = ""
     if (cMiscDev || cRoutines || uPIN_SHM || uPIN_Mode || fSecFeed || shmSynthDevice || shmSonosDevice || volume) {
     	result = "complete"}
