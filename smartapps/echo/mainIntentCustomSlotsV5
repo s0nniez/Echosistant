@@ -16,6 +16,7 @@ checked out
 checking in
 checking out
 chilling
+cleaned
 cleaning
 close
 closed
@@ -65,6 +66,7 @@ repeat
 replace
 replaced
 run
+scooped
 slow down
 speed up
 start
@@ -88,13 +90,11 @@ unmute
 up
 warmer
 working
-shot 
+brushed 
 fed
 bathed
 walked
 medicated
-
-
 
 LIST_OF_GROUPS
 
@@ -226,8 +226,12 @@ window
 windows
 windy
 dog
-
-
+rusty
+calliope
+doug
+loki
+thor
+litter box
 
 
 LIST_OF_QUERIES
@@ -313,3 +317,9 @@ text
 timer
 warm white
 yellow
+rusty
+calliope
+doug
+loki
+thor
+litter box
