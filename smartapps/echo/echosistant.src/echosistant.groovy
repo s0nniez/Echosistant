@@ -221,6 +221,8 @@ page name: "mIntent"
         	def mPetNotes(){
             	dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
                     section ("Pet Notes") {
+                    	input "petNoteAct", "bool", title: "Activate your Pet Notes", requied: false, default: false, submitOnChange: true
+                        if (petNoteAct) {
                     	input "pCat", "text", title: "Name your Cat...", required: false, default: null
                         input "pCat1", "text", title: "Name your other Cat...", required: false, default: null
                         input "pDog", "text", title: "Name your Dog...", required: false, default: null
@@ -239,6 +241,7 @@ page name: "mIntent"
                             		}
                                 }    
                 			}
+                        }    
         page name: "mSecurity"    
             def mSecurity(){
                 dynamicPage(name: "mSecurity", title: "",install: false, uninstall: false) {
@@ -628,29 +631,37 @@ page name: "scheduled"  // display scheduled events on the dashboard add by JH 3
 	def scheduled(){
     	dynamicPage(name: "scheduled", uninstall: false) {
     	section ("Scheduled Events") {
-        if (state.filterNotif != null) {href "filtersReset", title: "${state.filterNotif}", description: "Tap here to reset this scheduled event"}}
+        if (state.filterNotif != null) {href "filtersReset", title: "${state.filterNotif}", description: "Tap here to reset this scheduled event"}
+        	else paragraph "I'm sorry, I was not informed that the HVAC filters were changed"}
         section ("Pet Notes") {
-        if (state.catShotNotify.contains ("last")) {href "catShotReset", title: "${state.catShotNotify}", description: "Tap here to reset this note"}
+        if (petNoteAct == true) {
+        if (state.litterbox.contains ("last")) {href "litterboxReset", title: "${state.litterbox}", description: "Tap here to reset this note"}
+        if (state.catBrushNotify.contains ("last")) {href "catBrushReset", title: "${state.catBrushNotify}", description: "Tap here to reset this note"}
         if (state.catWalkNotify.contains ("last")) {href "catWalkReset", title: "${state.catWalkNotify}", description: "Tap here to reset this note"}
         if (state.catBathNotify.contains ("last")) {href "catBathReset", title: "${state.catBathNotify}", description: "Tap here to reset this note"}
         if (state.catFedNotify.contains ("last")) {href "catFedReset", title: "${state.catFedNotify}", description: "Tap here to reset this note"}
         if (state.catMedNotify.contains ("last")) {href "catMedReset", title: "${state.catMedNotify}", description: "Tap here to reset this note"}
-        if (state.dogShotNotify.contains ("last")) {href "dogShotReset", title: "${state.dogShotNotify}", description: "Tap here to reset this note"}
+        if (state.dogBrushNotify.contains ("last")) {href "dogBrushReset", title: "${state.dogBrushNotify}", description: "Tap here to reset this note"}
         if (state.dogWalkNotify.contains ("last")) {href "dogWalkReset", title: "${state.dogWalkNotify}", description: "Tap here to reset this note"}
         if (state.dogBathNotify.contains ("last")) {href "dogBathReset", title: "${state.dogBathNotify}", description: "Tap here to reset this note"}
         if (state.dogFedNotify.contains ("last")) {href "dogFedReset", title: "${state.dogFedNotify}", description: "Tap here to reset this note"}
         if (state.dogMedNotify.contains ("last")) {href "dogMedReset", title: "${state.dogMedNotify}", description: "Tap here to reset this note"}
-        if (state.catShot1Notify.contains ("last")) {href "catShot1Reset", title: "${state.catShot1Notify}", description: "Tap here to reset this note"}
+        if (state.catBrush1Notify.contains ("last")) {href "catBrush1Reset", title: "${state.catBrush1Notify}", description: "Tap here to reset this note"}
         if (state.catWalk1Notify.contains ("last")) {href "catWalk1Reset", title: "${state.catWalk1Notify}", description: "Tap here to reset this note"}
         if (state.catBath1Notify.contains ("last")) {href "catBath1Reset", title: "${state.catBath1Notify}", description: "Tap here to reset this note"}
         if (state.catFed1Notify.contains ("last")) {href "catFed1Reset", title: "${state.catFed1Notify}", description: "Tap here to reset this note"}
         if (state.catMed1Notify.contains ("last")) {href "catMed1Reset", title: "${state.catMed1Notify}", description: "Tap here to reset this note"}
-        if (state.dogShot1Notify.contains ("last")) {href "dogShot1Reset", title: "${state.dogShot1Notify}", description: "Tap here to reset this note"}
+        if (state.dogBrush1Notify.contains ("last")) {href "dogBrush1Reset", title: "${state.dogBrush1Notify}", description: "Tap here to reset this note"}
         if (state.dogWalk1Notify.contains ("last")) {href "dogWalk1Reset", title: "${state.dogWalk1Notify}", description: "Tap here to reset this note"}
         if (state.dogBath1Notify.contains ("last")) {href "dogBath1Reset", title: "${state.dogBath1Notify}", description: "Tap here to reset this note"}
         if (state.dogFed1Notify.contains ("last")) {href "dogFed1Reset", title: "${state.dogFed1Notify}", description: "Tap here to reset this note"}
         if (state.dogMed1Notify.contains ("last")) {href "dogMed1Reset", title: "${state.dogMed1Notify}", description: "Tap here to reset this note"}
-        }    
+        }
+        else if (petNoteAct == false) {
+        		paragraph "I'm sorry, your Pet Notes have not been activated" 
+        		log.info "The Pet Notes feature has not been activated" 
+                }
+        	}
         section ("Upcoming Reminders") {
 			paragraph "Reminder Scheduled: ${params.rMessage} on ${state.esEvent.eStartingDate} at ${state.esEvent.eStartingTime}"
     	}
@@ -794,27 +805,30 @@ def initialize() {
             state.pinTry = null
         //Other Settings
             state.scheduledHandler
-            state.catShotNotify
-            state.catWalkNotify
-            state.catBathNotify
-            state.catFedNotify
-            state.catMedNotify
-            state.dogShotNotify
-            state.dogWalkNotify
-            state.dogBathNotify
-            state.dogFedNotify
-            state.dogMedNotify
-            state.catShot1Notify
-            state.catWalk1Notify
-            state.catBath1Notify
-            state.catFed1Notify
-            state.catMed1Notify
-            state.dogShot1Notify
-            state.dogWalk1Notify
-            state.dogBath1Notify
-            state.dogFed1Notify
-            state.dogMed1Notify
-			state.pendingConfirmation = false
+        	if (petNoteAct) {
+            if (state.litterbox == null) {state.litterbox = "I'm sorry, I have not been told when the litter box was cleaned" }
+            if (state.catWalkNotify == null) {state.catWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
+            if (state.catBathNotify == null) {state.catBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
+            if (state.catFedNotify == null) {state.catFedNotify = "I'm sorry, I have not been told when the cat was fed" }
+			if (state.catMedNotify == null) {state.catMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
+            if (state.catBrushNotify == null) {state.catBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
+            if (state.dogWalkNotify == null) {state.dogWalkNotify = "I'm sorry, I have not been told when the dog was walked" }
+            if (state.dogBathNotify == null) {state.dogBathNotify = "I'm sorry, I have not been told when the dog was walked" }
+            if (state.dogFedNotify == null) {state.dogFedNotify = "I'm sorry, I have not been told when the dog was fed" }
+            if (state.dogMedNotify == null) {state.dogMedNotify = "I'm sorry, I have not been told when the dog was medicated" }
+            if (state.dogBrushNotify == null) {state.dogBrushNotify = "I'm sorry, I have not been told when the dog was brushed" }
+            if (state.catWalk1Notify == null) {state.catWalk1Notify = "I'm sorry, I have not been told when the cat was walked" }
+            if (state.catBath1Notify == null) {state.catBath1Notify = "I'm sorry, I have not been told when the cat was bathed" }
+            if (state.catFed1Notify == null) {state.catFed1Notify = "I'm sorry, I have not been told when the cat was fed" }
+			if (state.catMed1Notify == null) {state.catMed1Notify = "I'm sorry, I have not been told when the cat was medicated" }
+            if (state.catBrus1hNotify == null) {state.catBrush1Notify = "I'm sorry, I have not been told when the cat was brushed" }
+            if (state.dogWalk1Notify == null) {state.dogWalk1Notify = "I'm sorry, I have not been told when the dog was walked" }
+            if (state.dogBath1Notify == null) {state.dogBath1Notify = "I'm sorry, I have not been told when the dog was walked" }
+            if (state.dogFed1Notify == null) {state.dogFed1Notify = "I'm sorry, I have not been told when the dog was fed" }
+            if (state.dogMed1Notify == null) {state.dogMed1Notify = "I'm sorry, I have not been told when the dog was medicated" }
+            if (state.dogBrush1Notify == null) {state.dogBrush1Notify = "I'm sorry, I have not been told when the dog was brushed" }
+            }
+            state.pendingConfirmation = false
             unschedule("startLoop")
             unschedule("continueLoop")
 }
@@ -1501,17 +1515,16 @@ def feedbackHandler(fbResponseTxt) {
                 if(fOperand == "closed" && fCommand == "undefined") {fCommand = "closed" }
                 outputTxt = doorsWindowsFeedback()}               
 //>>> Pet Notes Feedback>>>>
-           if (fOperand == "dog" || fOperand == "cat" || fOperand == "${pDog}" || fOperand == "${pCat}" || fOperand == "${pDog1}" || fOperand == "${pCat1}") { 
-            	if (fQuery == "when") {
-                log.info "I hope we make it this far at line 1499"
+           if (fOperand == "litter box" || fOperand == "dog" || fOperand == "cat" || fOperand == "${pDog}" || fOperand == "${pCat}" || fOperand == "${pDog1}" || fOperand == "${pCat1}") { 
+           		if (fQuery == "when") {
                 outputTxt = petNotesFeedback()
-               	}
-            }
-		
+                }
+           }
 //>>> HVAC Filters Reminders >>>>	
-			if (fCommand == "change" && state.filterNotif !=null ) {
+			if (fCommand == "changed" && state.filterNotif !=null ) {
+                log.info "This is the HVAC Filters Reminder at line 1526"
                 outputTxt = state.filterNotif
-				}
+                }
             	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             }      
             def hText = fDevice != "undefined" ? " a device named " + fDevice : " something "           
@@ -1863,41 +1876,48 @@ def petNotesFeedback() {
     	log.debug "petNotesFeedback data: (pCat) = '${pCat}', (pdog) = '${pDog}', (pCat1) = '${pCat1}', (pdog1) = '${pDog1}', (fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fUnit) = '${fUnit}'"}
 	def pProcess = true
     state.pTryAgain = false
+    			if (fQuery == "when") {
+                if (fOperand == "litter box") {
+                	if (fCommand == "scooped") {outputTxt = state.litterbox}
+                        return outputTxt
+                        }
+                    }
+                    
             	if (fQuery == "when") {
             	if (fOperand == "cat" || fOperand == "${pCat}") {
-                    if (fCommand == "shot" && state.catShotNotify != null ) {outputTxt = state.catShotNotify}
+                    if (fCommand == "medicated" && state.catMedNotify != null ) {outputTxt = state.catMedNotify}
                 	else if (fCommand == "fed" && state.catFedNotify != null ) {outputTxt = state.catFedNotify}
                 	else if (fCommand == "bathed" && state.catBathNotify != null ) {outputTxt = state.catBathNotify}
                 	else if (fCommand == "walked" && state.catWalkNotify != null ) {outputTxt = state.catWalkNotify}
-                	else if (fCommand == "medicated" && state.catMedNotify != null ) {outputTxt = state.catMedNotify}
-            		return outputTxt
+                	else if (fCommand == "brushed" && state.catBrushNotify != null ) {outputTxt = state.catBrushNotify}
+                    return outputTxt
                     }
-            	else if (fOperand == "${pCat1}") {
-                    if (fCommand == "shot" && state.catShot1Notify != null ) {outputTxt = state.catShot1Notify}
+             	else if (fOperand == "${pCat1}") {
+                    if (fCommand == "medicated" && state.catMed1Notify != null ) {outputTxt = state.catMed1Notify}
                 	else if (fCommand == "fed" && state.catFed1Notify != null ) {outputTxt = state.catFed1Notify}
                 	else if (fCommand == "bathed" && state.catBath1Notify != null ) {outputTxt = state.catBath1Notify}
                 	else if (fCommand == "walked" && state.catWalk1Notify != null ) {outputTxt = state.catWalk1Notify}
-                	else if (fCommand == "medicated" && state.catMed1Notify != null ) {outputTxt = state.catMed1Notify}
-            		return outputTxt
+                	else if (fCommand == "brushed" && state.catBrush1Notify != null ) {outputTxt = state.catBrush1Notify}
+                    return outputTxt
                     }
                 }
                 if (fQuery == "when") {
 				if (fOperand == "dog" || fOperand == "${pDog}") {
-                    if (fCommand == "shot" && state.dogShotNotify != null ) {outputTxt = state.dogShotNotify} 
+        			if (fCommand == "medicated" && state.dogMedNotify != null ) {outputTxt = state.dogMedNotify} 
                 	else if (fCommand == "fed" && state.dogFedNotify != null ) {outputTxt = state.dogFedNotify}
                     else if (fCommand == "bathed" && state.dogBathNotify != null ) {outputTxt = state.dogBathNotify}
                     else if (fCommand == "walked" && state.dogWalkNotify != null ) {outputTxt = state.dogWalkNotify}
-                    else if (fCommand == "medicated" && state.dogMedNotify != null ) {outputTxt = state.dogMedNotify}
+                    else if (fCommand == "brushed" && state.dogBrushNotify != null ) {outputTxt = state.dogBrushNotify}
                     return outputTxt
-            	}
-				//if (fQuery == "when") {
+            		}
 				else if (fOperand == "${pDog1}") {
-                    if (fCommand == "shot" && state.dogShot1Notify != null ) {outputTxt = state.dogShot1Notify} 
+                    if (fCommand == "medicated" && state.dogMed1Notify != null ) {outputTxt = state.dogMed1Notify} 
                 	else if (fCommand == "fed" && state.dogFed1Notify != null ) {outputTxt = state.dogFed1Notify}
                     else if (fCommand == "bathed" && state.dogBath1Notify != null ) {outputTxt = state.dogBath1Notify}
                     else if (fCommand == "walked" && state.dogWalk1Notify != null ) {outputTxt = state.dogWalk1Notify}
-                    else if (fCommand == "medicated" && state.dogMed1Notify != null ) {outputTxt = state.dogMed1Notify}
-                    return outputTxt}
+                    else if (fCommand == "brushed" && state.dogBrush1Notify != null ) {outputTxt = state.dogBrus1hNotify}
+                    return outputTxt
+                    }
             	}
             }      
 /************************************************************************************************************
@@ -4316,7 +4336,7 @@ private getCapabilities(cap) {
                     DeviceDetails << d.displayName 
                 }
         }
-         log.warn "locks devices = $DeviceDetails"
+        log.warn "locks devices = $DeviceDetails"
         cSwitch?.each 	{ d ->
         	def attrValue = d.latestValue("switch") 
             if (d?.currentState("switch") != null) {
@@ -4331,7 +4351,7 @@ private getCapabilities(cap) {
                 }
            	}
         } 
-         log.warn "switch devices = $DeviceDetails"
+        log.warn "switch devices = $DeviceDetails"
         def dUniqueList = DeviceDetails.unique (false)
         dUniqueList = dUniqueList.sort()       
         def listSize = dUniqueList?.size()
@@ -4637,7 +4657,14 @@ private getCustomCmd(command, unit, group, num) {
       	}
 		return result
     }
-    if (command == "shot" || command == "fed" || command == "walked" || command == "bathed" || command == "medicated") {
+    if (command == "scooped" || command == "cleaned") {
+    	if (operand == "litter box" || unit == "litter box") {
+        log.info "The litter box command has been received at line 4662"
+        	result = petNotifyHandler(command, unit, operand)
+            }
+            return result
+            }
+    if (command == "brushed" || command == "fed" || command == "walked" || command == "bathed" || command == "medicated") {
     	if (operand == "cat" || operand == "dog" || operand == "${pCat}" || operand == "${pDog}"  || operand == "${pCat1}" || operand == "${pDog1}" || unit == "cat" || unit == "dog" || unit == "${pCat}" || unit == "${pDog}" || unit == "${pCat1}" || unit == "${pDog1}") {
                 result = petNotifyHandler(command, unit, operand)
               	}
@@ -4811,10 +4838,10 @@ private getTimeVariable(date, type) {
     MISC. - SCHEDULE HANDLER
 ***********************************************************************************************************************/
 private scheduleHandler(unit) {
-    def rowDate = new Date(date + location.timeZone)
-    def cDay = rowDate.date
-    def cHour= rowDate.hours
-	def cMin = rowDate.minutes   
+//    def rowDate = new Date(date + location.timeZone)
+//    def cDay = rowDate.date
+//    def cHour= rowDate.hours
+//	def cMin = rowDate.minutes   
     def result
     if (unit == "filters") {
     	if (debug) log.debug "Received filter replacement request"
@@ -4833,15 +4860,24 @@ private scheduleHandler(unit) {
     MISC. - PET NOTIFICATIONS HANDLER - This sets the variable and repeats the variable
 ***********************************************************************************************************************/
 private petNotifyHandler(command, unit, operand) {
+    if (debug){
+    	log.debug "petNotifyHandler data: (fOperand) = '${operand}', (fCommand) = '${command}', (fUnit) = '${unit}'"}	
 	def result
     def timeDate = new Date().format("hh:mm aa", location.timeZone)
     def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
+    if (operand == "litter box" || unit == "litter box") {
+    	if (unit != "null") {result = "Ok, recording that the litter box was ${command} on " + dateDate + " at " + timeDate}
+        log.info "troubleshooting the litter box command"
+    	if(command == "cleaned") {state.litterbox = "The litter box was last ${command} on " + dateDate + " at " + timeDate}
+        if(command == "scooped") {state.litterbox = "The litter box was last ${command} on " + dateDate + " at " + timeDate}
+        return result
+        }
     if (operand == "cat" || operand == "${pCat}"|| unit == "cat" || unit == "${pCat}") {
         if (pCat != null) {
         	unit = pCat
             }
             if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
-            if(command == "shot") {state.catShotNotify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+            if(command == "brushed") {state.catBrushNotify = "${unit} was last brushed on " + dateDate + " at " + timeDate }
             if(command == "fed") {state.catFedNotify = "${unit} was last fed on " + dateDate + " at " + timeDate }
             if(command == "bathed") {state.catBathNotify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
             if(command == "walked") {state.catWalkNotify = "${unit} was last walked on " + dateDate + " at " + timeDate }
@@ -4855,7 +4891,7 @@ private petNotifyHandler(command, unit, operand) {
         	unit = pCat1
             }
             if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
-            if(command == "shot") {state.catShot1Notify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+            if(command == "brushed") {state.catBrush1Notify = "${unit} was last brushed on " + dateDate + " at " + timeDate }
             if(command == "fed") {state.catFed1Notify = "${unit} was last fed on " + dateDate + " at " + timeDate }
             if(command == "bathed") {state.catBath1Notify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
             if(command == "walked") {state.catWalk1Notify = "${unit} was last walked on " + dateDate + " at " + timeDate }
@@ -4869,7 +4905,7 @@ private petNotifyHandler(command, unit, operand) {
         	unit = pDog
             }
         	if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
-			if(command == "shot") {state.dogShotNotify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+			if(command == "brushed") {state.dogBrushNotify = "${unit} was last brushed on " + dateDate + " at " + timeDate }
 			if(command == "fed") {state.dogFedNotify = "${unit} was last fed on " + dateDate + " at " + timeDate }
 			if(command == "bathed") {state.dogBathNotify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
 			if(command == "walked") {state.dogWalkNotify = "${unit} was last walked on " + dateDate + " at " + timeDate }
@@ -4883,7 +4919,7 @@ private petNotifyHandler(command, unit, operand) {
         	unit = pDog1
             }
         	if (unit != null) {result = "Ok, recording that ${unit} was last ${command} on " + dateDate + " at " + timeDate}
-			if(command == "shot") {state.dogShot1Notify = "${unit} was last given a shot on " + dateDate + " at " + timeDate }
+			if(command == "brushed") {state.dogBrush1Notify = "${unit} was last brushed on " + dateDate + " at " + timeDate }
 			if(command == "fed") {state.dogFed1Notify = "${unit} was last fed on " + dateDate + " at " + timeDate }
 			if(command == "bathed") {state.dogBath1Notify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
 			if(command == "walked") {state.dogWalk1Notify = "${unit} was last walked on " + dateDate + " at " + timeDate }
@@ -4897,14 +4933,18 @@ private petNotifyHandler(command, unit, operand) {
 /***********************************************************************************************************************
     Notifications and Reminders Variables Reset Handlers
 ***********************************************************************************************************************/
+page name: "litterboxReset"
+	def litterboxReset(){dynamicPage(name: "litterboxReset", title: "", uninstall: false) {
+    	section ("Litter Box Note Reset") {paragraph "The litter box note has been reset, please tap Done"
+        state.litterbox = "I'm sorry, I have not been told when the litter box was last cleaned"}}}
 page name: "filtersReset"
 	def filtersReset(){dynamicPage(name: "filtersReset", title: "", uninstall: false) {
     	section ("Filters Reminder Reset") {paragraph "The Filters Reminder has been Reset"
-        state.filterNotif = null}}}
-page name: "catShotReset"
-	def catShotReset(){dynamicPage(name: "catShotReset", title: "", uninstall: false) {
-        	section ("Cat's Shot Note Reset") {paragraph "The cats shot note has been reset, please tap Done"
-            state.catShotNotify = "I'm sorry, I have not been told when the cat was given a shot"}}}
+        state.filterNotif = "I'm sorry, I was not told when the filters were last changed"}}}
+page name: "catBrushReset"
+	def catBrushReset(){dynamicPage(name: "catBrushReset", title: "", uninstall: false) {
+        	section ("Cat's Brushed Note Reset") {paragraph "The cats brushed note has been reset, please tap Done"
+            state.catBrushNotify = "I'm sorry, I have not been told when the cat was brushed"}}}
 page name: "catFedReset"
 	def catFedReset(){dynamicPage(name: "catFedReset", title: "", uninstall: false) {
         	section ("Cat's Feeding Note Reset") {paragraph "The cats feeding note has been reset, please tap Done"
@@ -4921,10 +4961,10 @@ page name: "catMedReset"
 	def catMedReset(){dynamicPage(name: "catMedReset", title: "", uninstall: false) {
         	section ("Cat's Medication Note Reset") {paragraph "The cats medication note has been reset, please tap Done"
             state.catMedNotify = "I'm sorry, I have not been told when the cat was medicated"}}}
-page name: "dogShotReset" 
-	def dogShotReset(){dynamicPage(name: "dogShotReset", title: "", uninstall: false) {
-        	section ("Dog's Shot Note Reset") {paragraph "The dog's shot note has been reset, please tap Done"
-			state.dogShotNotify = "I'm sorry, I have not been told when the dog was given a shot"}}}
+page name: "dogBrushReset" 
+	def dogBrushReset(){dynamicPage(name: "dogBrushReset", title: "", uninstall: false) {
+        	section ("Dog's Brushed Note Reset") {paragraph "The dog's brushed note has been reset, please tap Done"
+			state.dogBrushNotify = "I'm sorry, I have not been told when the dog was brushed"}}}
 page name: "dogFedReset"
 	def dogFedReset(){dynamicPage(name: "dogFedReset", title: "", uninstall: false) {
         	section ("Dog's Feeding Note Reset") {paragraph "The dog's feeding note has been reset, please tap Done"
@@ -4941,10 +4981,10 @@ page name: "dogMedReset"
 	def dogMedReset(){dynamicPage(name: "dogMedReset", title: "", uninstall: false) {
         	section ("Dog's Medication Note Reset") {paragraph "The dog's medication note has been reset, please tap Done"
 			state.dogMedNotify = "I'm sorry, I have not been told when the dog was medicated"}}}
-page name: "catShot1Reset"
-	def catShot1Reset(){dynamicPage(name: "catShot1Reset", title: "", uninstall: false) {
-        	section ("The Other Cat's Shot Note Reset") {paragraph "The other cats shot note has been reset, please tap Done"
-            state.catShot1Notify = "I'm sorry, I have not been told when the other cat was given a shot"}}}
+page name: "catBrush1Reset"
+	def catBrush1Reset(){dynamicPage(name: "catBrush1Reset", title: "", uninstall: false) {
+        	section ("The Other Cat's Brushed Note Reset") {paragraph "The other cats brushed note has been reset, please tap Done"
+            state.catBrush1Notify = "I'm sorry, I have not been told when the other cat was brushed"}}}
 page name: "catFed1Reset"
 	def catFed1Reset(){dynamicPage(name: "catFed1Reset", title: "", uninstall: false) {
         	section ("The Other Cat's Feeding Note Reset") {paragraph "The other cats feeding note has been reset, please tap Done"
@@ -4961,10 +5001,10 @@ page name: "catMed1Reset"
 	def catMed1Reset(){dynamicPage(name: "catMed1Reset", title: "", uninstall: false) {
         	section ("The Other Cat's Medication Note Reset") {paragraph "The other cats medication note has been reset, please tap Done"
             state.catMed1Notify = "I'm sorry, I have not been told when the other cat was medicated"}}}
-page name: "dogShot1Reset" 
-	def dogShot1Reset(){dynamicPage(name: "dogShot1Reset", title: "", uninstall: false) {
-        	section ("The Other Dog's Shot Note Reset") {paragraph "The other dog's shot note has been reset, please tap Done"
-			state.dogShot1Notify = "I'm sorry, I have not been told when the other dog was given a shot"}}}
+page name: "dogBrush1Reset" 
+	def dogBrush1Reset(){dynamicPage(name: "dogBrush1Reset", title: "", uninstall: false) {
+        	section ("The Other Dog's Brushed Note Reset") {paragraph "The other dog's brush note has been reset, please tap Done"
+			state.dogBrush1Notify = "I'm sorry, I have not been told when the other dog was brushed"}}}
 page name: "dogFed1Reset"
 	def dogFed1Reset(){dynamicPage(name: "dogFed1Reset", title: "", uninstall: false) {
         	section ("The Other Dog's Feeding Note Reset") {paragraph "The other dog's feeding note has been reset, please tap Done"
