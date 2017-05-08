@@ -67,6 +67,8 @@ replace
 replaced
 run
 scooped
+shot
+shop
 slow down
 speed up
 start
@@ -126,7 +128,6 @@ cat
 change in weather forecast
 changes to the forecast
 changes to the weather
-cleaned
 closed
 cold outside
 current condition
@@ -232,6 +233,7 @@ doug
 loki
 thor
 litter box
+litterbox
 
 
 LIST_OF_QUERIES
@@ -323,3 +325,4 @@ doug
 loki
 thor
 litter box
+litterbox
