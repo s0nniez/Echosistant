@@ -232,7 +232,7 @@ page name: "variables"
                                 "&dogmed = 		${getVar("dogmed")}\n"+
                                 "&dogwalk = 	${getVar("dogwalk")}\n"+
                                 "&dogbath = 	${getVar("dogbath")}\n"+
-                                "&dogsho1t = 	${getVar("dogshot1")}\n"+
+                                "&dogshot1 = 	${getVar("dogshot1")}\n"+
                                 "&dogfed1 = 	${getVar("dogfed1")}\n"+
                                 "&dogmed1 = 	${getVar("dogmed1")}\n"+
                                 "&dogwalk1 = 	${getVar("dogwalk1")}\n"+
