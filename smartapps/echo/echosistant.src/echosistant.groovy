@@ -7,7 +7,8 @@
  								DON'T FORGET TO UPDATE RELEASE NUMBER!!!!!
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
- *
+ /*
+ *		5/08/2017		Version:4.0 R.0.3.5		Toggle to disable presence devices (cell phones) from low battery query
  *		4/24/2017		Version:4.0 R.0.3.4		Added Pet Notes, code optimization
  *		4/05/2017		Version:4.0 R.0.3.3d	Minor UI changes & added "cut on/cut off" commands
  *		4/03/2017		Version:4.0 R.0.3.3c 	Bug Fixes and various other things
@@ -177,6 +178,8 @@ page name: "mIntent"
                     }
                     section ("Activity Defaults") {            
                         input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
+                        paragraph "If your presence sensor devices are cell phones, activate this toggle. This prevents them from being erroneously detected for low battery queries"
+                        input "phones", "bool", title: "Activate if presence sensors are cell phones", defaultValue: false, required: false, submitOnChange: true
                         input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
                     }
 					section ("Alexa Voice Settings") {            
@@ -1077,60 +1080,78 @@ def feedbackHandler(fbResponseTxt) {
          }
          if (fDevice != "undefined" && fQuery != "undefined" && fOperand != "undefined") {
          if (fbMessage.contains ("what is open") || fQuery.contains ("is ") || fQuery.contains ("if ") || fQuery == "is" || fQuery == "if" || fQuery == "is the") {
-                def deviceMatch = cRelay.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                def deviceMatch = cRelay.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                     if(deviceMatch && cContactRelay) {// changed by Jason 2/24/2017
                         outputTxt =  cContactRelay.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                     }
                     else {
+                        if (cDoor1 != null) {
                         if (deviceMatch == null && cDoor1) {// changed by Jason 2/24/2017
-                            deviceMatch = cDoor1.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                            deviceMatch = cDoor1.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                              if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
+                        	}
                         }
+                        if (cContact != null) {
                         if (deviceMatch == null && cContact) {// changed by Jason 2/24/2017
-                           deviceMatch = cContact.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                           deviceMatch = cContact.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
+                        	}
                         } 
-                    	if (deviceMatch == null && cLock) {// changed by Jason 2/24/2017
-                        	deviceMatch = cLock.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                    	if (cLock != null) {
+                        if (deviceMatch == null && cLock) {// changed by Jason 2/24/2017
+                        	deviceMatch = cLock.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                         	if(deviceMatch) {
                             	currState = deviceMatch.latestValue("lock")
                             	currState = currState == "${fOperand}" ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                             	outputTxt =  currState
-                        	}
+                        		}
+                            }
                     	}                        
+                        if (cSwitch != null) {
                         if (deviceMatch == null && cSwitch) {// changed by Jason 2/24/2017
-                            deviceMatch = cSwitch.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()} 
+                            deviceMatch = cSwitch.find {d -> d.label?.toLowerCase() == fDevice?.toLowerCase()} 
                             if(deviceMatch) outputTxt = deviceMatch.latestValue("switch").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
+                        	}
                         }
+                        if (cMotion != null) {
                         if (deviceMatch == null && cMotion) {// changed by Jason 2/24/2017
-                            deviceMatch = cMotion.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                            deviceMatch = cMotion.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                             if(deviceMatch) {
                                 currState = deviceMatch.currentValue("motion")
                                 currState = currState == "active" ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                                 outputTxt =  currState
+                            	}
                             }
                         }
+						if (cPresence != null) {
 						if (deviceMatch == null && cPresence) {  // changed by Jason 2/24/2017
-                            deviceMatch = cPresence.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                            deviceMatch = cPresence.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                             	if(fOperand == "home" || fOperand == "here" || fOperand == "present" || fOperand == "in" || fOperand == "at home") {
-                                	outputTxt = deviceMatch.latestValue("presence")?.contains("not") ? "no, ${deviceMatch} is not ${fOperand}" : "yes, ${deviceMatch} is ${fOperand}"
+                                	outputTxt = deviceMatch.latestValue("presence").contains("not") ? "no, ${deviceMatch} is not ${fOperand}" : "yes, ${deviceMatch} is ${fOperand}"
 									}
                                 }
+                        	}
+                        if (cWater != null) {    
                         if (deviceMatch == null && cWater) {// changed by Jason 2/24/2017
-                            deviceMatch = cWater.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}	
+                            deviceMatch = cWater.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}	
                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("water").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
+                        	}
                         }
+                        if (cSpeaker != null) {
                         if (deviceMatch == null && cSpeaker) {// changed by Jason 2/24/2017
-                            deviceMatch = cSpeaker.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}	
+                            deviceMatch = cSpeaker.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}	
                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("mute").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
+                        	}
                         }
+                        if (cTstat != null) {	
                         if (deviceMatch == null && fOperand == "running" && cTstat ) {// changed by Jason 2/24/2017
-                            deviceMatch = cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                            deviceMatch = cTstat.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                             if(deviceMatch) {
                                 currState = deviceMatch.latestValue("thermostatOperatingState")
                                 currState = currState == "cooling" ? "yes, ${deviceMatch} is ${fOperand}" : currState == "heating" ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                                 outputTxt =  currState
+                            	}
                             }
                         }
                         if(outputTxt) return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
@@ -1160,7 +1181,7 @@ def feedbackHandler(fbResponseTxt) {
             }
         }   
         if (fOperand == "undefined" && fQuery != "undefined" && fQuery != "who" && !fQuery.contains ("when")) {        
-                def deviceMatch=cTstat.find {d -> d.label.toLowerCase() == fDevice.toLowerCase()}
+                def deviceMatch=cTstat.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                     if(deviceMatch)	{
                             deviceType = "cTstat"
                             def currentMode = deviceMatch.latestValue("thermostatMode")
@@ -1208,7 +1229,7 @@ def feedbackHandler(fbResponseTxt) {
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                         }
 					}  
-        }
+        		}
         else {
 //>>> Temp >>>>      
             if(fOperand == "temperature") {
@@ -1368,16 +1389,8 @@ def feedbackHandler(fbResponseTxt) {
             	}
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
             }
-//>>> Security >>>>
-            //TO DO: restrict security based on command
-            if (fOperand == "smart home monitor" || fOperand == "alarm system" ){
-                    def sSHM = location.currentState("alarmSystemStatus")?.value       
-                    sSHM = sSHM == "off" ? "disabled" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
-                    outputTxt = "Your Smart Home Monitor Status is " +  sSHM
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]				
-            }
 //>>> Lights >>>>            
-            if(fOperand?.contains("lights") || fOperand?.contains("anything") || fOperand?.contains("on") || fOperand?.contains("off") || fCommand?.contains("on")) { 
+         if(fOperand?.contains("lights") || fOperand?.contains("anything") || fOperand?.contains("on") || fOperand?.contains("off") || fCommand?.contains("on")) { 
             	if(fOperand == "on" && fCommand == "undefined") {
                 	fCommand = "on" }
                 if(fOperand == "off" && fCommand == "undefined") {
@@ -1394,7 +1407,7 @@ def feedbackHandler(fbResponseTxt) {
                         		}
 							}
                     	}
-                    if (fQuery == "what's" || fQuery == "what is" || fQuery == "what" || fQuery == "which" || fQuery == "any" || fQuery == "is") { // removed fQuery == "undefined" 2/13
+                    if (fQuery == "are there" || fQuery == "what's" || fQuery == "what is" || fQuery == "what" || fQuery == "which" || fQuery == "any" || fQuery == "is") { // removed fQuery == "undefined" 2/13
                         if (devList.size() > 0) {
                             if (devList.size() == 1) {
                                 outputTxt = "There is one light " + fCommand + " , would you like to know which one? "                           			
@@ -1417,7 +1430,7 @@ def feedbackHandler(fbResponseTxt) {
             if(fOperand == "batteries" || fOperand == "battery level" || fOperand == "battery" ) {
             	def cap = "bat"
             	def dMatch = deviceMatchHandler(fDevice)	
-                if (dMatch.deviceMatch == null) { 		
+                if (dMatch?.deviceMatch == null) { 		
                 def devList = getCapabilities(cap)
 					if(devList instanceof String){
                 	outputTxt = devList
@@ -1500,20 +1513,25 @@ def feedbackHandler(fbResponseTxt) {
 					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
             }       
+//>>> Security >>>>
+            //TO DO: restrict security based on command
+            if (fOperand == "smart home monitor" || fOperand == "alarm system" ){
+                    def sSHM = location.currentState("alarmSystemStatus")?.value       
+                    sSHM = sSHM == "off" ? "disabled" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
+                    outputTxt = "Your Smart Home Monitor Status is " +  sSHM
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]				
+            }
 //>>> Settings Feedback >>>>                                    
             if(fOperand == "settings") {
 				outputTxt = settingsFeedback()
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
 //>>> Presence Feedback >>>>                                    
-            if (fQuery == "who" || fOperand == "here" || fOperand == "at home" || fOperand == "present" || fOperand == "home" ) {
-				outputTxt = presenceFeedback()
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+            if (fQuery == "who" || fOperand == "here" || fOperand == "at home" || fOperand == "present" || fOperand == "home") {
+                outputTxt = presenceFeedback()
                 }
 //>>> Windows Feedback >>>>
 			if(fOperand == "window" || fOperand == "windows") {
             	outputTxt = windowsFeedback()
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
 //>>> Doors Feedback >>>>
 			if (fOperand.contains ("door")) {
@@ -1530,15 +1548,8 @@ def feedbackHandler(fbResponseTxt) {
                 outputTxt = petNotesFeedback()
                 }
            }
-//>>> Pet Notes Feedback - Litter Box>>>>
-//            if (fOperand == "litter box" || fUnit == "litter box" || fOperand == "litterbox" || fUnit == "litterbox") {
-//				if (fQuery == "when") {
-//                outputTxt = petNotesFeedback()
-//         		}
-//            }
 //>>> HVAC Filters Reminders >>>>	
 			if (fCommand == "changed" && state.filterNotif !=null ) {
-                log.info "This is the HVAC Filters Reminder at line 1526"
                 outputTxt = state.filterNotif
                 }
             	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
@@ -1551,9 +1562,7 @@ def feedbackHandler(fbResponseTxt) {
             	state.pTryAgain = true
             	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 					}
-                }    
-            	        
-//}
+                }                	        
 
 /*catch (Throwable t) {
         log.error t
@@ -1562,6 +1571,7 @@ def feedbackHandler(fbResponseTxt) {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
 }*/
+    
 /************************************************************************************************************
   DOORS AND WINDOWS FEEDBACK HANDLER
 ************************************************************************************************************/
@@ -2836,13 +2846,13 @@ def controlHandler(data) {
         	}   	
         	else {
         		if (currentCSP > newSetPoint) {
-        			deviceD?.setCoolingSetpoint(newSetPoint)
+                    deviceD?.setCoolingSetpoint(newSetPoint)
         			thermostat?.poll()
         			if (debug) log.trace "Adjusting Cooling Set Point to '${newSetPoint}'"
         			result = "Ok, setting " + deviceD + " cooling to " + cNewSetPoint + " degrees "
                     if (delayD == false) { 
-                    	return result 
-                    }
+                        return result
+					}
                 }
         		else {
         			if (debug) log.trace "Not taking action because cooling is already set to '${currentCSP}', which is lower than '${newSetPoint}'"  
@@ -4056,7 +4066,7 @@ private deviceMatchHandler(fDevice) {
         	}
         }        
         if (cPresence){
-        deviceMatch =cPresence?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+        deviceMatch =cPresence.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
             if(deviceMatch)	{
                 deviceType = "cPresence"
                 currState = deviceMatch.currentState("presence")?.value 
@@ -4216,11 +4226,12 @@ private getCapabilities(cap) {
         		batDetails << d.displayName         
              }
          }
-         
+        if (!phones) {
         cPresence?.each 	{ d ->
         def attrValue = d.latestValue("battery") 
         	if (attrValue < cLowBattery) {
         		batDetails << d.displayName         
+             	}
              }
          }
         cWater?.each 	{ d ->
