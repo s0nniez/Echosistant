@@ -112,7 +112,7 @@ page name: "mIntent"
             section ("EchoSistant Security") {
             	href "mSecurity", title: "Configure EchoSistant Security Options", description: mSecurityD(), state: mSecurityS()
             }
-            section ("Pet Notes") {
+            section ("Quick Notes") {
             	href "mPetNotes", title: "Configure the Pet Notes", description: mPetNotesD(), state: mPetNotesS()
             }    
             section ("FaceBook Messenger Control") {
@@ -1439,7 +1439,7 @@ def feedbackHandler(fbResponseTxt) {
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                 	}
                 	else {
-                   		if (fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fCommand == "low" || fQuery == "give" || fQuery == "get") {
+                   		if (fQuery == "what" || fQuery == "how" || fQuery== "how many" || fQuery == "undefined" || fQuery == "are there" || fCommand == "low" || fQuery == "give" || fQuery == "get") {
                             if (devList.listSize > 0) {
                                 if (devList.listSize == 1) {
                                     outputTxt = "There is one device with low battery level , would you like to know which one"                           			
