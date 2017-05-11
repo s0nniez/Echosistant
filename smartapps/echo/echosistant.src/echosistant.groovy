@@ -1543,7 +1543,7 @@ def feedbackHandler(fbResponseTxt) {
                 if(fOperand == "closed" && fCommand == "undefined") {fCommand = "closed" }
                 outputTxt = doorsWindowsFeedback()}               
 //>>> Pet Notes Feedback>>>>
-           if (fOperand == "dog" || fOperand == "cat" || fOperand == "${pDog}" || fOperand == "${pCat}" || fOperand == "${pDog1}" || fOperand == "${pCat1}" || fOperand == "litter box" || fUnit == "litter box" || fOperand == "litterbox" || fUnit == "litterbox") { 
+           if (fOperand == "cat shocked" || fOperand == "dog" || fOperand == "cat" || fOperand == "${pDog}" || fOperand == "${pCat}" || fOperand == "${pDog1}" || fOperand == "${pCat1}" || fOperand == "litter box" || fUnit == "litter box" || fOperand == "litterbox" || fUnit == "litterbox") { 
            		if (fQuery == "when") {
                 outputTxt = petNotesFeedback()
                 }
@@ -1911,9 +1911,20 @@ def petNotesFeedback() {
                     }
                 if (fQuery == "when") {
             	if (fOperand == "cat" || fOperand == "${pCat}") {
-                    if (fCommand == "medicated" && state.catMedNotify != null ) {outputTxt = state.catMedNotify}
-                	else if (fCommand == "shot" && state.catShotNotify != null) {outputTxt = state.catShotNotify}
-                    else if (fCommand == "shop" && state.catShotNotify != null) {outputTxt == state.catShotNotify}
+                    if ( fCommand == "medicated" && state.catShotNotify.contains("last") && state.catMedNotify.contains("last")) {
+                        outputTxt = "I have been told that " + state.catMedNotify + " , I have also been told that " + state.catShotNotify
+                        	return outputTxt}
+                    	else if ( fCommand == "medicated" && state.catShotNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was medicated, but " + state.catShotNotify 
+                        	return outputTxt}
+                        else if ( fCommand == "medicated") { outputTxt = state.catMedNotify 
+                        	return outputTxt}
+                  	if (fCommand == "shot" && state.catShotNotify.contains("last") && state.catMedNotify.contains("last")) {
+                  		outputTxt = "I have been told that " + state.catShotNotify + " , I have also been told that " + state.catMedNotify
+                        	return outputTxt}
+                    	else if ( fCommand == "shot" && state.catMedNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.catMedNotify 
+                        	return outputTxt}
+                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.catShotNotify 
+                        	return outputTxt}
                     else if (fCommand == "fed" && state.catFedNotify != null ) {outputTxt = state.catFedNotify}
                 	else if (fCommand == "bathed" && state.catBathNotify != null ) {outputTxt = state.catBathNotify}
                 	else if (fCommand == "walked" && state.catWalkNotify != null ) {outputTxt = state.catWalkNotify}
@@ -1921,9 +1932,20 @@ def petNotesFeedback() {
                     return outputTxt
                     }
              	else if (fOperand == "${pCat1}") {
-                    if (fCommand == "medicated" && state.catMed1Notify != null ) {outputTxt = state.catMed1Notify}
-                	else if (fCommand == "shot" && state.catShot1Notify != null) {outputTxt = state.catShot1Notify}
-                    else if (fCommand == "shop" && state.catShot1Notify != null) {outputTxt == state.catShot1Notify}
+                    if ( fCommand == "medicated" && state.catShot1Notify.contains("last") && state.catMed1Notify.contains("last")) {
+                        outputTxt = "I have been told that " + state.catMed1Notify + " , I have also been told that " + state.catShot1Notify
+                        	return outputTxt}
+                    	else if ( fCommand == "medicated" && state.catShot1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was medicated, but " + state.catShot1Notify 
+                        	return outputTxt}
+                        else if ( fCommand == "medicated") { outputTxt = state.catMed1Notify 
+                        	return outputTxt}
+                  	if (fCommand == "shot" && state.catShot1Notify.contains("last") && state.catMed1Notify.contains("last")) {
+                  		outputTxt = "I have been told that " + state.catShot1Notify + " , I have also been told that " + state.catMed1Notify
+                        	return outputTxt}
+                    	else if ( fCommand == "shot" && state.catMed1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.catMed1Notify 
+                        	return outputTxt}
+                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.catShot1Notify 
+                        	return outputTxt}
                 	else if (fCommand == "fed" && state.catFed1Notify != null ) {outputTxt = state.catFed1Notify}
                 	else if (fCommand == "bathed" && state.catBath1Notify != null ) {outputTxt = state.catBath1Notify}
                 	else if (fCommand == "walked" && state.catWalk1Notify != null ) {outputTxt = state.catWalk1Notify}
@@ -1933,9 +1955,20 @@ def petNotesFeedback() {
                 }
                 if (fQuery == "when") {
 				if (fOperand == "dog" || fOperand == "${pDog}") {
-        			if (fCommand == "medicated" && state.dogMedNotify != null ) {outputTxt = state.dogMedNotify} 
-                	else if (fCommand == "shot" && state.dogShotNotify != null) {outputTxt = state.dogShotNotify}
-                    else if (fCommand == "shop" && state.dogShotNotify != null) {outputTxt == state.dogShotNotify}
+                    if ( fCommand == "medicated" && state.dogShotNotify.contains("last") && state.dogMedNotify.contains("last")) {
+                        outputTxt = "I have been told that " + state.dogMedNotify + " , I have also been told that " + state.dogShotNotify
+                        	return outputTxt}
+                    	else if ( fCommand == "medicated" && state.dogShotNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was medicated, but " + state.dogShotNotify 
+                        	return outputTxt}
+                        else if ( fCommand == "medicated") { outputTxt = state.dogMedNotify 
+                        	return outputTxt}
+                  	if (fCommand == "shot" && state.dogShotNotify.contains("last") && state.dogMedNotify.contains("last")) {
+                  		outputTxt = "I have been told that " + state.dogShotNotify + " , I have also been told that " + state.dogMedNotify
+                        	return outputTxt}
+                    	else if ( fCommand == "shot" && state.dogMedNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.dogMedNotify 
+                        	return outputTxt}
+                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.dogShotNotify 
+                        	return outputTxt}
                 	else if (fCommand == "fed" && state.dogFedNotify != null ) {outputTxt = state.dogFedNotify}
                     else if (fCommand == "bathed" && state.dogBathNotify != null ) {outputTxt = state.dogBathNotify}
                     else if (fCommand == "walked" && state.dogWalkNotify != null ) {outputTxt = state.dogWalkNotify}
@@ -1943,9 +1976,20 @@ def petNotesFeedback() {
                     return outputTxt
             		}
 				else if (fOperand == "${pDog1}") {
-                    if (fCommand == "medicated" && state.dogMed1Notify != null ) {outputTxt = state.dogMed1Notify} 
-                	else if (fCommand == "shot" && state.dogShot1Notify != null) {outputTxt = state.dogShot1Notify}
-                    else if (fCommand == "shop" && state.dogShot1Notify != null) {outputTxt == state.dogShot1Notify}
+                    if ( fCommand == "medicated" && state.dogShot1Notify.contains("last") && state.dogMed1Notify.contains("last")) {
+                        outputTxt = "I have been told that " + state.dogMed1Notify + " , I have also been told that " + state.dogShot1Notify
+                        	return outputTxt}
+                    	else if ( fCommand == "medicated" && state.dogShot1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was medicated, but " + state.dogShot1Notify 
+                        	return outputTxt}
+                        else if ( fCommand == "medicated") { outputTxt = state.dogMed1Notify 
+                        	return outputTxt}
+                  	if (fCommand == "shot" && state.dogShot1Notify.contains("last") && state.dogMed1Notify.contains("last")) {
+                  		outputTxt = "I have been told that " + state.dogShot1Notify + " , I have also been told that " + state.dogMed1Notify
+                        	return outputTxt}
+                    	else if ( fCommand == "shot" && state.dogMed1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.dogMed1Notify 
+                        	return outputTxt}
+                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.dogShot1Notify 
+                        	return outputTxt}
                 	else if (fCommand == "fed" && state.dogFed1Notify != null ) {outputTxt = state.dogFed1Notify}
                     else if (fCommand == "bathed" && state.dogBath1Notify != null ) {outputTxt = state.dogBath1Notify}
                     else if (fCommand == "walked" && state.dogWalk1Notify != null ) {outputTxt = state.dogWalk1Notify}
