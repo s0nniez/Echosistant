@@ -113,8 +113,9 @@ page name: "mIntent"
             	href "mSecurity", title: "Configure EchoSistant Security Options", description: mSecurityD(), state: mSecurityS()
             }
             section ("Quick Notes") {
-            	href "mPetNotes", title: "Configure the Pet Notes", description: mPetNotesD(), state: mPetNotesS()
-            }    
+            	href "mPetNotes", title: "Configure the Pets Notes", description: mPetNotesD(), state: mPetNotesS()
+				href "mKidsNotes", title: "Configure the Kids Notes", description: mKidNotesD(), state: mKidNotesS()
+                }    
             section ("FaceBook Messenger Control") {
                 href "mFacebook", title: "Enter Credentials for Facebook Messenger Control", description: "", state: complete
             }
@@ -220,11 +221,49 @@ page name: "mIntent"
          				}
 					}                        
 				}
+		page name: "mKidsNotes"
+        	def mKidsNotes(){
+            	dynamicPage(name: "mKidsNotes", title: "", install: false, uninstall: false) {
+                	section ("Kids Notes") {
+                    	input "kidNoteAct", "bool", title: "Activate your Kids Notes", required: false, default: false, submitOnChange: true
+                        if (kidNoteAct) {
+                        input "kid1", "text", title: "Name is the name of Kid #1...", required: false, default: null, submitOnChange: true
+                        	if (kid1) {
+                            	input "kid1ch1", "text", title: "What is " + kid1 +"'s first chore?", required: false, default: null
+                                input "kid1ch2", "text", title: "What is " + kid1 +"'s second chore?", required: false, default: null
+                                input "kid1ch3", "text", title: "what is " + kid1 +"'s third chore?", required: false, default: null
+                                input "kid1ch4", "text", title: "What is " + kid1 +"'s fourth chore?", required: false //, default: null
+                                }
+                        if (kid1) {input "kid2", "text", title: "What is the name of Kid #2?", required: false, default: null, submitOnChange: true
+                        	if (kid2) {
+                            	input "kid2ch1", "text", title: "What is " + kid2 +"'s first chore?", required: false, default: null
+                                input "kid2ch2", "text", title: "What is " + kid2 +"'s second chore?", required: false, default: null
+                                input "kid2ch3", "text", title: "what is " + kid2 +"'s third chore?", required: false, default: null
+                                input "kid2ch4", "text", title: "What is " + kid2 +"'s fourth chore?", required: false, default: null
+                                }
+                            }    
+                        if (kid2) {input "kid3", "text", title: "What is the name of Kid #3?", required: false, default: null, submitOnChange: true
+                        	if (kid3) {
+                            	input "kid3ch1", "text", title: "What is " + kid3 +"'s first chore?", required: false, default: null
+                                input "kid3ch2", "text", title: "What is " + kid3 +"'s second chore?", required: false, default: null
+                                input "kid3ch3", "text", title: "what is " + kid3 +"'s third chore?", required: false, default: null
+                                input "kid3ch4", "text", title: "What is " + kid3 +"'s fourth chore?", required: false, default: null
+                                }
+                            }    
+                        if (kid3) {input "kid4", "text", title: "What is the name of Kid #4?", required: false, default: null, submitOnChange: true
+                        	if (kid4) {
+                            	input "kid4ch1", "text", title: "What is " + kid4 +"'s first chore?", required: false, default: null
+                                input "kid4ch2", "text", title: "What is " + kid4 +"'s second chore?", required: false, default: null
+                                input "kid4ch3", "text", title: "what is " + kid4 +"'s third chore?", required: false, default: null
+                                input "kid4ch4", "text", title: "What is " + kid4 +"'s fourth chore?", required: false, default: null
+                                }
+                            }    
+                                }}}}
 		page name: "mPetNotes"
         	def mPetNotes(){
             	dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
-                    section ("Pet Notes") {
-                    	input "petNoteAct", "bool", title: "Activate your Pet Notes", requied: false, default: false, submitOnChange: true
+                    section ("Pets Notes") {
+                    	input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
                         if (petNoteAct) {
                     	input "pCat", "text", title: "Name your Cat...", required: false, default: null
                         input "pCat1", "text", title: "Name your other Cat...", required: false, default: null
@@ -338,11 +377,11 @@ page name: "mIntent"
                     	href "mThermoManager", title: "Climate Control Profiles...", description: none
                     }    
 				}
-//				if (remindOn) {
-//        			section ("Reminders & Events (${getChildSize("Reminders")})") {
-//  						app(name: "reminder", appName: "Reminders", namespace: "Echo", title: "Reminders & Events Settings...", multiple: false,  uninstall: false)
-//					}
-//                }    
+				if (remindOn) {
+        			section ("Reminders & Events (${getChildSize("Reminders")})") {
+  						app(name: "reminder", appName: "Reminders", namespace: "Echo", title: "Reminders & Events Settings...", multiple: false,  uninstall: false)
+					}
+                }    
                 if (securityOn) {
                 	section ("Security Suite (${getChildSize("SecuritySuite")})") {
                     	href "mSecuritySuite", title: "Security Suite Profiles...", description: ""
@@ -1092,6 +1131,12 @@ def feedbackHandler(fbResponseTxt) {
                              if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         	}
                         }
+                        if (cDoor != null) {
+                        if (deviceMatch == null && cDoor) {// changed by Jason 2/24/2017
+                            deviceMatch = cDoor.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
+                             if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
+                        	}
+                        }
                         if (cContact != null) {
                         if (deviceMatch == null && cContact) {// changed by Jason 2/24/2017
                            deviceMatch = cContact.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
@@ -1237,7 +1282,7 @@ def feedbackHandler(fbResponseTxt) {
                 	outputTxt = "I'm sorry, it seems that you have not selected any temperature devices in the EchoSistant app"
                     }
            			else if(cTstat){
-                    cTstat?.find {s -> 
+                    cTstat.find {s -> 
                         if(s.label.toLowerCase() == fDevice?.toLowerCase()){
                             deviceType = "cTstat"
                             def currentTMP = s.latestValue("temperature")
@@ -1336,7 +1381,7 @@ def feedbackHandler(fbResponseTxt) {
                 }                            
             }
 //>>> Weather >>>>
-            if (fOperand?.contains("weather") || fOperand?.contains("forecast")){
+            if (fOperand.contains("weather") || fOperand.contains("forecast")){
             //Full forecast
             if (fOperand == "forecast" || fOperand == "weather" || fOperand == "weather forecast" || fOperand.contains("outside") || fOperand== "current forecast" || fOperand == "current weather" ){
 				outputTxt = mGetWeather()
@@ -1353,12 +1398,12 @@ def feedbackHandler(fbResponseTxt) {
             }
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
             }
-			if (fOperand?.contains("wind ") || fOperand == "windy" || fOperand?.contains("rain") || fOperand == "precipitation" || fOperand?.contains("UV ") || fOperand?.contains("condition")){
+			if (fOperand.contains("wind ") || fOperand == "windy" || fOperand.contains("rain") || fOperand == "precipitation" || fOperand.contains("UV ") || fOperand?.contains("condition")){
 				def wElement = fOperand?.contains("wind") ? "wind" : fOperand?.contains("rain") ? "rain" : fOperand == "precipitation" ? "precip" : fOperand?.contains("UV ") ? "uv" : fOperand == "weather conditions"? "cond" : null
 				outputTxt = mGetWeatherElements(wElement)
 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]		
             }
-			if (fOperand == "outside humidity" || fOperand== "humid is outside" || fOperand== "outside humidity" || fOperand== "current conditions"){
+			if (fOperand == "humidity" || fOperand == "outside humidity" || fOperand== "humid is outside" || fOperand== "outside humidity" || fOperand== "current conditions"){
 				def wElement = fOperand.contains("humid") ? "humid" : fOperand.contains("current ") ? "cond" : null
 				outputTxt = mGetWeatherElements(wElement)
 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]		
@@ -1390,11 +1435,15 @@ def feedbackHandler(fbResponseTxt) {
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
             }
 //>>> Lights >>>>            
-         if(fOperand?.contains("lights") || fOperand?.contains("anything") || fOperand?.contains("on") || fOperand?.contains("off") || fCommand?.contains("on")) { 
+         if(fOperand.contains("lights") || fOperand.contains("anything") || fOperand.contains("on") || fOperand.contains("off") || fCommand.contains("on")) { 
             	if(fOperand == "on" && fCommand == "undefined") {
                 	fCommand = "on" }
                 if(fOperand == "off" && fCommand == "undefined") {
                 	fCommand = "off" }
+				if(cSwitch == null) {
+            	outputTxt = "I'm sorry, it seems that you have not selected any switches for this query. Please check the configuration of your EchoSistant App"
+				log.warn "This output is returned because no switches have been selected in the EchoSistant app"
+                }
                     if(cSwitch){
                     def devList = []
                     if (cSwitch != null) {
@@ -1476,6 +1525,8 @@ def feedbackHandler(fbResponseTxt) {
                   	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]                    
  				}                   
             }
+
+                        
 //>>> Inactive Devices >>>>                               
             if(fOperand == "inactive" || fOperand?.contains("inactive") ||  fCommand == "inactive" || fCommand == "enacted" ) { //devices inactive
             	def cap = "act"
@@ -1513,6 +1564,180 @@ def feedbackHandler(fbResponseTxt) {
 					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
             }       
+//>>> Doors >>>>     // Mod'd by Jason to ask "which windows are open" on 2/27/2017         
+			if(fOperand.contains("door") && cDoor1 == null) {
+            	outputTxt = "I'm sorry, it seems that you have not selected any door sensors for this query. Please check the configuration of your EchoSistant App"
+				log.warn "This output is returned because no doors sensors have been selected in the EchoSistant app"
+                }
+                if(fOperand.contains("door") && cDoor1 != null) {  
+                def devList = []
+                  if (cDoor1.latestValue("contact")?.contains(fCommand)) {
+                        cDoor1.each { deviceName ->
+                                    if (deviceName.latestValue("contact")=="${fCommand}") {
+                                        String device  = (String) deviceName
+                                        devList += device
+                                    }
+                        		}
+							}
+                    if (fQuery == "how" || fQuery== "how many" || fQuery == "are there" || fQuery == "any" || fQuery.contains ("if")) { // removed fQuery == "undefined" 2/13
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
+                                outputTxt = "There is one door " + fCommand + " , would you like to know which one? "                           			
+                            }
+                            else {
+                                outputTxt = "There are " + devList?.size() + " doors " + fCommand + " , would you like to know which doors? "
+                            	return outputTxt
+                            }
+                        data.devices = devList
+                        data.cmd = fCommand
+                        data.deviceType = "cDoor1"
+                        state.lastAction = data
+                        state.pContCmdsR = "feedback"
+                        }
+                        else {outputTxt = "There are no doors " + fCommand}
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    }
+                    else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
+                        def devNames = []
+                        fOperand = fOperand.contains("close") ? "closed" : fOperand.contains("open") ? "open" : fOperand 
+                        fCommand = fCommand.contains("close") ? "closed" : fCommand
+                        fCommand = fOperand == "closed" ? "closed" : fOperand == "open" ? "open" : fCommand                  
+                            if (cDoor1.latestValue("contact").contains(fCommand)) {
+                                cDoor1.each { deviceName ->
+                                            if (deviceName.latestValue("contact")=="${fCommand}") {
+                                                String device  = (String) deviceName
+                                                devNames += device
+                                            }
+                                }
+                                cDoor1.each { deviceName ->
+                                            if (deviceName.latestValue("contact")=="${fCommand}") {
+                                                String device  = (String) deviceName
+                                                devNames += device
+                                            }
+                                }
+                            outputTxt = "The following doors are " + fCommand + "," + devNames.sort().unique()
+							}
+                            else {outputTxt = "There are no doors " + fCommand}
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    	}
+            		}   
+//>>> Windows >>>>       // Added by Jason to ask "which windows are open" on 2/27/2017     
+			if(fOperand.contains("window") && cWindow == null) {
+            	outputTxt = "I'm sorry, it seems that you have not selected any window sensors for this query. Please check the configuration of your EchoSistant App"
+				log.warn "This output is returned because no window sensors have been selected in the EchoSistant app"
+                }
+                if(fOperand.contains("window") && cWindow != null) {  
+                    def devList = []
+                    fCommand = fOperand.contains("open") ? "open" : fOperand.contains("close") ? "closed" : fCommand // to avoid misplaced command as operand 3/3/17 Bobby
+                    if (cWindow.latestValue("contact").contains(fCommand)) {
+                        cWindow.each { deviceName ->
+                                    if (deviceName.latestValue("contact")=="${fCommand}") {
+                                        String device  = (String) deviceName
+                                        devList += device
+                                    }
+                        		}
+							}
+                    if (fQuery == "any" || fQuery == "how" || fQuery== "how many" || fQuery == "are there" || fQuery.contains ("if")) { // removed fQuery == "undefined" 2/13
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
+                                outputTxt = "There is one window " + fCommand + " , would you like to know which one? "                           			
+                            	}
+                            else {
+                                outputTxt = "There are " + devList.size() + " windows " + fCommand + " , would you like to know which windows? "
+                            	return outputTxt
+                                }
+                        data.devices = devList
+                        data.cmd = fCommand
+                        data.deviceType = "cWindow"
+                        state.lastAction = data
+                        state.pContCmdsR = "feedback"
+                        }
+                        else {outputTxt = "There are no windows " + fCommand}
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    }
+                    else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
+                        def devNames = []
+                        fOperand = fOperand.contains("close") ? "closed" : fOperand.contains("open") ? "open" : fOperand 
+                        fCommand = fCommand.contains("close") ? "closed" : fCommand
+                        fCommand = fOperand == "closed" ? "closed" : fOperand == "open" ? "open" : fCommand                  
+                            if (cWindow.latestValue("contact")?.contains(fCommand)) {
+                                cWindow.each { deviceName ->
+                                            if (deviceName.latestValue("contact")=="${fCommand}") {
+                                                String device  = (String) deviceName
+                                                devNames += device
+                                            }
+                                }
+                                cWindow.each { deviceName ->
+                                            if (deviceName.latestValue("contact")=="${fCommand}") {
+                                                String device  = (String) deviceName
+                                                devNames += device
+                                            }
+                                }
+                            outputTxt = "The following windows are " + fCommand + "," + devNames.sort().unique()
+							}
+                            else {outputTxt = "There are no windows " + fCommand}
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    	}
+            		}   
+//>>> Doors and Windows >>>>
+            if(fOperand.contains("anything") || fOperand.contains("open") || fOperand.contains("closed")) {
+            	if(fOperand == "open" && fCommand == "undefined") {
+                	fCommand = "open" }
+                if(fOperand == "closed" && fCommand == "undefined") {
+                	fCommand = "closed" } 
+				if(cWindow == null || cDoor1 == null) {
+            		outputTxt = "I'm sorry, but either the window sensors or door sensors for this query have not been selected. Please check the configuration of your EchoSistant App"
+					log.warn "This output is returned because no window sensors or no door sensor have been selected in the EchoSistant app"
+                	}
+                    def devListDoors = []
+                    def devListWindows = []
+                    if(cDoor1){
+                        if (cDoor1.currentValue("contact").contains(fCommand)) {
+                            cDoor1.each { deviceName ->
+                                        if (deviceName.currentValue("contact")=="${fCommand}") {
+                                            String device  = (String) deviceName
+                                            devListDoors += device
+                                        	}
+                                    	}
+                                	}
+                    			}
+                    if(cWindow) {
+                        if (cWindow.currentValue("contact").contains(fCommand)) {
+                            cWindow.each { deviceName ->
+                                        if (deviceName.currentValue("contact")=="${fCommand}") {
+                                            String device  = (String) deviceName
+                                            devListWindows += device
+                                        	}
+                                    	}
+                                	}
+                    			}
+                    if (fQuery == "what's" || fQuery == "what is" || fQuery == "what" || fQuery == "which" || fQuery == "any" || fQuery.contains ("is")) { // removed fQuery == "undefined" 2/13
+                        if (devListDoors.size() == 1 && devListWindows.size() == 1) {
+                            outputTxt = "The following " + devListDoors.size() + " door is open, " + devListDoors + " , as well as the following " + devListWindows.size() + " window, " + devListWindows
+                            }
+                            else if (devListDoors.size() > 0 && devListWindows.size() == 0) {
+                            	outputTxt = "The following " + devListDoors.size() + " doors are open, " + devListDoors
+                                }
+                            else if (devListDoors.size() == 0 && devListWindows.size() > 0) {
+                            	outputTxt = "The following " + devListWindows.size() + " windows are open, " + devListWindows  
+                                }
+                            else if (devListDoors.size() == 0 && devListWindows.size() == 0) {
+                            	outputTxt = "There are no doors or windows open"
+                                }
+                            else {
+                            outputTxt = "The following " + devListDoors.size() + " doors are open, " + devListDoors + " , as well as the following " + devListWindows.size() + " windows, " + devListWindows                      
+                      		}
+                        data.cmd = fCommand
+                        data.deviceTypeDoors = "cDoor1"
+                        data.deviceTypeWindows = "cWindow"
+                        data.deviceDoors = devListDoors
+                        data.deviceWindows = devListWindows
+                        state.lastAction = data
+                        state.pContCmdsR = "feedback"
+                        	}
+                        else {outputTxt = "There are no doors or windows " + fCommand}
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    	}
 //>>> Security >>>>
             //TO DO: restrict security based on command
             if (fOperand == "smart home monitor" || fOperand == "alarm system" ){
@@ -1529,25 +1754,18 @@ def feedbackHandler(fbResponseTxt) {
             if (fQuery == "who" || fOperand == "here" || fOperand == "at home" || fOperand == "present" || fOperand == "home") {
                 outputTxt = presenceFeedback()
                 }
-//>>> Windows Feedback >>>>
-			if(fOperand == "window" || fOperand == "windows") {
-            	outputTxt = windowsFeedback()
-                }
-//>>> Doors Feedback >>>>
-			if (fOperand.contains ("door")) {
-            	outputTxt = doorsFeedback() 
-                }
-//>>> Doors and Windows Feedback >>>>
-			if(fOperand.contains("anything") || fOperand.contains("open") || fOperand.contains("closed")) {
-            	if(fOperand == "open" && fCommand == "undefined") {fCommand = "open" }
-                if(fOperand == "closed" && fCommand == "undefined") {fCommand = "closed" }
-                outputTxt = doorsWindowsFeedback()}               
 //>>> Pet Notes Feedback>>>>
            if (fOperand == "cat shocked" || fOperand == "dog" || fOperand == "cat" || fOperand == "${pDog}" || fOperand == "${pCat}" || fOperand == "${pDog1}" || fOperand == "${pCat1}" || fOperand == "litter box" || fUnit == "litter box" || fOperand == "litterbox" || fUnit == "litterbox") { 
            		if (fQuery == "when") {
                 outputTxt = petNotesFeedback()
                 }
            }
+//>>> Kids Notes Feedback>>>>
+			if (fQuery == "what" || fQuery == "has" || fQuery == "which") {
+   	   		if (fOperand.contains("chore")) {
+				outputTxt = kidsNotesFeedback() 
+            	}
+        	}    
 //>>> HVAC Filters Reminders >>>>	
 			if (fCommand == "changed" && state.filterNotif !=null ) {
                 outputTxt = state.filterNotif
@@ -1571,11 +1789,10 @@ def feedbackHandler(fbResponseTxt) {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
 }*/
-    
 /************************************************************************************************************
-  DOORS AND WINDOWS FEEDBACK HANDLER
+  KIDS NOTES FEEDBACK HANDLER
 ************************************************************************************************************/
-def doorsWindowsFeedback() {
+def kidsNotesFeedback() {
     //LAMBDA
     def fDevice = params.fDevice
    	def fQuery = params.fQuery
@@ -1583,131 +1800,55 @@ def doorsWindowsFeedback() {
     def fCommand = params.fCommand 
   	def String outputTxt = (String) null
 	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
-            if(fOperand.contains("anything") || fOperand.contains("open") || fOperand.contains("closed")) {
-            	if(fOperand == "open" && fCommand == "undefined") {
-                	fCommand = "open" }
-                if(fOperand == "closed" && fCommand == "undefined") {
-                	fCommand = "closed" }   
-                    def devListDoors = []
-                    def devListWindows = []
-                    if(cDoor1 == null || cWindow == null) {
-            			outputTxt = "I'm sorry, it seems that you have not selected any sensors for this query. Please check the configuration of your EchoSistant App"
-						return outputTxt}                    
-                    if(cDoor1){
-                        if (cDoor1.currentValue("contact").contains(fCommand)) {
-                            cDoor1.each { deviceName ->
-                                        if (deviceName.currentValue("contact")=="${fCommand}") {
-                                            String device  = (String) deviceName
-                                            devListDoors += device
-                                        	}
-                                    	}
-                                	}
-                    			}
-                    if(cWindow) {
-                        if (cWindow.currentValue("contact").contains(fCommand)) {
-                            cWindow.each { deviceName ->
-                                        if (deviceName.currentValue("contact")=="${fCommand}") {
-                                            String device  = (String) deviceName
-                                            devListWindows += device
-                                        	}
-                                    	}
-                                	}
-                    			}
-                    if (fQuery == "what's" || fQuery == "what is" || fQuery == "what" || fQuery == "which" || fQuery == "any" || fQuery.contains ("is")) { // removed fQuery == "undefined" 2/13
-                        if (devListDoors.size() == 1 && devListWindows.size() == 1) {
-                            return outputTxt = "The following " + devListDoors?.size() + " door is open, " + devListDoors + " , as well as the following " + devListWindows?.size() + " window, " + devListWindows
-                            }
-                            else if (devListDoors.size() > 0 && devListWindows.size() == 0) {
-                            	return outputTxt = "The following " + devListDoors?.size() + " doors are open, " + devListDoors
-                                }
-                            else if (devListDoors.size() == 0 && devListWindows.size() > 0) {
-                            	return outputTxt = "The following " + devListWindows.size() + " windows are open, " + devListWindows  
-                                }
-                            else if (devListDoors.size() == 0 && devListWindows.size() == 0) {
-                            	return outputTxt = "There are no doors or windows open"
-                                }
-                            else {
-                            return outputTxt = "The following " + devListDoors?.size() + " doors are open, " + devListDoors + " , as well as the following " + devListWindows?.size() + " windows, " + devListWindows                      
-                      		}
-                        data.cmd = fCommand
-                        data.deviceTypeDoors = "cDoor1"
-                        data.deviceTypeWindows = "cWindow"
-                        data.deviceDoors = devListDoors
-                        data.deviceWindows = devListWindows
-                        state.lastAction = data
-                        state.pContCmdsR = "feedback"
-                        	}
-                        else {outputTxt = "There are no doors or windows " + fCommand}
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
-                    	}
-                    }
-/************************************************************************************************************
-  DOORS FEEDBACK HANDLER
-************************************************************************************************************/
-def doorsFeedback() {
-    //LAMBDA
-    def fDevice = params.fDevice
-   	def fQuery = params.fQuery
-    def fOperand = params.fOperand 
-    def fCommand = params.fCommand 
-  	def String outputTxt = (String) null
-	fDevice = fDevice?.replaceAll("[^a-zA-Z0-9 ]", "") 
-            if(fOperand.contains("door")) { 
-            	if(cDoor1 == null) {
-            	outputTxt = "I'm sorry, it seems that you have not selected any door sensors for this query. Please check the configuration of your EchoSistant App"
-				return outputTxt}
-                	def devList = []
-    				if (cDoor1.latestValue("contact").contains(fCommand)) {
-                        cDoor1.each { deviceName ->
-                                    if (deviceName.latestValue("contact")=="${fCommand}") {
-                                        String device  = (String) deviceName
-                                        devList += device
-                                    }
-                        		}
-							}
-                    if (fQuery == "how" || fQuery== "how many" || fQuery == "are there" || fQuery == "any" || fQuery.contains ("if")) { // removed fQuery == "undefined" 2/13
-                        if (devList.size() > 0) {
-                            if (devList.size() == 1) {
-                                return outputTxt = "There is one door " + fCommand + " , would you like to know which one? "                           			
-                            }
-                            else {
-                                outputTxt = "There are " + devList.size() + " doors " + fCommand + " , would you like to know which doors? "
-                            	return outputTxt
-                            }
-                        data.devices = devList
-                        data.cmd = fCommand
-                        data.deviceType = "cDoor1"
-                        state.lastAction = data
-                        state.pContCmdsR = "feedback"
-                        }
-                        else {outputTxt = "There are no doors " + fCommand}
-                        return outputTxt                     }
-                    else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
-                        def devNames = []
-                        fOperand = fOperand.contains("close") ? "closed" : fOperand.contains("open") ? "open" : fOperand 
-                        fCommand = fCommand.contains("close") ? "closed" : fCommand
-                        fCommand = fOperand == "closed" ? "closed" : fOperand == "open" ? "open" : fCommand                  
-                            if (cDoor1.latestValue("contact")?.contains(fCommand)) {
-                                cDoor1.each { deviceName ->
-                                            if (deviceName.latestValue("contact")=="${fCommand}") {
-                                                String device  = (String) deviceName
-                                                devNames += device
-                                            }
-                                }
-                                cDoor1.each { deviceName ->
-                                            if (deviceName.latestValue("contact")=="${fCommand}") {
-                                                String device  = (String) deviceName
-                                                devNames += device
-                                            }
-                                }
-                            outputTxt = "The following doors are " + fCommand + "," + devNames.sort().unique()
-							return outputTxt
-                            }
-                            else {outputTxt = "There are no doors " + fCommand}
-                            return outputTxt                     		
-                            }
-            			}
-                    }    
+		if (fCommand.contains("${kid1}") && kid1ch1 != null && kid1ch2 != null && kid1ch3 != null && kid1ch4 != null) {
+        	outputTxt = "${kid1} has four chores. " + "${kid1}"+ "'s chores are " + "${kid1ch1}" + " , " + "${kid1ch2}" + " , " + "${kid1ch3}" + " , and " + "${kid1ch4}"
+            return outputTxt}
+        	else if (fCommand.contains("${kid1}") && kid1ch1 != null && kid1ch2 != null && kid1ch3 != null && kid1ch4 == null) {
+           		outputTxt = "${kid1} has three chores. " + "${kid1}"+ "'s chores are " + "${kid1ch1}" + " , " + "${kid1ch2}" + " ,  and " + "${kid1ch3}"
+            	return outputTxt}
+        	else if (fCommand.contains("${kid1}") && kid1ch1 != null && kid1ch2 != null && kid1ch3 == null && kid1ch4 == null) {
+           		outputTxt = "${kid1} has two chores. " + "${kid1}"+ "'s chores are " + "${kid1ch1}" + " , and " + "${kid1ch2}"
+            	return outputTxt}
+       		else if (fCommand.contains("${kid1}") && kid1ch1 != null && kid1ch2 == null && kid1ch3 == null && kid1ch4 == null) {
+           		outputTxt = "${kid1} has one chore. " + "${kid1}"+ "'s chore is " + "${kid1ch1}"
+            	return outputTxt}
+		if (fCommand.contains("${kid2}") && kid2ch1 != null && kid2ch2 != null && kid2ch3 != null && kid2ch4 != null) {
+        	outputTxt = "${kid2} has four chores. " + "${kid2}"+ "'s chores are " + "${kid2ch1}" + " , " + "${kid2ch2}" + " , " + "${kid2ch3}" + " , and " + "${kid2ch4}"
+            return outputTxt}
+        	else if (fCommand.contains("${kid2}") && kid2ch1 != null && kid2ch2 != null && kid2ch3 != null && kid2ch4 == null) {
+           		outputTxt = "${kid2} has three chores. " + "${kid2}"+ "'s chores are " + "${kid2ch1}" + " , " + "${kid2ch2}" + " ,  and " + "${kid2ch3}"
+            	return outputTxt}
+        	else if (fCommand.contains("${kid2}") && kid2ch1 != null && kid2ch2 != null && kid2ch3 == null && kid2ch4 == null) {
+           		outputTxt = "${kid2} has two chores. " + "${kid2}"+ "'s chores are " + "${kid2ch1}" + " , and " + "${kid2ch2}"
+            	return outputTxt}
+       		else if (fCommand.contains("${kid2}") && kid2ch1 != null && kid2ch2 == null && kid2ch3 == null && kid2ch4 == null) {
+           		outputTxt = "${kid2} has one chore. " + "${kid2}"+ "'s chore is " + "${kid2ch1}"
+            	return outputTxt}
+		if (fCommand.contains("${kid3}") && kid3ch1 != null && kid3ch2 != null && kid3ch3 != null && kid3ch4 != null) {
+        	outputTxt = "${kid3} has four chores. " + "${kid3}"+ "'s chores are " + "${kid3ch1}" + " , " + "${kid3ch2}" + " , " + "${kid3ch3}" + " , and " + "${kid3ch4}"
+            return outputTxt}
+        	else if (fCommand.contains("${kid3}") && kid3ch1 != null && kid3ch2 != null && kid3ch3 != null && kid3ch4 == null) {
+           		outputTxt = "${kid3} has three chores. " + "${kid3}"+ "'s chores are " + "${kid3ch1}" + " , " + "${kid3ch2}" + " ,  and " + "${kid3ch3}"
+            	return outputTxt}
+        	else if (fCommand.contains("${kid3}") && kid3ch1 != null && kid3ch2 != null && kid3ch3 == null && kid3ch4 == null) {
+           		outputTxt = "${kid3} has two chores. " + "${kid3}"+ "'s chores are " + "${kid3ch1}" + " , and " + "${kid3ch2}"
+            	return outputTxt}
+       		else if (fCommand.contains("${kid3}") && kid3ch1 != null && kid3ch2 == null && kid3ch3 == null && kid3ch4 == null) {
+           		outputTxt = "${kid3} has one chore. " + "${kid3}"+ "'s chore is " + "${kid3ch1}"
+            	return outputTxt}
+		if (fCommand.contains("${kid4}") && kid4ch1 != null && kid4ch2 != null && kid4ch3 != null && kid4ch4 != null) {
+        	outputTxt = "${kid4} has four chores. " + "${kid4}"+ "'s chores are " + "${kid4ch1}" + " , " + "${kid4ch2}" + " , " + "${kid4ch3}" + " , and " + "${kid4ch4}"
+            return outputTxt}
+        	else if (fCommand.contains("${kid4}") && kid4ch1 != null && kid4ch2 != null && kid4ch3 != null && kid4ch4 == null) {
+           		outputTxt = "${kid4} has three chores. " + "${kid4}"+ "'s chores are " + "${kid4ch1}" + " , " + "${kid4ch2}" + " ,  and " + "${kid4ch3}"
+            	return outputTxt}
+        	else if (fCommand.contains("${kid4}") && kid4ch1 != null && kid4ch2 != null && kid4ch3 == null && kid4ch4 == null) {
+           		outputTxt = "${kid4} has two chores. " + "${kid4}"+ "'s chores are " + "${kid4ch1}" + " , and " + "${kid4ch2}"
+            	return outputTxt}
+       		else if (fCommand.contains("${kid4}") && kid4ch1 != null && kid4ch2 == null && kid4ch3 == null && kid4ch4 == null) {
+           		outputTxt = "${kid4} has one chore. " + "${kid4}"+ "'s chore is " + "${kid4ch1}"
+            	return outputTxt}
+				}
 /************************************************************************************************************
   SETTINGS FEEDBACK HANDLER
 ************************************************************************************************************/
@@ -1755,70 +1896,6 @@ def settingsFeedback() {
                 return outputTxt = pMute + " and the conversational module is " + pCmds + ". The pin number is active for: " +  activePin + " and inactive for: " + inactivePin
                 return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
             }
-/************************************************************************************************************
-  WINDOWS FEEDBACK HANDLER
-************************************************************************************************************/
-def windowsFeedback() {
-    //LAMBDA
-    def fDevice = params.fDevice
-   	def fQuery = params.fQuery
-    def fOperand = params.fOperand 
-    def fCommand = params.fCommand 
-  	def String outputTxt = (String) null
-	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
-	state.pTryAgain = false
-	def devList = []
-                    fCommand = fOperand.contains("open") ? "open" : fOperand.contains("close") ? "closed" : fCommand // to avoid misplaced command as operand 3/3/17 Bobby
-    		if(cWindow == null) {
-            	outputTxt = "I'm sorry, it seems that you have not selected any window sensors for this query. Please check the configuration of your EchoSistant App"
-				return outputTxt}
-			if (cWindow.latestValue("contact").contains(fCommand)) {
-                        cWindow.each { deviceName ->
-                                    if (deviceName.latestValue("contact")=="${fCommand}") {
-                                        String device  = (String) deviceName
-                                        devList += device
-                                    }
-                        		}
-							}
-                    if (fQuery == "any" || fQuery == "how" || fQuery== "how many" || fQuery == "are there" || fQuery.contains ("if")) { // removed fQuery == "undefined" 2/13
-                        if (devList.size() > 0) {
-                            if (devList.size() == 1) {
-                                return outputTxt = "There is one window " + fCommand + " , would you like to know which one? "                           			
-                            }
-                            else {
-                                return outputTxt = "There are " + devList.size() + " windows " + fCommand + " , would you like to know which windows? "
-                            }
-                        data.devices = devList
-                        data.cmd = fCommand
-                        data.deviceType = "cWindow"
-                        state.lastAction = data
-                        state.pContCmdsR = "feedback"
-                        }
-                        else {return outputTxt = "There are no windows " + fCommand}
-                    }
-                    else if (fQuery.contains ("what") || fQuery.contains ("which") || fQuery == "what's") {
-                        def devNames = []
-                        fOperand = fOperand.contains("close") ? "closed" : fOperand.contains("open") ? "open" : fOperand 
-                        fCommand = fCommand.contains("close") ? "closed" : fCommand
-                        fCommand = fOperand == "closed" ? "closed" : fOperand == "open" ? "open" : fCommand                  
-                            if (cWindow.latestValue("contact")?.contains(fCommand)) {
-                                cWindow.each { deviceName ->
-                                            if (deviceName.latestValue("contact")=="${fCommand}") {
-                                                String device  = (String) deviceName
-                                                devNames += device
-                                            }
-                                }
-                                cWindow.each { deviceName ->
-                                            if (deviceName.latestValue("contact")=="${fCommand}") {
-                                                String device  = (String) deviceName
-                                                devNames += device
-                                            }
-                                }
-                            return outputTxt = "The following windows are " + fCommand + "," + devNames.sort().unique()
-							}
-                            else {return outputTxt = "There are no windows " + fCommand}
-                    	}
-            		}
 /************************************************************************************************************
   PRESENCE FEEDBACK HANDLER
 ************************************************************************************************************/
@@ -1911,7 +1988,7 @@ def petNotesFeedback() {
                     }
                 if (fQuery == "when") {
             	if (fOperand == "cat" || fOperand == "${pCat}") {
-                    if ( fCommand == "medicated" && state.catShotNotify.contains("last") && state.catMedNotify.contains("last")) {
+                    if (fCommand == "medicated" && state.catShotNotify.contains("last") && state.catMedNotify.contains("last")) {
                         outputTxt = "I have been told that " + state.catMedNotify + " , I have also been told that " + state.catShotNotify
                         	return outputTxt}
                     	else if ( fCommand == "medicated" && state.catShotNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was medicated, but " + state.catShotNotify 
@@ -1919,11 +1996,12 @@ def petNotesFeedback() {
                         else if ( fCommand == "medicated") { outputTxt = state.catMedNotify 
                         	return outputTxt}
                   	if (fCommand == "shot" && state.catShotNotify.contains("last") && state.catMedNotify.contains("last")) {
-                  		outputTxt = "I have been told that " + state.catShotNotify + " , I have also been told that " + state.catMedNotify
+                  			outputTxt = "I have been told that " + state.catShotNotify + " , I have also been told that " + state.catMedNotify
                         	return outputTxt}
-                    	else if ( fCommand == "shot" && state.catMedNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.catMedNotify 
+                    	else if (fCommand == "shot"&& state.catMedNotify.contains("last")) { 
+                        	outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.catMedNotify 
                         	return outputTxt}
-                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.catShotNotify 
+                        else if (fCommand == "shot") { outputTxt = state.catShotNotify 
                         	return outputTxt}
                     else if (fCommand == "fed" && state.catFedNotify != null ) {outputTxt = state.catFedNotify}
                 	else if (fCommand == "bathed" && state.catBathNotify != null ) {outputTxt = state.catBathNotify}
@@ -1939,12 +2017,14 @@ def petNotesFeedback() {
                         	return outputTxt}
                         else if ( fCommand == "medicated") { outputTxt = state.catMed1Notify 
                         	return outputTxt}
-                  	if (fCommand == "shot" && state.catShot1Notify.contains("last") && state.catMed1Notify.contains("last")) {
-                  		outputTxt = "I have been told that " + state.catShot1Notify + " , I have also been told that " + state.catMed1Notify
-                        	return outputTxt}
-                    	else if ( fCommand == "shot" && state.catMed1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.catMed1Notify 
-                        	return outputTxt}
-                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.catShot1Notify 
+                  	if (fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) {
+                    	if (state.catShot1Notify.contains("last") && state.catMed1Notify.contains("last")) {
+                  			outputTxt = "I have been told that " + state.catShot1Notify + " , I have also been told that " + state.catMed1Notify
+                        	return outputTxt}}
+                    	else if (fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) { 
+                        	if (state.catMed1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.catMed1Notify 
+                        	return outputTxt}}
+                        else if ( fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) { outputTxt = state.catShot1Notify 
                         	return outputTxt}
                 	else if (fCommand == "fed" && state.catFed1Notify != null ) {outputTxt = state.catFed1Notify}
                 	else if (fCommand == "bathed" && state.catBath1Notify != null ) {outputTxt = state.catBath1Notify}
@@ -1962,12 +2042,14 @@ def petNotesFeedback() {
                         	return outputTxt}
                         else if ( fCommand == "medicated") { outputTxt = state.dogMedNotify 
                         	return outputTxt}
-                  	if (fCommand == "shot" && state.dogShotNotify.contains("last") && state.dogMedNotify.contains("last")) {
-                  		outputTxt = "I have been told that " + state.dogShotNotify + " , I have also been told that " + state.dogMedNotify
-                        	return outputTxt}
-                    	else if ( fCommand == "shot" && state.dogMedNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.dogMedNotify 
-                        	return outputTxt}
-                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.dogShotNotify 
+                  	if (fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) {
+                    	if (state.dogShotNotify.contains("last") && state.dogMedNotify.contains("last")) {
+                  			outputTxt = "I have been told that " + state.dogShotNotify + " , I have also been told that " + state.dogMedNotify
+                        	return outputTxt}}
+                    	else if (fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) { 
+                        	if (state.dogMedNotify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.dogMedNotify 
+                        	return outputTxt}}
+                        else if ( fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) { outputTxt = state.dogShotNotify 
                         	return outputTxt}
                 	else if (fCommand == "fed" && state.dogFedNotify != null ) {outputTxt = state.dogFedNotify}
                     else if (fCommand == "bathed" && state.dogBathNotify != null ) {outputTxt = state.dogBathNotify}
@@ -1983,12 +2065,14 @@ def petNotesFeedback() {
                         	return outputTxt}
                         else if ( fCommand == "medicated") { outputTxt = state.dogMed1Notify 
                         	return outputTxt}
-                  	if (fCommand == "shot" && state.dogShot1Notify.contains("last") && state.dogMed1Notify.contains("last")) {
-                  		outputTxt = "I have been told that " + state.dogShot1Notify + " , I have also been told that " + state.dogMed1Notify
-                        	return outputTxt}
-                    	else if ( fCommand == "shot" && state.dogMed1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.dogMed1Notify 
-                        	return outputTxt}
-                        else if ( fCommand == "shot" || fCommand == "shop") { outputTxt = state.dogShot1Notify 
+                  	if (fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) {
+                    	if (state.dogShot1Notify.contains("last") && state.dogMed1Notify.contains("last")) {
+                  			outputTxt = "I have been told that " + state.dogShot1Notify + " , I have also been told that " + state.dogMed1Notify
+                        	return outputTxt}}
+                    	else if (fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) { 
+                        	if (state.dogMed1Notify.contains("last")) { outputTxt = "I have not been told when " + fOperand + " was shot, but " + state.dogMed1Notify 
+                        	return outputTxt}}
+                        else if ( fCommand == "shot" || fCommand == "shop" || fCommand.contains("shock")) { outputTxt = state.dogShot1Notify 
                         	return outputTxt}
                 	else if (fCommand == "fed" && state.dogFed1Notify != null ) {outputTxt = state.dogFed1Notify}
                     else if (fCommand == "bathed" && state.dogBath1Notify != null ) {outputTxt = state.dogBath1Notify}
@@ -4012,7 +4096,7 @@ def getMoreFeedback(data) {
     	return outputTxt
         }
     }
-	if (deviceType == "cWindow") {    // Added by Jason to ask "are doors open" on 2/27/2017
+	if (deviceType == "cWindow") {    // Added by Jason to ask "are windows open" on 2/27/2017
     	if (devices?.size() == 1) {
     	outputTxt = " The following window, " + devices + " is " + command 
     	}
@@ -4346,6 +4430,18 @@ private getCapabilities(cap) {
         cWindow?.each 	{ d ->
         def attrValue = d.latestValue("contact") 
         	def stateTime = d.currentState("contact").date.time
+			def endTime = now() + location.timeZone.rawOffset
+    		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
+    			startTimeAdj = startTimeAdj.getTime()
+    		int hours = (int)((endTime - startTimeAdj) / (1000 * 60 * 60) )
+    		//int minutes = (int)((endTime - startTime) / ( 60 * 1000))
+                if ( hours > cInactiveDev ) {
+                    DeviceDetails << d.displayName 
+                }
+        }
+        cDoor?.each 	{ d ->
+        def attrValue = d.latestValue("door") 
+        	def stateTime = d.currentState("door").date.time
 			def endTime = now() + location.timeZone.rawOffset
     		def startTimeAdj = new Date(stateTime + location.timeZone.rawOffset)
     			startTimeAdj = startTimeAdj.getTime()
@@ -4748,8 +4844,7 @@ private getCustomCmd(command, unit, group, num) {
               	}
                 return result
             	}
-                
-    if (command == "cancel" || command == "stop" || command == "disable" || command == "deactivate" || command == "unschedule" || command == "disarm") {
+	if (command == "cancel" || command == "stop" || command == "disable" || command == "deactivate" || command == "unschedule" || command == "disarm") {
     	if(group == "security"){
         	def param = [:]
         		param.command = command
@@ -4945,8 +5040,7 @@ private petNotifyHandler(command, unit, operand) {
     def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
     if (operand == "litter box" || unit == "litter box" || operand == "litterbox" || unit == "litterbox") {
     	if (unit != "null") {result = "Ok, recording that the litter box was ${command} on " + dateDate + " at " + timeDate}
-        log.info "troubleshooting the litter box command"
-    	if(command == "cleaned") {state.litterboxClean = "The litter box was last ${command} on " + dateDate + " at " + timeDate}
+        if(command == "cleaned") {state.litterboxClean = "The litter box was last ${command} on " + dateDate + " at " + timeDate}
         if(command == "scooped") {state.litterboxScoop = "The litter box was last ${command} on " + dateDate + " at " + timeDate}
         return result
         }
@@ -4961,7 +5055,7 @@ private petNotifyHandler(command, unit, operand) {
             if(command == "bathed") {state.catBathNotify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
             if(command == "walked") {state.catWalkNotify = "${unit} was last walked on " + dateDate + " at " + timeDate }
 			if(command == "medicated") {state.catMedNotify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
-        if(pSMS) { sendtxt(message, result) }
+        if(pSMS) { sendtxt (message, result) }
 		if(pPush) { sendPush result }
         return result
             }
@@ -4976,7 +5070,7 @@ private petNotifyHandler(command, unit, operand) {
             if(command == "bathed") {state.catBath1Notify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
             if(command == "walked") {state.catWalk1Notify = "${unit} was last walked on " + dateDate + " at " + timeDate }
 			if(command == "medicated") {state.catMed1Notify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
-        if(pSMS) { sendtxt(message, result) }
+        if(pSMS) { sendtxt (message, result) }
 		if(pPush) { sendPush result }
         return result
             }
@@ -4991,10 +5085,10 @@ private petNotifyHandler(command, unit, operand) {
 			if(command == "bathed") {state.dogBathNotify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
 			if(command == "walked") {state.dogWalkNotify = "${unit} was last walked on " + dateDate + " at " + timeDate }
 			if(command == "medicated") {state.dogMedNotify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
-        if(pSMS || pPush) { sendtxt(message, result) }
+        if(pSMS) { sendtxt (message, result) }
 		if(pPush) { sendPush result }
         return result
-    }
+            }
 		if (unit == "${pDog1}" || operand == "${pDog1}") {
 			if (pDog1 != null) {
         	unit = pDog1
@@ -5006,12 +5100,11 @@ private petNotifyHandler(command, unit, operand) {
 			if(command == "bathed") {state.dogBath1Notify = "${unit} was last bathed on " + dateDate + " at " + timeDate }
 			if(command == "walked") {state.dogWalk1Notify = "${unit} was last walked on " + dateDate + " at " + timeDate }
 			if(command == "medicated") {state.dogMed1Notify = "${unit} was last medicated on " + dateDate + " at " + timeDate }
-        if(pSMS || pPush) { sendtxt(message, result) }
+        if(pSMS) { sendtxt (message, result) }
 		if(pPush) { sendPush result }
         return result
-    }
-
-}
+            }
+		}
 /***********************************************************************************************************************
     Notifications and Reminders Variables Reset Handlers
 ***********************************************************************************************************************/
@@ -5167,12 +5260,16 @@ private void sendtxt(message, result) {
         if (push) { 
                 sendPush message
         }
+        if (pPush) {
+        		sendPush message
+        }
         if (sms) {
             processSms(sms, message)
         }
-        if (psms) {
-        	processSms(psms, result)
+        if (pSMS) {
+        	processpsms(psms, result)
             }
+        log.info "SMS sent to '${psms}' from line 5267"
     }
 }
 private void processSms(number, message) {
@@ -5181,6 +5278,15 @@ private void processSms(number, message) {
         for (phone in phones) {
             sendSms(phone, message)
         }
+    }
+}
+private void processpsms(psms, result) {
+    if (pSMS) {
+        def phones = psms.split("\\,")
+        for (phone in phones) {
+            sendSms(phone, result)
+        }
+        log.info "SMS sent to '${psms}' from line 5284"
     }
 }
 /************************************************************************************************************
@@ -6050,8 +6156,17 @@ def mPetNotesS() {def result = ""
 	if (pDog || pCat || pSMS || pPush) {
     	result = "complete"}
         result}
-def mPetNotesD() {def text = "Tap here to configure Pet Notes"
+def mPetNotesD() {def text = "Tap here to configure Pets Notes"
 	if (pDog || pCat || pSMS || pPush) {
+    	text = "Configured" }
+        else text = "Tap to Configure"
+        text}
+def mKidNotesS() {def result = ""
+	if (kid1 || kid2 || kid3 || kid4) {
+    	result = "complete"}
+        result}
+def mKidNotesD() {def text = "Tap here to configure Kids Notes"
+	if (kid1 || kid2 || kid3 || kid4) {
     	text = "Configured" }
         else text = "Tap to Configure"
         text}

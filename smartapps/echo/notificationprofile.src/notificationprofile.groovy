@@ -1,7 +1,9 @@
 /* 
  * Notification - EchoSistant Add-on 
  *
- *		5/04/2017		Version:4.0 R.0.3.6			Added temperature, CO and CO2 triggers
+ *		5/13/2017		Version:4.0 R.0.3.8b			Added more Ad-Hoc Report Variables
+ *		5/11/2017		Version:4.0 R.0.3.8a			Added acceleration triggers
+ *		5/04/2017		Version:4.0 R.0.3.7			Added temperature, CO, CO2 and humidity triggers
  *		5/02/2017		Version:4.0 R.0.3.5			Added Pet Note variables to Ad-hoc reports
  *		5/01/2017		Version:4.0 R.0.3.4			Added WebCoRE integration
  *		4/27/2017		Version:4.0 R.0.3.3			Retrigger bug fixe
@@ -32,7 +34,7 @@ definition(
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
 /**********************************************************************************************************************************************/
 private release() {
-	def text = "R.0.3.6"
+	def text = "R.0.3.8a"
 }
 
 preferences {
@@ -221,22 +223,26 @@ page name: "variables"
                                 "&catmed = 		${getVar("catmed")}\n"+
                                 "&catwalk = 	${getVar("catwalk")}\n"+
                                 "&catbath = 	${getVar("catbath")}\n"+
+                                "&catbrush = 	${getVar("catbrush")}\n"+
                                 "&catshot1 = 	${getVar("catshot1")}\n"+
                                 "&catfed1 = 	${getVar("catfed1")}\n"+
                                 "&catmed1 = 	${getVar("catmed1")}\n"+
                                 "&catwalk1 = 	${getVar("catwalk1")}\n"+
                                 "&catbath1 = 	${getVar("catbath1")}\n"+
+                                "&catbrush1 = 	${getVar("catbrush1")}\n"+
                                 "\nPet Notes - Dogs \n"+
                                 "&dogshot = 	${getVar("dogshot")}\n"+
                                 "&dogfed = 		${getVar("dogfed")}\n"+
                                 "&dogmed = 		${getVar("dogmed")}\n"+
                                 "&dogwalk = 	${getVar("dogwalk")}\n"+
                                 "&dogbath = 	${getVar("dogbath")}\n"+
+                                "&dogbrush = 	${getVar("dogbrush")}\n"+
                                 "&dogshot1 = 	${getVar("dogshot1")}\n"+
                                 "&dogfed1 = 	${getVar("dogfed1")}\n"+
                                 "&dogmed1 = 	${getVar("dogmed1")}\n"+
                                 "&dogwalk1 = 	${getVar("dogwalk1")}\n"+
                                 "&dogbath1 = 	${getVar("dogbath1")}\n"+
+                                "&dogbrush1 = 	${getVar("dogbrush1")}\n"+
                                 "\n"+
                                 "(**) MUST select device(s) in the PROFILE \n"+
                                 "(**) MUST select device(s) in the MAIN App"
@@ -320,6 +326,8 @@ page name: "triggers"
             section ("Sensor Status", hideWhenEmpty: true) {
                 input "myContact", "capability.contactSensor", title: "Choose Doors and Windows..", required: false, multiple: true, submitOnChange: true
                     if (myContact && actionType != "Ad-Hoc Report") input "myContactS", "enum", title: "Notify when state changes to...", options: ["open", "closed", "both"], required: false
+                input "myAcceleration", "capability.accelerationSensor", title: "Choose Acceleration Sensors..", required: false, multiple: true, submitOnChange: true
+                    if (myAcceleration && actionType != "Ad-Hoc Report") input "myAccelerationS", "enum", title: "Notify when state changes to...", options: ["active", "inactive", "both"], required: false                   
                 input "myMotion", "capability.motionSensor", title: "Choose Motion Sensors..", required: false, multiple: true, submitOnChange: true
                     if (myMotion && actionType != "Ad-Hoc Report") input "myMotionS", "enum", title: "Notify when state changes to...", options: ["active", "inactive", "both"], required: false
                 input "myPresence", "capability.presenceSensor", title: "Choose Presence Sensors...", required: false, multiple: true, submitOnChange: true
@@ -330,12 +338,19 @@ page name: "triggers"
                     if (myWater && actionType != "Ad-Hoc Report") input "myWaterS", "enum", title: "Notify when state changes to...", options: ["wet", "dry", "both"], required: false		
                 input "myTemperature", "capability.temperatureMeasurement", title: "Choose Temperature Sensors...", required: false, multiple: true, submitOnChange: true
 					if (myTemperature && actionType != "Ad-Hoc Report") input "myTemperatureS", "enum", title: "Notify when temperature is...", options: ["above", "below"], required: false, submitOnChange: true
-                        if (myTemperatureS) input "temperature", "number", title: "Temperature...", required: false, description: "degrees", submitOnChange: true
+                        if (myTemperatureS) input "temperature", "number", title: "Temperature...", required: true, description: "degrees", submitOnChange: true
                         if (temperature) input "temperatureStop", "number", title: "...but not ${myTemperatureS} this temperature", required: false, description: "degrees"
-                input "myCO2", "capability.carbonDioxideMeasurement", title: "Choose CO2 (Carbon Dioxide) Sensors...", required: false, multiple: true, submitOnChange: true
-                    if (myCO2 && actionType != "Ad-Hoc Report") input "myCO2S", "number", title: "Notify when level exeeds...", description: "number", required: true	            
-                input "myCO", "capability.carbonMonoxideDetector", title: "Choose CO (Carbon Monoxide) Sensors...", required: false, multiple: true, submitOnChange: true
+                input "myCO2", "capability.carbonDioxideMeasurement", title: "Choose CO2 (Carbon Dioxide) Sensor...", required: false, submitOnChange: true
+                    if (myCO2 && actionType != "Ad-Hoc Report") input "myCO2S", "enum", title: "Notify when CO2 is...", options: ["above", "below"], required: false, submitOnChange: true            
+                    if (myCO2S) input "CO2", "number", title: "Carbon Dioxide Level...", required: true, description: "number", submitOnChange: true              
+                input "myCO", "capability.carbonMonoxideDetector", title: "Choose CO (Carbon Monoxide) Sensor...", required: false, submitOnChange: true
                     if (myCO && actionType != "Ad-Hoc Report") input "myCOS", "enum", title: "Notify when ...", options: ["detected", "tested", "both"], required: false	            
+                input "myHumidity", "capability.relativeHumidityMeasurement", title: "Choose Relative Humidity Sensor...", required: false, submitOnChange: true
+                    if (myHumidity && actionType != "Ad-Hoc Report") input "myHumidityS", "enum", title: "Notify when Relative Humidity is...", options: ["above", "below"], required: false, submitOnChange: true            
+                    if (myHumidityS) input "humidity", "number", title: "Relative Humidity...", required: true, description: "percent", submitOnChange: true            
+                input "mySound", "capability.soundPressureLevel", title: "Choose Noise Sensor...", required: false, submitOnChange: true
+                    if (mySound && actionType != "Ad-Hoc Report") input "mySoundS", "enum", title: "Notify when Noise is...", options: ["above", "below"], required: false, submitOnChange: true            
+                    if (mySoundS) input "noise", "number", title: "Noise Level...", required: true, description: "number", submitOnChange: true              
             }
             if(actionType != "Default" && actionType != "Ad-Hoc Report"){
                 section ("Weather Events") {
@@ -481,6 +496,18 @@ def initialize() {
     state.cycleOnA = false
     state.cycleOnB = false
     state.savedOffset = false
+    state.cycleTh = false
+    state.cycleTl = false
+   
+   state.cycleSh = false
+    state.cycleSl = false    
+    
+    state.cycleHh = false
+    state.cycleHl = false    
+    
+    state.cycleCO2h = false
+    state.cycleCO2l = false    
+    
     state.lastWeather
 	state.message = null
     state.occurrences = 0
@@ -534,7 +561,7 @@ def initialize() {
             	if (myLocksSCode){
             									subscribe(myLocks, "lock", unlockedWithCodeHandler)
                 }
-                else 							ubscribe(myLocks, "lock.unlocked", alertsHandler)                                                                     
+                else 							subscribe(myLocks, "lock.unlocked", alertsHandler)                                                                     
             }
             if (myLocksS == "both" || myLocksS == null)				subscribe(myLocks, "lock", alertsHandler)
         }
@@ -572,12 +599,22 @@ def initialize() {
             if (myWaterS == "dry")				subscribe(myWater, "water.dry", alertsHandler)
             if (myWaterS == "both" || myWaterS == null)				subscribe(myWater, "water", alertsHandler)
       	}
-			if (myTemperature) {    
-            if (myWaterS == "wet")				subscribe(myWater, "water.wet", alertsHandler)
-            if (myWaterS == "dry")				subscribe(myWater, "water.dry", alertsHandler)
-            if (myWaterS == "both" || myWaterS == null)				subscribe(myWater, "water", alertsHandler)
-      	}
-	}
+			if (myTemperature) 					subscribe(myTemperature, "temperature", tempHandler)    
+            if (myCO2)							subscribe(myCO2, "carbonDioxide", CO2Handler)
+            if (myCO){
+            	if (myCOS== "detected")            	subscribe(myCO, "carbonMonoxide.detected", alertsHandler)
+				if (myCOS== "tested")				subscribe(myCO, "carbonMonoxide.tested", alertsHandler)
+    			if (myCOS== "both")					subscribe(myCO, "carbonMonoxide", alertsHandler)
+            }
+            if (myHumidity)						subscribe(myHumidity, "humidity", humidityHandler)
+            if (mySound)						subscribe(mySound, "soundPressureLevel", soundHandler)
+            
+            if (myAcceleration){
+            	if (myAccelerationS == "active")	subscribe(myAcceleration, "acceleration.active", alertsHandler)
+                if (myAccelerationS == "inactive")	subscribe(myAcceleration, "acceleration.inactive", alertsHandler)
+                if (myAccelerationS == "both")		subscribe(myAcceleration, "acceleration", alertsHandler)
+    		}
+    }
 }
 /******************************************************************************************************
    PARENT STATUS CHECKS
@@ -594,10 +631,10 @@ def runProfile(profile) {
 	if(message && actionType == "Ad-Hoc Report"){
     	// date, time and profile variables
         result = message ? "$message".replace("&date", "${getVar("date")}").replace("&time", "${getVar("time")}").replace("&profile", "${getVar("profile")}") : null
-        result = result ? "$result".replace("&catfed", "${getVar("catfed")}").replace("&catshot", "${getVar("catshot")}").replace("&catmed", "${getVar("catmed")}").replace("&catbath", "${getVar("catbath")}").replace("&catwalk", "${getVar("catwalk")}").replace("&catbrush", "${getVar("catbrush")}") : null
-        result = result ? "$result".replace("&dogshot", "${getVar("dogshot")}").replace("&dogfed", "${getVar("dogfed")}").replace("&dogwalk", "${getVar("dogwalk")}").replace("&dogbath", "${getVar("dogbath")}").replace("&dogmed", "${getVar("dogmed")}").replace("&dogbrush", "${getVar("dogbrush")}") : null
-        result = result ? "$result".replace("&catfed1", "${getVar("catfed1")}").replace("&catshot1", "${getVar("catshot1")}").replace("&catmed1", "${getVar("catmed1")}").replace("&catbath1", "${getVar("catbath1")}").replace("&catwalk1", "${getVar("catwalk1")}").replace("&catbrush1", "${getVar("catbrush1")}") : null
-        result = result ? "$result".replace("&dogshot1", "${getVar("dogshot1")}").replace("&dogfed1", "${getVar("dogfed1")}").replace("&dogwalk1", "${getVar("dogwalk1")}").replace("&dogbath1", "${getVar("dogbath1")}").replace("&dogmed1", "${getVar("dogmed1")}").replace("&dogbrush1", "${getVar("dogbrush1")}") : null
+        result = result ? "$result".replace("&catfed", "${getVar("catfed")}").replace("&catbrush", "${getVar("catbrush")}").replace("&catshot", "${getVar("catshot")}").replace("&catmed", "${getVar("catmed")}").replace("&catbath", "${getVar("catbath")}").replace("&catwalk", "${getVar("catwalk")}").replace("&catbrush", "${getVar("catbrush")}") : null
+        result = result ? "$result".replace("&dogshot", "${getVar("dogshot")}").replace("&dogbrush", "${getVar("dogbrush")}").replace("&dogfed", "${getVar("dogfed")}").replace("&dogwalk", "${getVar("dogwalk")}").replace("&dogbath", "${getVar("dogbath")}").replace("&dogmed", "${getVar("dogmed")}").replace("&dogbrush", "${getVar("dogbrush")}") : null
+        result = result ? "$result".replace("&catfed1", "${getVar("catfed1")}").replace("&catbrush1", "${getVar("catbrush1")}").replace("&catshot1", "${getVar("catshot1")}").replace("&catmed1", "${getVar("catmed1")}").replace("&catbath1", "${getVar("catbath1")}").replace("&catwalk1", "${getVar("catwalk1")}").replace("&catbrush1", "${getVar("catbrush1")}") : null
+        result = result ? "$result".replace("&dogshot1", "${getVar("dogshot1")}").replace("&dogbrush1", "${getVar("dogbrush1")}").replace("&dogfed1", "${getVar("dogfed1")}").replace("&dogwalk1", "${getVar("dogwalk1")}").replace("&dogbath1", "${getVar("dogbath1")}").replace("&dogmed1", "${getVar("dogmed1")}").replace("&dogbrush1", "${getVar("dogbrush1")}") : null
         result = result ? "$result".replace("&litterclean", "${getVar("litterclean")}").replace("&litterscoop", "${getVar("litterscoop")}") : null
         // power variables
         result = result ? "$result".replace("&power", "${getVar("power")}").replace("&lights", "${getVar("lights")}") : null
@@ -761,10 +798,6 @@ private getVar(var) {
     	result = parent.state.litterboxScoop
         return result
     }    
-	if (var == "profile"){
-        result = app.label
-    	return result 	
-    }
     if (var == "mode"){
         result = location?.currentMode
     	return result 	    
@@ -1076,6 +1109,164 @@ def unlockedWithCodeHandler(evt) {
 				} 
             }
 }
+/***********************************************************************************************************************
+    TEMPERATURE HANDLER
+***********************************************************************************************************************/
+def tempHandler(evt) {
+        def data = [:]
+        def eVal = evt.value
+        def eName = evt.name
+        def eDev = evt.device
+        def eDisplayN = evt.displayName
+		log.info "event received: event = $event, eVal = $eVal, eName = $eName, eDev = $eDev, eDisplayN = $eDisplayN"
+        def tempAVG = myTemperature ? getAverage(myTemperature, "temperature") : "undefined device"          
+        def cycleThigh = state.cycleTh
+        def cycleTlow = state.cycleTl        
+        def currentTemp = tempAVG
+        int temperatureStopVal = temperatureStop == null ? 0 : temperatureStop as int
+        log.warn "currentTemp = $currentTemp"
+        if(myTemperatureS == "above"){
+        	temperatureStopVal = temperatureStopVal == 0 ? 999 :  temperatureStopVal as int
+            if (currentTemp >= temperature && currentTemp <= temperatureStopVal) {
+                if (cycleThigh == false){
+                    state.cycleTh = true
+                    log.debug "sending notification (above): as temperature $currentTemp is above threshold $temperature" 
+                        data = [value:"above ${temperature} degrees", name:"temperature", device:"temperature sensor"]
+                        alertsHandler(data)
+                }
+            }
+            else state.cycleTh = false
+        }
+        if(myTemperatureS == "below"){
+            if (currentTemp <= temperature && currentTemp >= temperatureStopVal) {
+                if (cycleTlow == false){
+                    state.cycleTl = true
+					log.debug "sending notification (below): as temperature $currentTemp is below threshold $temperature"
+                        data = [value:"below ${temperature} degrees", name:"temperature", device:"temperature sensor"]
+                        alertsHandler(data)
+                }
+            }
+            else state.cycleTl = false
+        }
+	}
+/******************************************************************************
+	 FEEDBACK SUPPORT - GET AVERAGE										
+******************************************************************************/
+def getAverage(device,type){
+	def total = 0
+		if(debug) log.debug "calculating average temperature"  
+    device.each {total += it.latestValue(type)}
+    return Math.round(total/device?.size())
+}
+/***********************************************************************************************************************
+    HUMIDITY HANDLER
+***********************************************************************************************************************/
+def humidityHandler(evt){
+        def data = [:]
+        def eVal = evt.value
+        	eVal = eVal as int
+        def eName = evt.name
+        def eDev = evt.device
+        def eDisplayN = evt.displayName
+		log.info "event received: event = $event, eVal = $eVal, eName = $eName, eDev = $eDev, eDisplayN = $eDisplayN"
+        if(myHumidityS == "above"){
+            if (eVal >= humidity) {
+                if (state.cycleHh == false){
+                    state.cycleHh = true            
+                    log.debug "sending notification (above): as humidity $eVal is above threshold $humidity" 
+                        data = [value:"above ${humidity}", name:"humidity", device:"humidity sensor"]
+                        alertsHandler(data)
+            	}
+           }
+            else state.cycleHh = false
+        }
+        else {
+            if(myHumidityS == "below"){
+                if (eVal <= humidity) {
+                    if (state.cycleHl == false){
+                        state.cycleHl = true                
+                            log.debug "sending notification (below): as humidity $eVal is below threshold $humidity"
+                                //data = [value:"below temperature", name:"temperature", device:"temperature sensor"]
+                                data = [value:"below ${humidity}", name:"humidity", device:"humidity sensor"]
+                                alertsHandler(data)
+                    }
+                }
+          	else state.cycleHl = false
+            }
+    	}
+	}
+/***********************************************************************************************************************
+    SOUND HANDLER
+***********************************************************************************************************************/
+def soundHandler(evt){
+        def data = [:]
+        def eVal = evt.value
+        	eVal = eVal as int
+        def eName = evt.name
+        def eDev = evt.device
+        def eDisplayN = evt.displayName
+		log.info "event received: event = $event, eVal = $eVal, eName = $eName, eDev = $eDev, eDisplayN = $eDisplayN"
+        if(mySoundS == "above"){
+            if (eVal >= noise) {
+                if (state.cycleSh == false){
+                    state.cycleSh = true             
+                    log.debug "sending notification (above): as noise $eVal is above threshold $noise" 
+                        data = [value:"above ${noise}", name:"noise", device:"sound sensor"]
+                        alertsHandler(data)
+            	}
+        	}
+            else state.cycleSh = false
+        }
+        else {
+            if(mySoundS == "below"){
+                if (eVal <= noise) {
+                    if (state.cycleSl == false){
+                        state.cycleSl = true                
+                            log.debug "sending notification (below): as noise $eVal is below threshold $noise"
+                                data = [value:"below ${noise}", name:"noise", device:"sound sensor"]
+                                alertsHandler(data)
+                    }
+            	}
+                else state.cycleSl = false
+    		}
+        }
+	}
+/***********************************************************************************************************************
+    CO2 HANDLER
+***********************************************************************************************************************/
+def CO2Handler(evt){
+        def data = [:]
+        def eVal = evt.value
+        	eVal = eVal as int
+        def eName = evt.name
+        def eDev = evt.device
+        def eDisplayN = evt.displayName
+		log.info "event received: event = $event, eVal = $eVal, eName = $eName, eDev = $eDev, eDisplayN = $eDisplayN"
+        if(myCO2S == "above"){
+            if (eVal >= CO2) {
+                if (state.cycleCO2h == false){
+                    state.cycleCO2h = true              
+                    log.debug "sending notification (above): as CO2 $eVal is above threshold $CO2" 
+                        data = [value:"${eVal}", name:"CO2", device:"CO2 sensor"]
+                        alertsHandler(data)
+            	}
+        	}
+        	else state.cycleCO2h = false
+        }
+        else {
+            if(myCO2S == "below"){
+                if (eVal <= CO2) {
+                    if (state.cycleCO2l == false){
+                        state.cycleCO2l = true                 
+                            log.debug "sending notification (below): as CO2 $eVal is below threshold $CO2" 
+                                data = [value:"${eVal}", name:"CO2", device:"CO2 sensor"]
+                                alertsHandler(data)
+                    }
+            	}
+           	else state.cycleCO2l = false
+    		}
+        }
+	}
 /************************************************************************************************************
    EVENTS HANDLER
 ************************************************************************************************************/
@@ -2058,11 +2249,11 @@ def pSendComplete() {def text = "Tap here to configure settings"
     	else text = "Tap to Configure"
 		text}
 def triggersSettings() {def result = ""
-    if (myWeatherTriggers || myWeather || myWeatherAlert || myWater || mySmoke || myPresence || myMotion || myContact || mySwitch || myPower || myLocks || myTstat || myMode || myRoutine || frequency) {
+    if (myWeatherTriggers || myWeather || myTemperature || myCO2 || myCO ||  myAcceleration || myHumidity || mySound || myWeatherAlert || myWater || mySmoke || myPresence || myMotion || myContact || mySwitch || myPower || myLocks || myTstat || myMode || myRoutine || frequency) {
     	result = "complete"}
    		result}
 def triggersComplete() {def text = "Tap here to configure settings" 
-    if (myWeatherTriggers || myWeather || myWeatherAlert || myWater || mySmoke || myPresence || myMotion || myContact || mySwitch || myPower || myLocks || myTstat || myMode || myRoutine || frequency) {
+    if (triggersSettings() == "complete") {
         text = "Configured"
     }
     else text = "Tap to Configure"
@@ -2086,3 +2277,4 @@ def pTimeComplete() {def text = "Tap here to configure settings"
     	text = "Configured"}
     	else text = "Tap to Configure"
 		text}
+        
