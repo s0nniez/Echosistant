@@ -8,6 +8,8 @@
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  /*
+ *		5/16/2017		Version:4.0 R.0.3.5b	Added "Check" command for lights, windows, doors, locks, & batteries. As well has "House Status"
+ *		5/14/2017		Version:4.0 R.0.3.5a	Added Kid notes, more code optimization, Thermostat commands (on & off w/o device name)
  *		5/08/2017		Version:4.0 R.0.3.5		Toggle to disable presence devices (cell phones) from low battery query
  *		4/24/2017		Version:4.0 R.0.3.4		Added Pet Notes, code optimization
  *		4/05/2017		Version:4.0 R.0.3.3d	Minor UI changes & added "cut on/cut off" commands
@@ -103,9 +105,9 @@ page name: "mainParentPage"
 page name: "mIntent"
     def mIntent() {
     	dynamicPage (name: "mIntent", title: "", install: false, uninstall: false) {
-			section("Devices used by EchoSistant") {
-	            href "mDevices", title: "Select Devices", description: mDevicesD(), state: mDevicesS()
-			}               
+			section("Devices used by EchoSistant to be Controlled") {
+	            href "mDevices", title: "Select Devices to Control", description: mDevicesD(), state: mDevicesS()
+			}
             section ("System and Device Control Defaults") {
                 href "mDefaults", title: "Change Defaults", description: mDefaultsD(), state: mDefaultsS()
 			}
@@ -120,14 +122,13 @@ page name: "mIntent"
                 href "mFacebook", title: "Enter Credentials for Facebook Messenger Control", description: "", state: complete
             }
 		}
-	}
+	}    
     page name: "mDevices"    
         def mDevices(){
             dynamicPage(name: "mDevices", title: "",install: false, uninstall: false) {
-                section ("Select devices", hideWhenEmpty: true){ }
-                section ("Lights and Switches", hideWhenEmpty: true){  
-                    input "cSwitch", "capability.switch", title: "Allow These Switch(es)...", multiple: true, required: false, submitOnChange: true                   
-                    input "cFan", "capability.switchLevel", title: "Allow These Fan(s)...", multiple: true, required: false
+                section ("Lights, Switches, and Fans", hideWhenEmpty: true){  
+                    input "cSwitch", "capability.switch", title: "Allow these devices to be controlled...", multiple: true, required: false, submitOnChange: true                   
+                    input "cFan", "capability.switchLevel", title: "Allow these devices that control fans...", multiple: true, required: false
                 }     
                 section ("Garage Doors, Window Coverings and Locks", hideWhenEmpty: true){ 
                 	input "cLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
@@ -363,7 +364,6 @@ page name: "mIntent"
 	page name: "mProfiles"    
         def mProfiles() {
             dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
-				
                 section ("Messaging & Control (${getChildSize("Profiles")})") {
                 	href "mMainProfile", title: "Messaging & Control Profiles...", description: none
                     }
@@ -389,7 +389,7 @@ page name: "mIntent"
                 }                   
             }            
 		}
-        page name: "mMainProfile"    
+         page name: "mMainProfile"    
             def mMainProfile() {
                 dynamicPage (name: "mMainProfile", title: "", install: true, uninstall: false) {
                     if (childApps?.size()>0) {  
@@ -1132,7 +1132,7 @@ def feedbackHandler(fbResponseTxt) {
                         	}
                         }
                         if (cDoor != null) {
-                        if (deviceMatch == null && cDoor) {// changed by Jason 2/24/2017
+                        if (deviceMatch == null && fDoor) {// changed by Jason 2/24/2017
                             deviceMatch = cDoor.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
                              if(deviceMatch) outputTxt =  deviceMatch.latestValue("contact").contains(fOperand) ? "yes, the ${deviceMatch} is ${fOperand}" : "no, the ${deviceMatch} is not ${fOperand}"
                         	}
@@ -1564,6 +1564,7 @@ def feedbackHandler(fbResponseTxt) {
 					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
             }       
+
 //>>> Doors >>>>     // Mod'd by Jason to ask "which windows are open" on 2/27/2017         
 			if(fOperand.contains("door") && cDoor1 == null) {
             	outputTxt = "I'm sorry, it seems that you have not selected any door sensors for this query. Please check the configuration of your EchoSistant App"
@@ -1740,9 +1741,9 @@ def feedbackHandler(fbResponseTxt) {
                     	}
 //>>> Security >>>>
             //TO DO: restrict security based on command
-            if (fOperand == "smart home monitor" || fOperand == "alarm system" ){
+            if (fOperand == "smart home monitor" || fOperand == "alarm system" || fOperand == "alarm"){
                     def sSHM = location.currentState("alarmSystemStatus")?.value       
-                    sSHM = sSHM == "off" ? "disabled" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
+                    sSHM = sSHM == "off" ? "disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
                     outputTxt = "Your Smart Home Monitor Status is " +  sSHM
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]				
             }
@@ -1765,7 +1766,11 @@ def feedbackHandler(fbResponseTxt) {
    	   		if (fOperand.contains("chore")) {
 				outputTxt = kidsNotesFeedback() 
             	}
-        	}    
+        	}  
+//>>> Check Devices Feedback>>>>
+			if (fQuery == "check" || fQuery == "check on" || fCommand == "check" || fCommand == "check on") { 
+            	outputTxt = checkDevicesFeedback()
+                }
 //>>> HVAC Filters Reminders >>>>	
 			if (fCommand == "changed" && state.filterNotif !=null ) {
                 outputTxt = state.filterNotif
@@ -1789,6 +1794,208 @@ def feedbackHandler(fbResponseTxt) {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}
 }*/
+/************************************************************************************************************
+  CHECK ON DEVICES FEEDBACK HANDLER
+************************************************************************************************************/
+def checkDevicesFeedback() {    //LAMBDA
+    def fDevice = params.fDevice
+   	def fQuery = params.fQuery
+    def fOperand = params.fOperand 
+    def fCommand = params.fCommand 
+  	def String outputTxt = (String) null
+	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") 
+/// check the doors
+			if(fOperand.contains("door") && cDoor1 == null) {
+                	outputTxt = "There are no doors selected for this query"
+                    return outputTxt
+                    }
+                if(fOperand.contains("door") && cDoor1 != null) {  
+                    def devListDoor = []
+                    if (cDoor1.latestValue("contact").contains("open")) {
+                        cDoor1.each { deviceName ->
+                                    if (deviceName.latestValue("contact")=="open") {
+                                        String device  = (String) deviceName
+                                        devListDoor += device
+                                    }
+                        		}
+							}
+                    log.info "devListDoor = ${devListDoor}"                            
+                        if (devListDoor.size() > 0) {
+                            if (devListDoor.size() == 1) {
+                                outputTxt = "There is one door open "                           			
+                            	}
+                            else {
+                                outputTxt = "There are " + devListDoor.size() + " doors open. "
+                            	return outputTxt
+                                }
+                        }
+                        else {outputTxt = "There are no doors open"}
+                        return outputTxt
+                        }
+/// check the windows
+				if(fOperand.contains("window") && cWindow == null) {
+                	outputTxt = "There are no windows selected for this query"
+                    return outputTxt
+                    }
+                if(fOperand.contains("window") && cWindow != null) {  
+                    def devListWindow = []
+                    if (cWindow.latestValue("contact").contains("open")) {
+                        cWindow.each { deviceName ->
+                                    if (deviceName.latestValue("contact")=="open") {
+                                        String device  = (String) deviceName
+                                        devListWindow += device
+                                    }
+                        		}
+							}
+                        if (devListWindow.size() > 0) {
+                            if (devListWindow.size() == 1) {
+                                outputTxt = "There is one window open. "                           			
+                            	}
+                            else {
+                                outputTxt = "There are " + devListWindow.size() + " windows open. "
+                            	return outputTxt
+                                }
+                        }
+                        else {outputTxt = "There are no windows open,"}
+                        return outputTxt
+                        }
+/// check the lights
+				if(fOperand.contains("light") && cSwitch == null) {
+                	outputTxt = "There are no lights selected for this query"
+                    return outputTxt
+                    }
+                if(fOperand.contains("light") && cDoor1 != null) {  
+                    def devListLight = []
+                    if (cSwitch.latestValue("switch").contains("on")) {
+                        cSwitch.each { deviceName ->
+                                    if (deviceName.latestValue("switch")=="on") {
+                                        String device  = (String) deviceName
+                                        devListLight += device
+                                    }
+                        		}
+							}
+                        if (devListLight.size() > 0) {
+                            if (devListLight.size() == 1) {
+                                outputTxt = "There is one light on. "                           			
+                            	}
+                            else {
+                                outputTxt = "There are " + devListLight.size() + " lights on. "
+                            	return outputTxt
+                                }
+                        }
+                        else {outputTxt = "There are no lights on"}
+                        return outputTxt
+                        }
+/// check the locks
+				if(fOperand.contains("locks") && cLock == null) {
+                	outputTxt = "There are no locks selected for this query"
+                    return outputTxt
+                    }
+                if(fOperand.contains("locks") && cLock != null) {  
+                    def devListLock = []
+                    if (cLock.latestValue("lock").contains("unlocked")) {
+                        cLock.each { deviceName ->
+                                    if (deviceName.latestValue("lock")=="unlocked") {
+                                        String device  = (String) deviceName
+                                        devListLock += device
+                                    }
+                        		}
+							}
+                        if (devListLock.size() > 0) {
+                            if (devListLock.size() == 1) {
+                                outputTxt = "There is one lock open "                           			
+                            	}
+                            else {
+                                outputTxt = "There are " + devListLock.size() + " locks open. "
+                            	return outputTxt
+                                }
+                        }
+                        else {outputTxt = "There are no locks open"}
+                        return outputTxt
+                        }
+/// check the batteries
+            if(fOperand == "batteries" || fOperand == "battery levels" || fOperand == "battery" ) {
+            	log.info "Check the battery levels"
+                def cap = "bat"
+                def devList = getCapabilities(cap)
+					if(devList instanceof String){
+                	outputTxt = devList
+                    log.info "devListBatteries is ${devList}"
+                	log.error " devList = ${devList}"
+					return outputTxt
+                    }
+                	else {
+                            if (devList.listSize > 0) {
+                                if (devList.listSize == 1) {
+                                    outputTxt = "There is one device with low battery level , "                           			
+                                }
+                                else {
+                                    outputTxt = "There are " + devList.listSize + " devices with low battery levels , "
+                                }
+                            }
+                            else {outputTxt = "There are no devices with low battery levels"}
+                            return outputTxt
+                            }
+			            }
+/// check the house                        
+			if (fOperand == "home" || fOperand == "house" || fOperand == "my home" || fOperand == "my house") {
+            	log.info "this is the house status"
+            		def devListDoor = []
+                    if (cDoor1 != null) {
+                    if (cDoor1.latestValue("contact").contains("open")) {
+                        cDoor1.each { deviceName ->
+                                    if (deviceName.latestValue("contact")=="open") {
+                                        String device  = (String) deviceName
+                                        devListDoor += device
+                                    	}
+                                    }                
+                    			}
+                    		}
+                    def devListWindow = []
+                    if (cWindow != null) {
+                    if (cWindow.latestValue("contact").contains("open")) {
+                        cWindow.each { deviceName ->
+                                    if (deviceName.latestValue("contact")=="open") {
+                                        String device  = (String) deviceName
+                                        devListWindow += device
+                                    	}
+                        			}
+                    			}
+                    		}
+                    def devListLight = []
+                    if (cSwitch != null) {
+                    if (cSwitch.latestValue("switch").contains("on")) {
+                        cSwitch.each { deviceName ->
+                                    if (deviceName.latestValue("switch")=="on") {
+                                        String device  = (String) deviceName
+                                        devListLight += device
+                                    	}
+                                    }
+                        		}
+                    		}
+                    def devListLock = []
+                    if (cLock != null) {
+                    if (cLock.latestValue("lock").contains("unlocked")) {
+                        cLock.each { deviceName ->
+                                    if (deviceName.latestValue("lock")=="unlocked") {
+                                        String device  = (String) deviceName
+                                        devListLock += device
+                                    	}
+                                    }
+                        		}
+                            }    
+                if (devListDoor.size() > 0 || devListWindow.size() > 0 || devListLock.size() > 0 || devListLight.size > 0) {
+                	outputTxt = "Your homes status is, " + devListDoor.size() + " doors open, " + devListWindow.size() + " windows open, " + devListLight.size + " lights on, " + devListLock.size + " locks unlocked, "
+                    return outputTxt + " and your Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}"
+					}
+               else {
+                outputTxt = "The house status is all secure, " +
+                    " and your Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}"
+                    return outputTxt
+                    }
+                }    
+            }
+            
 /************************************************************************************************************
   KIDS NOTES FEEDBACK HANDLER
 ************************************************************************************************************/
@@ -2488,12 +2695,27 @@ def controlDevices() {
                                     data = [type: "cTstat", command: command, device: device, unit: ctUnit, num: ctNum, delay: delay]
                                     outputTxt = controlHandler(data)
                                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                                		}
+                                	}
                                 }
+                                if (ctUnit == "heat" || ctUnit == "heating" || ctUnit == "heater" || ctUnit == "AC" || ctUnit == "cooling" || unit =="heat" || unit =="AC" || unit =="cooling" || unit =="heating") {
+									if (command == "on") {
+                                    cTstat?."auto"()
+                                    outputTxt = " I am setting all selected thermostats to Auto Mode"
+            						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+									}
+                                }    
+                                if (ctUnit == "heat" || ctUnit == "heating" || ctUnit == "heater" || ctUnit == "AC" || ctUnit == "cooling" || unit =="heat" || unit =="AC" || unit =="cooling" || unit =="heating") {
+									if (command == "off") {
+                                    cTstat?."off"()
+                                    outputTxt = " I am setting all selected thermostats to Off"
+            						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+
+            						}
+								}
                             }
-                       }
-                    }
-             }
-    // >>>> LOCKS CONTROL <<<<
+                    	}
+	// >>>> LOCKS CONTROL <<<<
             else if (deviceType == "lock") {
                 if (settings.cLock?.size()>0) {   
                     def deviceMatch = cLock.find {l -> l.label?.toLowerCase() == ctDevice.toLowerCase()}             
@@ -2922,12 +3144,13 @@ def controlHandler(data) {
             return result
             }
         if (deviceCommand == "off") {
-        	deviceD?."off"()
+            deviceD?."off"()
             result = "Ok, turning off the " + deviceD
             return result
             }
         if (deviceCommand == "on") {
         	deviceD?."auto"()
+            log.info "Ok, turning the thermostat to auto mode"
             result = "Ok, turning the " + deviceD + " to auto mode"
             return result
             }    
@@ -4669,8 +4892,9 @@ private getUnitText (unit, num) {
     CONTROL SUPPORT - COMMANDS HANDLER
 ***********************************************************************************************************************/
 private getCommand(command, unit) {
-	def deviceType = " "
-	if (command && unit) {
+	def result
+    def deviceType = " "
+    if (command && unit) {
 	//case "General Commands":
     		deviceType = "general"
         if (unit == "undefined") {
@@ -4737,20 +4961,7 @@ private getCommand(command, unit) {
                     command = "colorloopOff"
                     deviceType = "color"
                 }
-           }
-	//case "Temperature Commands":
-    	if (command == "off") {
-        	if (unit =="heat" || unit =="AC" || unit =="cooling" || unit =="heating") {
-            command = "off"
-            deviceType = "temp"
-        	}
-        }
-        if (command == "on") {
-        	if (unit =="heat" || unit =="AC" || unit =="cooling" || unit =="heating") {
-            command = "on"
-            deviceType = "temp"
-        	}
-        }
+           }        
         if (command == "colder" || command =="not cold enough" || command =="too hot" || command == "too warm") {
             command = "decrease"
             deviceType = "temp"
@@ -4815,7 +5026,7 @@ private getCommand(command, unit) {
 			deviceType = "door"                  
 		}
     }
-    return ["deviceType":deviceType, "command":command ]                          
+    return ["deviceType":deviceType, "command":command, "result":result]                          
 }
 /************************************************************************************************************
 	CONTROL SUPPORT - CUSTOM CONTROL COMMANDS
