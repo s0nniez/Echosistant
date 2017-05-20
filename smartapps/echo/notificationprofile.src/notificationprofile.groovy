@@ -2276,5 +2276,5 @@ def pTimeComplete() {def text = "Tap here to configure settings"
     if (startingX || endingX) {
     	text = "Configured"}
     	else text = "Tap to Configure"
-		text}
+		text} 
         
