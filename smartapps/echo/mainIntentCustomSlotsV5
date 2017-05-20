@@ -98,6 +98,7 @@ bathed
 walked
 medicated
 
+
 LIST_OF_GROUPS
 
 activities
@@ -113,9 +114,10 @@ switches
 thermostats
 vents
 
-
 LIST_OF_OPERANDS
 
+chore
+chores
 active
 alarm
 alert
@@ -135,7 +137,6 @@ current conditions
 current forecast
 current temperature
 current weather
-door
 doors
 doors open
 dry
@@ -150,6 +151,7 @@ home
 home monitor
 hot outside
 hourly forcast
+house
 humid is outside
 humidity
 humidity outside
@@ -157,12 +159,15 @@ in
 inactive
 indoor temperature
 is
-light
 lights
+lock
+locks
 locked
 messages
 mode
 muted
+my home
+my house
 not here
 not home
 not present
@@ -180,7 +185,6 @@ rainfall
 raining
 report
 running
-security
 settings
 smart home monitor
 switches
@@ -227,14 +231,8 @@ window
 windows
 windy
 dog
-rusty
-calliope
-doug
-loki
-thor
 litter box
 litterbox
-
 
 LIST_OF_QUERIES
 
@@ -319,10 +317,5 @@ text
 timer
 warm white
 yellow
-rusty
-calliope
-doug
-loki
-thor
 litter box
 litterbox
