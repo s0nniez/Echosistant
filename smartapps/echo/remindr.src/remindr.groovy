@@ -1,6 +1,8 @@
 /* 
  * RemindR - An EchoSistant Smart App 
  *
+ *	5/24/2017		Version:1.0 R.0.0.2		ad-hoc triggering
+ *
  *
  *  Copyright 2017 Jason Headley & Bobby Dobrescu
  *
@@ -29,11 +31,9 @@ private def textVersion() {
 	def text = "1.0"
 }
 private release() {
-    def text = "R.0.0.1"
+    def text = "R.0.0.2"
 }
 /**********************************************************************************************************************************************/
-
-
 
 preferences {
 	page(name: "main")
@@ -97,4 +97,19 @@ def echoSistantHandler(evt) {
 def listEchoSistantProfiles() {
 log.warn "child requesting esProfiles"
 	return state.esProfiles = state.esProfiles ? state.esProfiles : []
+}
+
+/***********************************************************************************************************************
+    RUN ADHOC REPORT
+***********************************************************************************************************************/
+def runReport(profile) {
+def result
+           		childApps.each {child ->
+                        def ch = child.label
+                		if (ch == profile) { 
+                    		if (debug) log.debug "Found a profile, $profile"
+                            result = child.runProfile(ch)
+						}
+            	}
+                return result
 }

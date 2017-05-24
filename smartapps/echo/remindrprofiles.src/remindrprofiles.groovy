@@ -1,6 +1,8 @@
 /* 
  * RemindR Profiles- An EchoSistant Smart App 
  *
+ *	5/24/2017		Version:1.0 R.0.0.2		ad-hoc triggering
+ *
  *
  *  Copyright 2016 Jason Headley & Bobby Dobrescu
  *
@@ -26,7 +28,7 @@ definition(
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-RemindR@2x.png")
 /**********************************************************************************************************************************************/
 private release() {
-	def text = "R.0.0.1"
+	def text = "R.0.0.2"
 }
 
 preferences {
@@ -154,11 +156,13 @@ page name: "mainProfilePage"
                     if (sonos) {
                         input "sonosVolume", "number", title: "Temporarily change volume", description: "0-100%", required: false
                     	input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: false
+                        input "sonosDelayFirst", "decimal", title: "(Optional) Delay delivery of first message by...", description: "seconds", required: false
                         input "sonosDelay", "decimal", title: "(Optional) Delay delivery of second message by...", description: "seconds", required: false
                     }
                 input "speechSynth", "capability.speechSynthesis", title: "Play on this Speech Synthesis Device", required: false, multiple: true, submitOnChange: true
                         if (speechSynth) {
                             input "speechVolume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+                            input "delayFirst", "decimal", title: "(Optional) Delay delivery of first message by...", description: "seconds", required: false
                     }
                 input "tv", "capability.notification", title: "Display on this Notification Capable Device(s)", required: false, multiple: true, submitOnChange: true
                 href "SMS", title: "Send SMS & Push Messages...", description: pSendComplete(), state: pSendSettings()
@@ -501,6 +505,7 @@ def updated() {
 	state.NotificationRelease = "Notification: " + release()
     state.lastPlayed = null
     state.sound
+    state.speechSound
 	unschedule()
     unsubscribe()
     initialize()
@@ -666,10 +671,7 @@ def sendEvent(message) {
    RUNNING ADD-HOC REPORT
 ************************************************************************************************************/
 def runProfile(profile) {
-	
-    if(parent) log.info "running ad-hoc report $profile"
-	
-    def result 
+	def result 
 	if(message && actionType == "Ad-Hoc Report"){
     	// date, time and profile variables
         result = message ? "$message".replace("&date", "${getVar("date")}").replace("&time", "${getVar("time")}").replace("&profile", "${getVar("profile")}") : null
@@ -714,7 +716,7 @@ def runProfile(profile) {
 			return result
      	}
         else result = "Sorry you can only generate an ad-hoc report that has a custom message"
-		 if(parent) log.error "Unable to send this report: $result"
+		log.warn "sending Report to Main App: $result"
 	}
     
 }
@@ -1002,13 +1004,13 @@ def meterHandler(evt) {
             if (meterValue >= thresholdValue && meterValue <= thresholdStopValue ) {
                 if (cycleOnHigh == false){
                     state.cycleOnH = true
-                    if(parent) log.debug "Power meter $meterValue is above threshold $thresholdValue with threshold stop $thresholdStopValue"
+                    if(parent.debug) log.debug "Power meter $meterValue is above threshold $thresholdValue with threshold stop $thresholdStopValue"
                     if (delay) {
                         log.warn "scheduling delay ${delay}, ${60*delay}"
                         runIn(60*delay , bufferPendingH)
                     }
                     else {
-                         if(parent) log.debug "sending notification (above)" 
+                         if(parent.debug) log.debug "sending notification (above)" 
                         data = [value:"above threshold", name:"power", device:"power meter"]
                         alertsHandler(data)
                     }
@@ -1280,7 +1282,7 @@ def alertsHandler(evt) {
   	}
     else {
             if (actionType == "Triggered Report" && myAdHocReport) {
-                eTxt = runProfile(myAdHocReport)
+                eTxt = parent.runReport(myAdHocReport)
             }
             def eProfile = app.label
             def nRoutine = false
@@ -1398,11 +1400,18 @@ private takeAction(eTxt) {
         if (speechSynth) {
             def currVolLevel = speechSynth.latestValue("level")
             def currMute = speechSynth.latestValue("mute")
-                if(parent.debug) log.debug "vol switch = ${currVolSwitch}, vol level = ${currVolLevel}, currMute = ${currMute} "
-                sVolume = settings.speechVolume ?: 30 
+      		if(parent.debug) log.debug "vol switch = ${currVolSwitch}, vol level = ${currVolLevel}, currMute = ${currMute} "
+            sVolume = settings.speechVolume ?: 30         
+        	if(!delayFirst) {
                 speechSynth?.playTextAndResume(eTxt, sVolume)
                 state.lastPlayed = now()
                 if(parent.debug) log.info "Playing message on the speech synthesizer'${speechSynth}' at volume '${sVolume}'"
+        	}
+            else {
+            	state.speechSound = eTxt
+                state.speechVolume = sVolume
+            	runIn(delayFirst , delayedFirstMessage)
+            }
         }
         if (sonos) { 
             def currVolLevel = sonos.latestValue("level") //as Integer
@@ -1416,11 +1425,20 @@ private takeAction(eTxt) {
                 sVolume = (sVolume == 20 && currVolLevel == 0) ? sVolume : sVolume !=20 ? sVolume: currVolLevel
                 def sCommand = resumePlaying == true ? "playTrackAndResume" : "playTrackAndRestore"
                 if (!state.lastPlayed) {
-					if(parent.debug) log.info "playing first message"
-					sonos?."${sCommand}"(sTxt.uri, Math.max((sTxt.duration as Integer),2), sVolume)
-					state.lastPlayed = now()
-					state.sound.command = sCommand
-					state.sound.volume = sVolume
+                	if(!sonosDelayFirst){
+                        if(parent.debug) log.info "playing first message"
+                        sonos?."${sCommand}"(sTxt.uri, Math.max((sTxt.duration as Integer),2), sVolume)
+                        state.lastPlayed = now()
+                        state.sound.command = sCommand
+                        state.sound.volume = sVolume
+                	}
+                    else {
+                    	if(parent.debug) log.info "playing first message with delay $sonosDelayFirst"
+                        state.sound.command = sCommand
+                        state.sound.volume = sVolume
+                        state.lastPlayed = now()
+                        runIn(sonosDelayFirst , sonosFirstDelayedMessage)                
+                	}
                 }
                 else {
                 	def elapsed = now() - state.lastPlayed
@@ -1463,6 +1481,18 @@ def delayedMessage() {
 	def sTxt = state.sound
 	sonos?."${sTxt.command}"(sTxt.uri, Math.max((sTxt.duration as Integer),2), sTxt.volume)
 	if(parent.debug) log.info "delayed message is now playing"
+}
+def delayedFirstMessage() {
+	eTxt = state.speechSound
+    sVolume= state.speechVolume 
+	speechSynth?.playTextAndResume(eTxt, sVolume)
+	state.lastPlayed = now()
+	if(parent.debug) log.info "Playing first message delayed"
+}
+def sonosFirstDelayedMessage() {
+	def sTxt = state.sound
+	sonos?."${sTxt.command}"(sTxt.uri, Math.max((sTxt.duration as Integer),2), sTxt.volume)
+	if(parent.debug) log.info "Playing first message delayed"
 }
 /***********************************************************************************************************************
     RETRIGGER
