@@ -116,7 +116,7 @@ page name: "mIntent"
             }
             section ("Quick Notes") {
             	href "mPetNotes", title: "Configure the Pets Notes", description: mPetNotesD(), state: mPetNotesS()
-				href "mKidsNotes", title: "Configure the Kids Notes", description: mKidNotesD(), state: mKidNotesS()
+                href "mFamilyNotes", title: "Configure the Family Notes", description: mKidNotesD(), state: mKidNotesS()
                 }    
             section ("FaceBook Messenger Control") {
                 href "mFacebook", title: "Enter Credentials for Facebook Messenger Control", description: "", state: complete
@@ -222,6 +222,64 @@ page name: "mIntent"
          				}
 					}                        
 				}
+        page name: "mFamilyNotes"
+        	def mFamilyNotes(){
+            	dynamicPage(name: "mFamilyNotes", title: "", install: false, uninstall: false) {
+				section ("") {
+                href "mKidsNotes", title: "Configure the Kids Chores", description: mKidNotesD(), state: mKidNotesS()
+                href "mFamNotes", title: "Configure the Family Notes", description: mKidNotesD(), state: mKidNotesS()
+                }
+            }
+         }   
+         page name: "mFamNotes"
+        	def mFamNotes(){
+            	dynamicPage(name: "mFamNotes", title: "", install: false, uninstall: false) {
+                	section ("Family Members") {
+                    	input "famNotesAct", "bool", title: "Activate your Family Notes", required: false, default: false, submitOnChange: true
+                        if (famNotesAct) {
+                    input "pPerson1", "text", title: "Family Member #1...", required: false, default: null
+                    input "pPerson2", "text", title: "Family Member #2...", required: false, default: null
+                    input "pPerson3", "text", title: "Family Member #3...", required: false, default: null
+                    input "pPerson4", "text", title: "Family Member #4...", required: false, default: null
+                    input "pPerson5", "text", title: "Family Member #5...", required: false, default: null
+                    input "pPerson6", "text", title: "Family Member #6...", required: false, default: null
+                    input "pPerson7", "text", title: "Family Member #7...", required: false, default: null
+                    input "pPerson8", "text", title: "Family Member #8...", required: false, default: null
+                    input "pFMsms", "bool", title: "Do you want to send an SMS when notes are made?", required: false, defaultValue: false, submitOnChange: true
+                       	if (pFMsms) {
+            				input "pFMsendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
+                			if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+           						input "pFMsendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
+                			if (psendText){      
+                    			paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                    			input name: "pFMsms", title: "Send text notification to (optional):", type: "phone", required: false
+                					}
+                                }    
+                                input "pFMPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
+                 				}
+            				}
+                            section ("Family Note Variables Reset") {
+                            	href "mFamNotesReset", title: "Tap here to reset all Family Notes Variables to Blank"
+                                }
+                			}
+                       }
+        page name: "mFamNotesReset" 
+        	def mFamNotesReset(){
+            	dynamicPage(name: "mFamNotesReset", title: "", install: false, uninstall: false) {
+                	section ("") {
+                    	paragraph "Are you sure that you want to reset all of the Family Note Variables?"
+                        href "mFamReset", title: "Tap here if you are sure"
+                        }
+                    }
+               }
+        page name: "mFamReset"
+        	def mFamReset() {
+            	dynamicPage(name: "mFamReset", title: "",  nextPage: "mFamilyNotes", install: false, uninstall: false) {
+                	section ("") {
+                    	famNotesResetHandler()
+                        }
+                    }
+                }    
 		page name: "mKidsNotes"
         	def mKidsNotes(){
             	dynamicPage(name: "mKidsNotes", title: "", install: false, uninstall: false) {
@@ -366,6 +424,8 @@ page name: "mIntent"
             dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
                 section ("Messaging & Control (${getChildSize("Profiles")})") {
                 	href "mMainProfile", title: "Messaging & Control Profiles...", description: none
+                    
+                	href "mMainTestProfile", title: "Messaging & Control Test Profiles...", description: none
                     }
 				if (notifyOn) {
         			section ("Notifications & Reporting (${getChildSize("NotificationProfile")})") {
@@ -389,6 +449,16 @@ page name: "mIntent"
                 }                   
             }            
 		}
+        page name: "mMainTestProfile"
+        	def mMainTestProfile() {
+            	dynamicPage ( name: "mMainTestProfile", title: "", install: true, uninstall: false) {
+                    if (childApps?.size()>0) {  
+                        section("Messaging & Control Test Profile",  uninstall: false){
+                            app(name: "Test Profiles", appName: "Test Profiles", namespace: "Echo", title: "Create a New Messaging & Control Test Profile", multiple: true,  uninstall: false)
+                        }
+                    }
+				}
+            }
          page name: "mMainProfile"    
             def mMainProfile() {
                 dynamicPage (name: "mMainProfile", title: "", install: true, uninstall: false) {
@@ -852,38 +922,150 @@ def initialize() {
             state.pinTry = null
         //Other Settings
             state.scheduledHandler
+            if (famNotesAct) {
+            if (pPerson1) {
+            if (state.perOneMornMed == null) {state.perOneMornMed = "I'm sorry, I have not been told when ${pPerson1}'s morning medicine was taken" }
+            if (state.perOneNoonMed == null) {state.perOneNoonMed = "I'm sorry, I have not been told when ${pPerson1}'s afternoon medicine was taken" }
+            if (state.perOneNightMed == null) {state.perOneNightMed = "I'm sorry, I have not been told when ${pPerson1}'s night time medicine was taken" }
+            if (state.perOneEveMed == null) {state.perOneEveMed = "I'm sorry, I have not been told when ${pPerson1}'s evening medicine was taken" }
+            	}
+            if (pPerson2) {    
+            if (state.perTwoMornMed == null) {state.perTwoMornMed = "I'm sorry, I have not been told when ${pPerson2}'s morning medicine was taken" }
+            if (state.perTwoNoonMed == null) {state.perTwoNoonMed = "I'm sorry, I have not been told when ${pPerson2}'s afternoon medicine was taken" }
+            if (state.perTwoNightMed == null) {state.perTwoNightMed = "I'm sorry, I have not been told when ${pPerson2}'s night time medicine was taken" }
+            if (state.perTwoEveMed == null) {state.perTwoEveMed = "I'm sorry, I have not been told when ${pPerson2}'s evening medicine was taken" }
+            	}
+            if (pPerson3) {    
+            if (state.perThreeMornMed == null) {state.perThreeMornMed = "I'm sorry, I have not been told when ${pPerson3}'s morning medicine was taken" }
+            if (state.perThreeNoonMed == null) {state.perThreeNoonMed = "I'm sorry, I have not been told when ${pPerson3}'s afternoon medicine was taken" }
+            if (state.perThreeNightMed == null) {state.perThreeNightMed = "I'm sorry, I have not been told when ${pPerson3}'s night time medicine was taken" }
+            if (state.perThreeEveMed == null) {state.perThreeEveMed = "I'm sorry, I have not been told when ${pPerson3}'s evening medicine was taken" }
+            	}
+            if (pPerson4) {    
+            if (state.perFourMornMed == null) {state.perFourMornMed = "I'm sorry, I have not been told when ${pPerson4}'s morning medicine was taken" }
+            if (state.perFourNoonMed == null) {state.perFourNoonMed = "I'm sorry, I have not been told when ${pPerson4}'s afternoon medicine was taken" }
+            if (state.perFourNightMed == null) {state.perFourNightMed = "I'm sorry, I have not been told when ${pPerson4}'s night time medicine was taken" }
+            if (state.perFourEveMed == null) {state.perFourEveMed = "I'm sorry, I have not been told when ${pPerson4}'s evening medicine was taken" }
+            	}
+            if (pPerson5) {
+            if (state.perFiveMornMed == null) {state.perFiveMornMed = "I'm sorry, I have not been told when ${pPerson5}'s morning medicine was taken" }
+            if (state.perFiveNoonMed == null) {state.perFiveNoonMed = "I'm sorry, I have not been told when ${pPerson5}'s afternoon medicine was taken" }
+            if (state.perFiveNightMed == null) {state.perFiveNightMed = "I'm sorry, I have not been told when ${pPerson5}'s night time medicine was taken" }
+            if (state.perFiveEveMed == null) {state.perFiveEveMed = "I'm sorry, I have not been told when ${pPerson5}'s evening medicine was taken" }
+            	}
+            if (pPerson6) {    
+            if (state.perSixMornMed == null) {state.perSixMornMed = "I'm sorry, I have not been told when ${pPerson6}'s morning medicine was taken" }
+            if (state.perSixNoonMed == null) {state.perSixNoonMed = "I'm sorry, I have not been told when ${pPerson6}'s afternoon medicine was taken" }
+            if (state.perSixNightMed == null) {state.perSixNightMed = "I'm sorry, I have not been told when ${pPerson6}'s night time medicine was taken" }
+            if (state.perSixEveMed == null) {state.perSixEveMed = "I'm sorry, I have not been told when ${pPerson6}'s evening medicine was taken" }
+            	}
+            if (pPerson7) {    
+            if (state.perSevMornMed == null) {state.perSevMornMed = "I'm sorry, I have not been told when ${pPerson7}'s morning medicine was taken" }
+            if (state.perSevNoonMed == null) {state.perSevNoonMed = "I'm sorry, I have not been told when ${pPerson7}'s afternoon medicine was taken" }
+            if (state.perSevNightMed == null) {state.perSevNightMed = "I'm sorry, I have not been told when ${pPerson7}'s night time medicine was taken" }
+            if (state.perSevEveMed == null) {state.perSevEveMed = "I'm sorry, I have not been told when ${pPerson7}'s evening medicine was taken" }
+            	}
+            if (pPerson8) {    
+            if (state.per8MornMed == null) {state.per8MornMed = "I'm sorry, I have not been told when ${pPerson8}'s morning medicine was taken" }
+            if (state.per8NoonMed == null) {state.per8NoonMed = "I'm sorry, I have not been told when ${pPerson8}'s afternoon medicine was taken" }
+            if (state.per8NightMed == null) {state.per8NightMed = "I'm sorry, I have not been told when ${pPerson8}'s night time medicine was taken" }
+            if (state.per8EveMed == null) {state.per8EveMed = "I'm sorry, I have not been told when ${pPerson8}'s evening medicine was taken" }
+            	}
+            }
         	if (petNoteAct) {
-            if (state.litterboxClean == null) {state.litterboxClean = "I'm sorry, I have not been told when the litter box was cleaned" }
+            if (state.litterboxClean == null) {state.litterboxClean = "I'm sorry, I have not been told when the litter box wascleaned" }
             if (state.litterboxScoop == null) {state.litterboxScoop = "I'm sorry, I have not been told when the litter box was scooped" }
-            if (state.catWalkNotify == null) {state.catWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
-            if (state.catShotNotify == null) {state.catShotNotify = "I'm sorry, I have not been told when the cat was shot" }
-            if (state.catBathNotify == null) {state.catBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
-            if (state.catFedNotify == null) {state.catFedNotify = "I'm sorry, I have not been told when the cat was fed" }
-			if (state.catMedNotify == null) {state.catMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
-            if (state.catBrushNotify == null) {state.catBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
-            if (state.dogWalkNotify == null) {state.dogWalkNotify = "I'm sorry, I have not been told when the dog was walked" }
-            if (state.dogBathNotify == null) {state.dogBathNotify = "I'm sorry, I have not been told when the dog was walked" }
-            if (state.dogShotNotify == null) {state.dogShotNotify = "I'm sorry, I have not been told when the dog was shot" }
-            if (state.dogFedNotify == null) {state.dogFedNotify = "I'm sorry, I have not been told when the dog was fed" }
-            if (state.dogMedNotify == null) {state.dogMedNotify = "I'm sorry, I have not been told when the dog was medicated" }
-            if (state.dogBrushNotify == null) {state.dogBrushNotify = "I'm sorry, I have not been told when the dog was brushed" }
-            if (state.catWalk1Notify == null) {state.catWalk1Notify = "I'm sorry, I have not been told when the cat was walked" }
-            if (state.catShot1Notify == null) {state.catShot1Notify = "I'm sorry, I have not been told when the cat was shot" }
-            if (state.catBath1Notify == null) {state.catBath1Notify = "I'm sorry, I have not been told when the cat was bathed" }
-            if (state.catFed1Notify == null) {state.catFed1Notify = "I'm sorry, I have not been told when the cat was fed" }
-			if (state.catMed1Notify == null) {state.catMed1Notify = "I'm sorry, I have not been told when the cat was medicated" }
-            if (state.catBrus1hNotify == null) {state.catBrush1Notify = "I'm sorry, I have not been told when the cat was brushed" }
-            if (state.dogWalk1Notify == null) {state.dogWalk1Notify = "I'm sorry, I have not been told when the dog was walked" }
-            if (state.dogShot1Notify == null) {state.dogShot1Notify = "I'm sorry, I have not been told when the dog was shot" }
-            if (state.dogBath1Notify == null) {state.dogBath1Notify = "I'm sorry, I have not been told when the dog was walked" }
-            if (state.dogFed1Notify == null) {state.dogFed1Notify = "I'm sorry, I have not been told when the dog was fed" }
-            if (state.dogMed1Notify == null) {state.dogMed1Notify = "I'm sorry, I have not been told when the dog was medicated" }
-            if (state.dogBrush1Notify == null) {state.dogBrush1Notify = "I'm sorry, I have not been told when the dog was brushed" }
+            if (pCat) {
+            	log.info "Initializing variables for '${pCat}'"
+            	if (state.catWalkNotify == null) {state.catWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
+            	if (state.catShotNotify == null) {state.catShotNotify = "I'm sorry, I have not been told when the cat was shot" }
+            	if (state.catBathNotify == null) {state.catBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
+            	if (state.catFedNotify == null) {state.catFedNotify = "I'm sorry, I have not been told when the cat was fed" }
+				if (state.catMedNotify == null) {state.catMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
+            	if (state.catBrushNotify == null) {state.catBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
+            	}
+            if (pDog) {
+            	log.info "Initializing variables for '${pDog}'"
+            	if (state.dogWalkNotify == null) {state.dogWalkNotify = "I'm sorry, I have not been told when the dog was walked" }
+            	if (state.dogBathNotify == null) {state.dogBathNotify = "I'm sorry, I have not been told when the dog was walked" }
+            	if (state.dogShotNotify == null) {state.dogShotNotify = "I'm sorry, I have not been told when the dog was shot" }
+            	if (state.dogFedNotify == null) {state.dogFedNotify = "I'm sorry, I have not been told when the dog was fed" }
+            	if (state.dogMedNotify == null) {state.dogMedNotify = "I'm sorry, I have not been told when the dog was medicated" }
+            	if (state.dogBrushNotify == null) {state.dogBrushNotify = "I'm sorry, I have not been told when the dog was brushed" }
+            	}
+            if (pCat1) {
+            	log.info "Initializing variables for '${pCat1}'"
+            	if (state.catWalk1Notify == null) {state.catWalk1Notify = "I'm sorry, I have not been told when the cat was walked" }
+            	if (state.catShot1Notify == null) {state.catShot1Notify = "I'm sorry, I have not been told when the cat was shot" }
+            	if (state.catBath1Notify == null) {state.catBath1Notify = "I'm sorry, I have not been told when the cat was bathed" }
+            	if (state.catFed1Notify == null) {state.catFed1Notify = "I'm sorry, I have not been told when the cat was fed" }
+				if (state.catMed1Notify == null) {state.catMed1Notify = "I'm sorry, I have not been told when the cat was medicated" }
+            	if (state.catBrus1hNotify == null) {state.catBrush1Notify = "I'm sorry, I have not been told when the cat was brushed" }
+            	}
+            if (pDog1) {
+            	log.info "Initializing variables for '${pDog1}'"
+                if (state.dogWalk1Notify == null) {state.dogWalk1Notify = "I'm sorry, I have not been told when the dog was walked" }
+            	if (state.dogShot1Notify == null) {state.dogShot1Notify = "I'm sorry, I have not been told when the dog was shot" }
+            	if (state.dogBath1Notify == null) {state.dogBath1Notify = "I'm sorry, I have not been told when the dog was walked" }
+            	if (state.dogFed1Notify == null) {state.dogFed1Notify = "I'm sorry, I have not been told when the dog was fed" }
+            	if (state.dogMed1Notify == null) {state.dogMed1Notify = "I'm sorry, I have not been told when the dog was medicated" }
+            	if (state.dogBrush1Notify == null) {state.dogBrush1Notify = "I'm sorry, I have not been told when the dog was brushed" }
+            	}
             }
             state.pendingConfirmation = false
             unschedule("startLoop")
             unschedule("continueLoop")
 }
+def famNotesResetHandler() {
+            if (pPerson1) {
+            if (state.perOneMornMed != null) {state.perOneMornMed = "I'm sorry, I have not been told when ${pPerson1}'s morning medicine was taken" }
+            if (state.perOneNoonMed != null) {state.perOneNoonMed = "I'm sorry, I have not been told when ${pPerson1}'s afternoon medicine was taken" }
+            if (state.perOneNightMed != null) {state.perOneNightMed = "I'm sorry, I have not been told when ${pPerson1}'s night time medicine was taken" }
+            if (state.perOneEveMed != null) {state.perOneEveMed = "I'm sorry, I have not been told when ${pPerson1}'s evening medicine was taken" }
+            	}
+            if (pPerson2) {    
+            if (state.perTwoMornMed != null) {state.perTwoMornMed = "I'm sorry, I have not been told when ${pPerson2}'s morning medicine was taken" }
+            if (state.perTwoNoonMed != null) {state.perTwoNoonMed = "I'm sorry, I have not been told when ${pPerson2}'s afternoon medicine was taken" }
+            if (state.perTwoNightMed != null) {state.perTwoNightMed = "I'm sorry, I have not been told when ${pPerson2}'s night time medicine was taken" }
+            if (state.perTwoEveMed != null) {state.perTwoEveMed = "I'm sorry, I have not been told when ${pPerson2}'s evening medicine was taken" }
+            	}
+            if (pPerson3) {    
+            if (state.perThreeMornMed != null) {state.perThreeMornMed = "I'm sorry, I have not been told when ${pPerson3}'s morning medicine was taken" }
+            if (state.perThreeNoonMed != null) {state.perThreeNoonMed = "I'm sorry, I have not been told when ${pPerson3}'s afternoon medicine was taken" }
+            if (state.perThreeNightMed != null) {state.perThreeNightMed = "I'm sorry, I have not been told when ${pPerson3}'s night time medicine was taken" }
+            if (state.perThreeEveMed != null) {state.perThreeEveMed = "I'm sorry, I have not been told when ${pPerson3}'s evening medicine was taken" }
+            	}
+            if (pPerson4) {    
+            if (state.perFourMornMed != null) {state.perFourMornMed = "I'm sorry, I have not been told when ${pPerson4}'s morning medicine was taken" }
+            if (state.perFourNoonMed != null) {state.perFourNoonMed = "I'm sorry, I have not been told when ${pPerson4}'s afternoon medicine was taken" }
+            if (state.perFourNightMed != null) {state.perFourNightMed = "I'm sorry, I have not been told when ${pPerson4}'s night time medicine was taken" }
+            if (state.perFourEveMed != null) {state.perFourEveMed = "I'm sorry, I have not been told when ${pPerson4}'s evening medicine was taken" }
+            	}
+            if (pPerson5) {
+            if (state.perFiveMornMed == null) {state.perFiveMornMed = "I'm sorry, I have not been told when ${pPerson5}'s morning medicine was taken" }
+            if (state.perFiveNoonMed == null) {state.perFiveNoonMed = "I'm sorry, I have not been told when ${pPerson5}'s afternoon medicine was taken" }
+            if (state.perFiveNightMed == null) {state.perFiveNightMed = "I'm sorry, I have not been told when ${pPerson5}'s night time medicine was taken" }
+            if (state.perFiveEveMed == null) {state.perFiveEveMed = "I'm sorry, I have not been told when ${pPerson5}'s evening medicine was taken" }
+            	}
+            if (pPerson6) {    
+            if (state.perSixMornMed == null) {state.perSixMornMed = "I'm sorry, I have not been told when ${pPerson6}'s morning medicine was taken" }
+            if (state.perSixNoonMed == null) {state.perSixNoonMed = "I'm sorry, I have not been told when ${pPerson6}'s afternoon medicine was taken" }
+            if (state.perSixNightMed == null) {state.perSixNightMed = "I'm sorry, I have not been told when ${pPerson6}'s night time medicine was taken" }
+            if (state.perSixEveMed == null) {state.perSixEveMed = "I'm sorry, I have not been told when ${pPerson6}'s evening medicine was taken" }
+            	}
+            if (pPerson7) {    
+            if (state.perSevMornMed == null) {state.perSevMornMed = "I'm sorry, I have not been told when ${pPerson7}'s morning medicine was taken" }
+            if (state.perSevNoonMed == null) {state.perSevNoonMed = "I'm sorry, I have not been told when ${pPerson7}'s afternoon medicine was taken" }
+            if (state.perSevNightMed == null) {state.perSevNightMed = "I'm sorry, I have not been told when ${pPerson7}'s night time medicine was taken" }
+            if (state.perSevEveMed == null) {state.perSevEveMed = "I'm sorry, I have not been told when ${pPerson7}'s evening medicine was taken" }
+            	}
+            if (pPerson8) {    
+            if (state.per8MornMed == null) {state.per8MornMed = "I'm sorry, I have not been told when ${pPerson8}'s morning medicine was taken" }
+            if (state.per8NoonMed == null) {state.per8NoonMed = "I'm sorry, I have not been told when ${pPerson8}'s afternoon medicine was taken" }
+            if (state.per8NightMed == null) {state.per8NightMed = "I'm sorry, I have not been told when ${pPerson8}'s night time medicine was taken" }
+            if (state.per8EveMed == null) {state.per8EveMed = "I'm sorry, I have not been told when ${pPerson8}'s evening medicine was taken" }
+            	}
+            }
 /************************************************************************************************************
 		CoRE Integration
 ************************************************************************************************************/
@@ -928,7 +1110,7 @@ def processBegin(){
     	state.pTryAgain = false
 
     if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^" 
-    if (debug) log.debug "Launch Data: (fbMessage) = '${responseTxt}', (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
+    if (debug) log.debug "Launch Data: (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
 
 //try {
     if (event == "noAction") {//event == "AMAZON.NoIntent" removed 1/20/17
@@ -1081,7 +1263,7 @@ def feedbackHandler(fbResponseTxt) {
     	if (fDevice != null) {
     	fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") }
     if (debug){
-    	log.debug 	"Feedback data: (fbMessage) = '${fbResponseTxt}', (fDevice) = '${fDevice}', "+
+    	log.debug 	"Feedback data: (fDevice) = '${fDevice}', "+
     				"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
 	def fProcess = true
     state.pTryAgain = false
@@ -1092,7 +1274,7 @@ def feedbackHandler(fbResponseTxt) {
 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
     }
 //try {
-    if (fbMessage != "null" && fDevice == "undefined" && fQuery == "undefined" && fOperand == "undefined" && fCommand == "undefined") {
+    if (fDevice == "undefined" && fQuery == "undefined" && fOperand == "undefined" && fCommand == "undefined") {
 		outputTxt = "Sorry, I didn't get that, "
         state.pTryAgain = true
         state.pContCmdsR = "clear"
@@ -1100,7 +1282,7 @@ def feedbackHandler(fbResponseTxt) {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}    
     else {
-  		if (fDevice != "undefined" && (fQuery == "get" ||  fQuery == "create" || fQuery == "generate" || fQuery == "give" || fbMessage.contains("what"))){
+  		if (fDevice != "undefined" && (fQuery == "get" ||  fQuery == "create" || fQuery == "generate" || fQuery == "give")){
             def pintentName
            		childApps.each {child ->
                         def ch = child.label
@@ -1767,6 +1949,12 @@ def feedbackHandler(fbResponseTxt) {
 				outputTxt = kidsNotesFeedback() 
             	}
         	}  
+//>>> Family Notes Feedback>>>>
+			if (fCommand.contains("morning") || fCommand.contains("afternoon") || fCommand.contains("evening") || fCommand.contains("night") || fCommand.contains("taken")) { 
+            if (fOperand.contains("medicine")) {
+            	outputTxt = familyNotesFeedback()
+                }
+            }    
 //>>> Check Devices Feedback>>>>
 			if (fQuery == "check" || fQuery == "check on" || fCommand == "check" || fCommand == "check on") { 
             	outputTxt = checkDevicesFeedback()
@@ -1995,7 +2183,91 @@ def checkDevicesFeedback() {    //LAMBDA
                     }
                 }    
             }
-            
+/************************************************************************************************************
+  FAMILY NOTES FEEDBACK HANDLER
+************************************************************************************************************/
+def familyNotesFeedback() {
+    //LAMBDA
+    def fDevice = params.fDevice
+	def fUnit = params.fUnit
+	def fQuery = params.fQuery
+    def fOperand = params.fOperand 
+    def fCommand = params.fCommand 
+    def fIntentName = params.intentName
+    //OTHER 
+    def String deviceType = (String) null
+    def String outputTxt = (String) null
+    def String result = (String) null
+	def currState
+    def stateDate
+    def stateTime
+    if (debug){
+        log.debug "familyNotesFeedback data: Query = '${fQuery}', Command = '${fCommand}', Person = '${fDevice}'"}
+	def pProcess = true
+    state.pTryAgain = false
+		if (fQuery == "when" || fQuery == "has" || fQuery == "did") {
+			if (fDevice.contains("${pPerson1}")) {
+                if (fCommand.contains("morning") && state.perOneMornMed != null) {outputTxt = state.perOneMornMed}
+                    if (fCommand.contains("evening") && state.perOneEveMed != null) {outputTxt = state.perOneNightMed}
+                    	if (fCommand.contains("night") && state.perOneNightMed != null) {outputTxt = state.perOneNightMed}
+                    		if (fCommand.contains("afternoon") && state.perOneNoonMed != null) {outputTxt = state.perOneNoonMed}
+                        return outputTxt
+                        }
+			else if (fDevice.contains("${pPerson2}")) {
+                if (fCommand.contains("morning") && state.perTwoMornMed != null) {outputTxt = state.perTwoMornMed}
+                    if (fCommand.contains("evening") && state.perTwoEveMed != null) {outputTxt = state.perTwoEveMed}
+                    	if (fCommand.contains("night") && state.perTwoNightMed != null) {outputTxt = state.perTwoNightMed}
+                    		if (fCommand.contains("afternoon") && state.perTwoNoonMed != null) {outputTxt = state.perTwoNoonMed}
+                        return outputTxt
+                        }
+			else if (fDevice.contains("${pPerson3}")) {
+                if (fCommand.contains("morning") && state.perThreeMornMed != null) {outputTxt = state.perThreeMornMed}
+                    if (fCommand.contains("evening") && state.perThreeEveMed != null) {outputTxt = state.perThreeEveMed}
+                    	if (fCommand.contains("night") && state.perThreeNightMed != null) {outputTxt = state.perThreeNightMed}
+                    		if (fCommand.contains("afternoon") && state.perThreeNoonMed != null) {outputTxt = state.perThreeNoonMed}
+                        return outputTxt
+                        }
+			else if (fDevice.contains("${pPerson4}")) {
+                if (fCommand.contains("morning") && state.perFourMornMed != null) {outputTxt = state.perFourMornMed}
+                    if (fCommand.contains("evening") && state.perFourEveMed != null) {outputTxt = state.perFourEveMed}
+                    	if (fCommand.contains("night") && state.perFourNightMed != null) {outputTxt = state.perFourNightMed}
+                    		if (fCommand.contains("afternoon") && state.perFourNoonMed != null) {outputTxt = state.perFourNoonMed}
+                        return outputTxt
+                        }
+			if (fDevice.contains("${pPerson5}")) {
+                if (fCommand.contains("morning") && state.perFiveMornMed != null) {outputTxt = state.perFiveMornMed}
+                    if (fCommand.contains("evening") && state.perFiveEveMed != null) {outputTxt = state.perFiveNightMed}
+                    	if (fCommand.contains("night") && state.perFiveNightMed != null) {outputTxt = state.perFiveNightMed}
+                    		if (fCommand.contains("afternoon") && state.perFiveNoonMed != null) {outputTxt = state.perFiveNoonMed}
+                        return outputTxt
+                        }
+			if (fDevice.contains("${pPerson6}")) {
+                if (fCommand.contains("morning") && state.perSixMornMed != null) {outputTxt = state.perSixMornMed}
+                    if (fCommand.contains("evening") && state.perSixEveMed != null) {outputTxt = state.perSixEveMed}
+                    	if (fCommand.contains("night") && state.perSixNightMed != null) {outputTxt = state.perSixNightMed}
+                    		if (fCommand.contains("afternoon") && state.perSixNoonMed != null) {outputTxt = state.perSixNoonMed}
+                        return outputTxt
+                        }
+			if (fDevice.contains("${pPerson7}")) {
+                if (fCommand.contains("morning") && state.perSevMornMed != null) {outputTxt = state.perSevMornMed}
+                    if (fCommand.contains("evening") && state.perSevEveMed != null) {outputTxt = state.perSevEveMed}
+                    	if (fCommand.contains("night") && state.perSevNightMed != null) {outputTxt = state.perSevNightMed}
+                    		if (fCommand.contains("afternoon") && state.perSevNoonMed != null) {outputTxt = state.perSevNoonMed}
+                        return outputTxt
+                        }
+			if (fDevice.contains("${pPerson8}")) {
+                if (fCommand.contains("morning") && state.per8MornMed != null) {outputTxt = state.per8MornMed}
+                    if (fCommand.contains("evening") && state.per8EveMed != null) {outputTxt = state.per8NightMed}
+                    	if (fCommand.contains("night") && state.per8NightMed != null) {outputTxt = state.per8NightMed}
+                    		if (fCommand.contains("afternoon") && state.per8NoonMed != null) {outputTxt = state.per8NoonMed}
+                        return outputTxt
+                        }
+                    }
+		if (fCommand.contains("morning") || fCommand.contains("night") || fCommand.contains("evening") || fCommand.contains("afternoon")) {
+        result = familyNotesHandler(fCommand, fDevice, fOperand)
+        return result
+        }
+    }            
 /************************************************************************************************************
   KIDS NOTES FEEDBACK HANDLER
 ************************************************************************************************************/
@@ -2289,6 +2561,7 @@ def petNotesFeedback() {
                     }
             	}
             }      
+
 /************************************************************************************************************
    DEVICE CONTROL - from Lambda via page c
 ************************************************************************************************************/
@@ -2334,7 +2607,7 @@ def controlDevices() {
     	if (ctCommand == "undefined" || ctNum == "undefined" || ctPIN == "undefined" || ctDevice == "undefined" || ctUnit == "undefined" || ctGroup == "undefined") {        
             if (ctUnit =="?" || ctUnit == "undefined") {
                 def String unit =  (String) "undefined"
-            }    
+            }  
             else {
                 if (ctNum>0){
                     def getTxt = getUnitText(ctUnit, ctNum)     
@@ -4181,6 +4454,7 @@ def remindersHandler() {
         return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
     } 
 }	*/
+
 /***********************************************************************************************************
 		SMART HOME MONITOR STATUS AND KEYPAD HANDLER
 ***********************************************************************************************************/
@@ -5239,6 +5513,82 @@ private scheduleHandler(unit) {
         	state.filterNotif = "The filters need to be changed on  ${schDate}"
     		return result
     }
+}
+/***********************************************************************************************************************
+    MISC. - FAMILY NOTIFICATIONS HANDLER - This sets the variable and repeats the variable
+***********************************************************************************************************************/
+private familyNotesHandler(command, device, operand) {
+    if (debug){
+    	log.debug "familyNotesHandler data: (fOperand) = ${operand}, (fCommand) = ${command}, (fDevice) = ${device}"}	
+	def result
+    def timeDate = new Date().format("hh:mm aa", location.timeZone)
+    def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
+    if (command.contains("morning") || command.contains("night") || command.contains("evening") || command.contains("afternoon")) {
+    	if (device.contains("${pPerson1}")) {
+    	result = "Ok, recording that ${pPerson1} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perOneMornMed = "${pPerson1} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perOneNoonMed = "${pPerson1} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perOneNightMed = "${pPerson1} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perOneEveMed = "${pPerson1} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson2}")) {
+    	result = "Ok, recording that ${pPerson2} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perTwoMornMed = "${pPerson2} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perTwoNoonMed = "${pPerson2} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perTwoNightMed = "${pPerson2} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perTwoEveMed = "${pPerson2} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson3}")) {
+    	result = "Ok, recording that ${pPerson3} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perThreeMornMed = "${pPerson3} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perThreeNoonMed = "${pPerson3} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perThreeNightMed = "${pPerson3} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perThreeEveMed = "${pPerson3} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson4}")) {
+    	result = "Ok, recording that ${pPerson4} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perFourMornMed = "${pPerson4} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perfourNoonMed = "${pPerson4} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perFourNightMed = "${pPerson4} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perFourEveMed = "${pPerson4} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson5}")) {
+    	result = "Ok, recording that ${pPerson5} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perFiveMornMed = "${pPerson5} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perFiveNoonMed = "${pPerson5} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perFiveNightMed = "${pPerson5} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perFiveveMed = "${pPerson5} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson6}")) {
+    	result = "Ok, recording that ${pPerson6} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perSixMornMed = "${pPerson6} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perSixNoonMed = "${pPerson6} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perSixNightMed = "${pPerson6} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perSixEveMed = "${pPerson6} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson7}")) {
+    	result = "Ok, recording that ${pPerson7} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.perSevMornMed = "${pPerson7} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.perSevNoonMed = "${pPerson7} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.perSevNightMed = "${pPerson7} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.perSevEveMed = "${pPerson7} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+    	if (device.contains("${pPerson8}")) {
+    	result = "Ok, recording that ${pPerson8} took medicine on " + dateDate + " at " + timeDate
+        if(command.contains("morning")) {state.per8MornMed = "${pPerson8} took the morning medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("afternoon")) {state.per8NoonMed = "${pPerson8} took the afternoon medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("night")) {state.per8NightMed = "${pPerson8} took night time medicine on " + dateDate + " at " + timeDate}
+        if(command.contains("evening")) {state.per8EveMed = "${pPerson8} took evening medicine on " + dateDate + " at " + timeDate}
+        return result
+        }
+	}
 }
 /***********************************************************************************************************************
     MISC. - PET NOTIFICATIONS HANDLER - This sets the variable and repeats the variable
