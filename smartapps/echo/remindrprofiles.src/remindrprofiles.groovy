@@ -1,7 +1,7 @@
 /* 
  * RemindR Profiles- An EchoSistant Smart App 
  *
- *	5/24/2017		Version:1.0 R.0.0.3		ad-hoc triggering
+ *	5/24/2017		Version:1.0 R.0.0.4		ad-hoc triggering
  *
  *
  *  Copyright 2016 Jason Headley & Bobby Dobrescu
@@ -28,7 +28,7 @@ definition(
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-RemindR@2x.png")
 /**********************************************************************************************************************************************/
 private release() {
-	def text = "R.0.0.3"
+	def text = "R.0.0.4"
 }
 
 preferences {
@@ -263,11 +263,14 @@ page name: "triggers"
                     input "tSchedule", "enum", title: "How Often?", submitOnChange: true, required: fale, 
             			options: ["One Time", "Recurring"]                    
                         if(tSchedule == "One Time"){
-                        	input "xFutureTime", "time", title: "At this time...", submitOnChange: true, required: true
-                            if(xFutureTime) input "xFutureDay", "number", title: "On this Day - maximum 31", range: "1..31", submitOnChange: true, required: false
-                            if(xFutureDay) input "xFutureMonth", "enum", title: "Of this Month", submitOnChange: true, required: false, multiple: false,
+                            def todayYear = new Date(now()).format("yyyy")
+    						def todayMonth = new Date(now()).format("MMMMM")
+    						def todayDay = new Date(now()).format("dd")
+                        	input "xFutureTime", "time", title: "At this time...",  required: true, submitOnChange: true
+                            if(xFutureTime) input "xFutureDay", "number", title: "On this Day - maximum 31", range: "1..31", submitOnChange: true, defaultValue: todayDay, required: false
+                            if(xFutureDay) input "xFutureMonth", "enum", title: "Of this Month", submitOnChange: true, required: false, multiple: false, defaultValue: "${todayMonth}",
                             options: ["1": "January", "2":"February", "3":"March", "4":"April", "5":"May", "6":"June", "7":"July", "8":"August", "9":"September", "10":"October", "11":"November", "12":"December"]
-                            if(xFutureMonth) input "xFutureYear", "number", title: "Of this Year", range: "2017..2020", submitOnChange: true, required: false
+                            if(xFutureMonth) input "xFutureYear", "number", title: "Of this Year", range: "2017..2020", submitOnChange: true, defaultValue: todayYear, required: false
                         }	
                     	if(tSchedule == "Recurring"){
                             input "frequency", "enum", title: "Recurring", submitOnChange: true, required: fale, 
@@ -539,7 +542,7 @@ def initialize() {
 	sunriseTimeHandler(location.currentValue("sunriseTime"))
     }
     if (frequency) cronHandler(frequency)
-    if (oneTime) oneTimeHandler()
+    if (xFutureTime) oneTimeHandler()
     if (myWeatherAlert) {
 		runEvery5Minutes(mGetWeatherAlerts)
 		state.weatherAlert
@@ -2306,7 +2309,7 @@ def pSendComplete() {def text = "Tap here to configure settings"
     	else text = "Tap to Configure"
 		text}
 def triggersSettings() {def result = ""
-    if (myWeatherTriggers || myWeather || myTemperature || myShades || myGarage || myCO2 || myCO ||  myAcceleration || myHumidity || mySound || myWeatherAlert || myWater || mySmoke || myPresence || myMotion || myContact || mySwitch || myPower || myLocks || myTstat || myMode || myRoutine || frequency || oneTime ) {
+    if (myWeatherTriggers || myWeather || myTemperature || myShades || myGarage || myCO2 || myCO ||  myAcceleration || myHumidity || mySound || myWeatherAlert || myWater || mySmoke || myPresence || myMotion || myContact || mySwitch || myPower || myLocks || myTstat || myMode || myRoutine || frequency || xFutureTime ) {
     	result = "complete"}
    		result}
 def triggersComplete() {def text = "Tap here to configure settings" 
