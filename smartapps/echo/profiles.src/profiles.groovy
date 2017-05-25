@@ -6,6 +6,7 @@
  
  ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
+ *		5/25/2017		Version:4.0 R.0.3.5		Keypad support, Virtual Person enhancement, Garage Door Support
  *		4/20/2017		Version:4.0 R.0.3.4 	WebCoRE integration
  *		4/20/2017		Version:4.0 R.0.3.2c	Added SHM state change when profile runs option
  *		4/10/2017		Version:4.0 R.0.3.2b	Added Virtual Person status change when profile runs option
@@ -39,7 +40,7 @@ definition(
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
 /**********************************************************************************************************************************************/
 private release() {
-	def text = "R.0.3.4"
+	def text = "R.0.3.5"
 }
 /**********************************************************************************************************************************************/
 preferences {
@@ -70,37 +71,45 @@ def mainProfilePage() {
                 href "pActions", title: "Select Location and Device Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
             }
 //        }
+        section("Keypads") {
+        	href "pKeypads", title: "Keypad Configuration and Actions Control Settings", description: pKeypadComplete(), state: pKeypadSettings()
+            }
        	section("Devices/Group Control Settings and Restrictions") {
 	    	href "pGroups", title: "Create Groups and Select Devices", description: pGroupComplete(), state: pGroupSettings()
 //			if (pGroupSettings() == "complete" || pSendSettings() == "complete" ){
             	href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()
 			}
 //        }
-        section("Keypads/Locks") {
-        	href "pKeypads", title: "Keypad and Locks Actions Control Settings"
-            }
-        section("Virtual Person Actions and Controls") {
-        	href "pPerson", title: "Activate Virtual Person and Actions"
-        }
+		}
 	}
-}
 page name: "pKeypads"
 	def pKeypads(){
     	dynamicPage(name: "pKeypads", title: "", uninstall: false){
-        section("Configure the Virtual Person Device") {
-        	input "kpVirPer", "bool", title: "Virtual Person Device Arrival/Departure manual control", refreshAfterSelection: true
+			def deviceId = "${app.label}" 
+			def d = getChildDevice("${app.label}")
+            section("Configure the Virtual Person Device") {
+        	input "kpVirPer", "bool", title: "Virtual Person Device Configuration", refreshAfterSelection: true
             if (kpVirPer) {
-            	href "pkpVirPerPage", title: "Virtual Person Device Control"
+            	href "pPerson", title: "Create/Delete Virtual Person Device"
+                if(d) {
+      				input "sLocksVP","capability.lockCodes", title: "Select Keypads", required: true, multiple: true, submitOnChange: true
+                	input "vpCode", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+                	input "vpActions", "bool", title: "Perform this profiles actions when the Virtual Person arrives via Keypad", required: false, submitOnChange: true
+                    input "notifyVPArrive", "bool", title: "Notify when Virtual Person Arrives", required: false, submitOnChange: true
+					input "notifyVPDepart", "bool", title: "Notify when Virtual Person Departs", required: false, submitOnChange: true
+					if (notifyVPArrive || notifyVPDepart) {
+                	href "pVPNotifyPage", title: "Virtual Person Notification Settings"
+                	}
                 }
             }    
-        section("Configure Smart Home Monitor Settings") {
+        }
+section("Configure Smart Home Monitor Settings") {
 			input "SHMConfigure", "bool", title: "Smart Home Monitor Controls", refreshAfterSelection: true
 			if (SHMConfigure) {
-      			input "sLocksSHM","capability.lockCodes", title: "Select Locks/Keypads", required: true, multiple: true, submitOnChange: true
-        		input "shmUserName", "text", title: "Input user name for SHM validation", required: true
+      			input "sLocksSHM","capability.lockCodes", title: "Select Keypads", required: true, multiple: true, submitOnChange: true
                 input "shmCode", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
                 input "keypadstatus", "bool", title: "Send status to keypad?", required: true, defaultValue: false
-					href "pShmNotifyPage", title: "SHM Profile Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
+				href "pShmNotifyPage", title: "SHM Profile Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
 					}
             	}    
                     if (SHMConfigure) {
@@ -123,11 +132,14 @@ page name: "pKeypads"
             	href "pGarageDoorNotify",title: "Garage Door Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
 				input "sDoor1", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
       			input "doorCode1", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+				input "gd1Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
 				if (doorCode1) {
 	               	input "sDoor2", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
     	            input "doorCode2", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+					input "gd2Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
 					if (doorCode2) {
-            			input "sDoor3", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
+            			input "gd3Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
+						input "sDoor3", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
                 		input "doorCode3", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
                     	}
 					}
@@ -135,14 +147,16 @@ page name: "pKeypads"
         	}
 		}    
 	}
-page name: "pkpVirPerPage"
-	def pkpVirPerPage() {
-    	dynamicPage(name: "pkpVirPerPage", title: "Virtual Person Device Manual Control") {
-        section {
-        	paragraph "This page is currently blank"
-            }
+page name: "pVPNotifyPage"
+	def pVPNotifyPage() {
+		dynamicPage(name: "pVPNotifyPage", title: "Notification Settings") {
+		section {
+			input "vpPhone", "phone", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true
+				paragraph "For multiple SMS recipients, separate phone numbers with a comma"
+			input "vpNotification", "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true
+			}
         }
-    }    
+	}    
 page name: "pShmNotifyPage"
 	def pShmNotifyPage() {
 		dynamicPage(name: "pShmNotifyPage", title: "Notification Settings") {
@@ -520,9 +534,11 @@ private pVirToggle() {
 	def vp = getChildDevice("${app.label}")
      if(vp) {
      if (vp?.currentValue('presence').contains('not')) {
+            message = "${app.label} has arrived"
             vp.arrived()
             }
         else if (vp?.currentValue('presence').contains('present')) {
+            message = "${app.label} has departed"
             vp.departed()
             }
     	}
@@ -612,17 +628,14 @@ def initialize() {
 		unschedule("startLoop")
 		unschedule("continueLoop")
 		if (garageDoors) {
-//		subscribe(sLocksGarage,"codeEntered",sendGarageEvent)
+		subscribe(sLocksGarage,"codeEntered",codeEntryHandler)
     	}
-//  		subscribe(sLocksSHM, "codeReport", codereturn)
-//  		subscribe(sLocksSHM, "lock", codeUsed)
-  		subscribe(sLocksSHM, "reportAllCodes", pollCodeReport, [filterEvents:false])
+  		subscribe(sLocksVP, "codeEntered", codeEntryHandler)
   		if (sLocksSHM) {
     	subscribe(location,"alarmSystemStatus",alarmStatusHandler)
     	subscribe(sLocksSHM,"codeEntered",codeEntryHandler)
-  }
-        
-}
+  		}
+	}
 
 /******************************************************************************************************
    PARENT STATUS CHECKS
@@ -938,7 +951,7 @@ def profileEvaluate(params) {
                 }
                 //EXECUTE PROFILE ACTIONS
                  if (command == "run" && deviceType == "profile"){    	
-                    outputTxt = "Running profile"
+                    outputTxt = "Running '${app.label}'"
                     ttsActions(tts)
                     pContCmdsR = "run"
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
@@ -1546,12 +1559,28 @@ private void sendtxt(message) {
     }
     if (notifyGdoorOpen) {
     	if (message.contains("open")) {
-        sendTextGarage(sms, message)
+        sendTextGarage(message)
         }
     }
     if (notifyGdoorClose) {
     	if (message.contains("close")) {
         sendTextGarage(message)
+        }
+    }
+    if (notifyVPArrive) {
+    	if (message.contains("check") && message.contains("in")) {
+        sendTextvp(message)
+        if (vpNotification) {
+        	sendPush(message)
+            }
+        }
+    }
+    if (notifyVPDepart) {
+    	if (message.contains("check") && message.contains("out")) {
+        sendTextvp(message)
+        if (vpNotification) {
+        	sendPush(message)
+            }
         }
     }    
     if (notifySHMArm) {
@@ -1569,8 +1598,16 @@ private void sendtxt(message) {
         if (parent.debug) log.debug "Processing message for selected phones"
 	}
 }
+private void sendTextvp(message) { 
+		if (vpPhone != null) {
+    	def vpPhones = vpPhone.split("\\,")
+        for (phone in vpPhones) {
+        	sendSms(vpPhone, message)
+            }
+        }
+	}    
 private void sendTextGarage(message) {
-    if (garagePhone) {
+    if (garagePhone != null) {
         def garagePhones = garagePhone.split("\\,")
         for (phone in garagePhones) {
             sendSms(garagePhone, message)
@@ -1579,7 +1616,7 @@ private void sendTextGarage(message) {
     }
 } 
 private void sendTextshm(number, message) {
-    if (shmPhone) {
+    if (shmPhone != null) {
         def shmPhones = shmPhone.split("\\,")
         for (phone in shmPhones) {
             sendSms(shmPhone, message)
@@ -2190,7 +2227,6 @@ private sendSHMEvent(String shmState) {
         displayed: true,
         description: "System Status is ${shmState}"
       	]
-//  	log.debug "test ${event}"
       	sendLocationEvent(event)
 	}
 private execRoutine(armMode) {
@@ -2208,7 +2244,6 @@ def codeEntryHandler(evt) {
   	def codeEntered = evt.value as String
   	def data = evt.data as String
   	def armMode = ''
-  	def currentarmMode = sLocksSHM.currentValue("armMode")
   	def changedMode = 0
   		if (codeEntered == "${shmCode}") {
   			shmCodeEnteredHandler(evt)
@@ -2216,12 +2251,43 @@ def codeEntryHandler(evt) {
         if (codeEntered == "${doorCode1}" || codeEntered == "${doorCode2}" || codeEntered == "${doorCode3}") {
         	garageCodeEnteredhandler(evt)
             }
+        if (codeEntered == "${vpCode}") {
+        	virtualPersonControlHandler(evt)
+            }
         }
+def virtualPersonControlHandler(evt) {
+	def vp = getChildDevice("${app.label}")
+	def codeEntered = evt.value as String
+	def data = evt.data as String
+	def armMode = ''
+	def changedMode = 0
+  	def message = " "
+    def stamp = state.lastTime = new Date(now()).format("h:mm aa, dd-MMMM-yyyy", location.timeZone) 
+    if(vp != null) {
+		if (codeEntered == "${vpCode}" && data == "3") {
+    		message = "${vp} checked in to the home using the ${evt.displayName} at ${stamp}"
+			vp.arrived()
+            if (notifyVPArrive) {
+            	sendtxt(message)
+                }
+                if (vpActions) {
+                ttsActions(tts)
+                }
+            }
+		if (codeEntered == "${vpCode}" && data == "0") {
+            message = "${vp} checked out of the home using the ${evt.displayName} at ${stamp}"
+            vp.departed()
+            if (notifyVPDepart) {
+            	sendtxt(message)
+                }
+            }
+		}
+        log.info "'${message}'"
+	}
 def garageCodeEnteredhandler(evt) {
 	def codeEntered = evt.value as String
 	def data = evt.data as String
 	def armMode = ''
-	def currentarmMode = sLocksSHM.currentValue("armMode")
 	def changedMode = 0
   	def message = " "
     def stamp = state.lastTime = new Date(now()).format("h:mm aa, dd-MMMM-yyyy", location.timeZone) 
@@ -2243,16 +2309,25 @@ def garageCodeEnteredhandler(evt) {
     else if (codeEntered == "${doorCode1}" && data == "3") {
         message = "The ${sDoor1} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
     		sDoor1?.open()
+            if (gd1Actionss) {
+            	ttsActions(tts)
+                }
             log.info "${message}"
         	}
         	else if (codeEntered == "${doorCode2}" && data == "3") {
         		message = "The ${sDoor2} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
             		sDoor2?.open()
+                    if (gd2Actions) {
+                    	ttsActions(tts) 
+                        }
                     log.info "${message}"
         			}
             		else if (codeEntered == "${doorCode3}" && data == "3") {
             			message = "The ${sDoor3} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
 							sDoor3?.open()
+                            if (gd3Actions) {
+                            	ttsActions(tts)
+                                }
                             log.info "${message}"
                 			}
                         if (garagePush) {
@@ -2342,6 +2417,16 @@ def sendStayCommand() {
 /************************************************************************************************************
    Page status and descriptions 
 ************************************************************************************************************/       
+def pKeypadSettings() {def result = ""
+    if (shmConfigure || garageDoors || kpVirPer) {
+    	result = "complete"}
+        result}
+def pKeypadComplete() {def text = "Tap here to Configure" 
+    if (shmConfigure || garageDoors || kpVirPer) {
+    	text = "Configured"}
+        else text = "Tap here to Configure"
+    	text}
+
 def pSendSettings() {def result = ""
     if (synthDevice || sonosDevice || sendContactText || sendText || push) {
     	result = "complete"}
@@ -2375,7 +2460,7 @@ def pActionsSettings(){def result = ""
     	result = "complete"
         pDevicesProc = "complete"}
     	result}
-def pActionsComplete() {def text = "Configured" 
+def pActionsComplete() {def text = "Tap here to configure" 
 	def pDevicesComplete = pDevicesComplete()
     if (pDevicesProc || pMode || pRoutine || shmState) {
     	text = "Configured"}
