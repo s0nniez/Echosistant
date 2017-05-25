@@ -1,7 +1,7 @@
 /* 
  * RemindR Profiles- An EchoSistant Smart App 
  *
- *	5/24/2017		Version:1.0 R.0.0.2		ad-hoc triggering
+ *	5/24/2017		Version:1.0 R.0.0.3		ad-hoc triggering
  *
  *
  *  Copyright 2016 Jason Headley & Bobby Dobrescu
@@ -28,7 +28,7 @@ definition(
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-RemindR@2x.png")
 /**********************************************************************************************************************************************/
 private release() {
-	def text = "R.0.0.2"
+	def text = "R.0.0.3"
 }
 
 preferences {
@@ -259,54 +259,53 @@ page name: "triggers"
 		dynamicPage(name: "triggers", title: "", uninstall: false) {
             def actions = location.helloHome?.getPhrases()*.label.sort()
             if(actionType != "Default" && actionType != "Ad-Hoc Report" ){
-                section("Time") {
-                    input "oneTime", "enum", title: "One Time", submitOnChange: true, required: fale, 
-            			options: ["At Certain Time (today)", "At Certain Date and Time (in the future)"]
-                        if(oneTime == "At Certain Time (today)"){
-                            input "xTimeToday", "time", title: "Choose a time...", submitOnChange: true, required: true
-                        }
-                        if(oneTime == "At Certain Date and Time (in the future)"){
-                            input "xFutureDay", "number", title: "On this Day - maximum 31", range: "1..31", submitOnChange: true, required: false
-                            if(xFutureDay) input "xFutureMonth", "enum", title: "Of this Month", submitOnChange: true, required: true, multiple: false,
+                section("Date & Time") {
+                    input "tSchedule", "enum", title: "How Often?", submitOnChange: true, required: fale, 
+            			options: ["One Time", "Recurring"]                    
+                        if(tSchedule == "One Time"){
+                        	input "xFutureTime", "time", title: "At this time...", submitOnChange: true, required: true
+                            if(xFutureTime) input "xFutureDay", "number", title: "On this Day - maximum 31", range: "1..31", submitOnChange: true, required: false
+                            if(xFutureDay) input "xFutureMonth", "enum", title: "Of this Month", submitOnChange: true, required: false, multiple: false,
                             options: ["1": "January", "2":"February", "3":"March", "4":"April", "5":"May", "6":"June", "7":"July", "8":"August", "9":"September", "10":"October", "11":"November", "12":"December"]
-                            if(xFutureMonth) input "xFutureYear", "number", title: "Of this Year", range: "2017..2020", submitOnChange: true, required: true
-                            if(xFutureYear && xFutureMonth && xFutureDay) input "xFutureTime", "time", title: "At time...", submitOnChange: true, required: true
+                            if(xFutureMonth) input "xFutureYear", "number", title: "Of this Year", range: "2017..2020", submitOnChange: true, required: false
                         }	
-                    input "frequency", "enum", title: "Recurring", submitOnChange: true, required: fale, 
-            			options: ["Minutes", "Hourly", "Daily", "Weekly", "Monthly", "Yearly"]
-                        if(frequency == "Minutes"){
-                            input "xMinutes", "number", title: "Every X minute(s) - maximum 60", range: "1..59", submitOnChange: true, required: false
-                        }
-                        if(frequency == "Hourly"){
-                            input "xHours", "number", title: "Every X hour(s) - maximum 24", range: "1..23", submitOnChange: true, required: false
-                        }	
-                        if(frequency == "Daily"){
-                            input "xDays", "number", title: "Every X day(s) - maximum 31", range: "1..31", submitOnChange: true, required: false
-                            input "xDaysWeekDay", "bool", title: "OR Every Week Day (MON-FRI)", required: false, defaultValue: false
-                            if(xDays || xDaysWeekDay){input "xDaysStarting", "time", title: "starting at time...", submitOnChange: true, required: true}
-                        }   
-                        if(frequency == "Weekly"){
-                            input "xWeeks", "enum", title: "Every selected day(s) of the week", submitOnChange: true, required: false, multiple: true,
-                                options: ["SUN": "Sunday", "MON": "Monday", "TUE": "Tuesday", "WED": "Wednesday", "THU": "Thursday", "FRI": "Friday", "SAT": "Saturday"]                        
-                            if(xWeeks){input "xWeeksStarting", "time", title: "starting at time...", submitOnChange: true, required: true}
-                        }
-                        if(frequency == "Monthly"){
-                            //TO DO add every (First-Fourth), (Mon-Fri) of every (X) month
-                            input "xMonths", "number", title: "Every X month(s) - maximum 12", range: "1..12", submitOnChange: true, required: false
-                            if(xMonths){
-                                input "xMonthsDay", "number", title: "...on this day of the month", range: "1..31", submitOnChange: true, required: true
-                                input "xMonthsStarting", "time", title: "starting at time...", submitOnChange: true, required: true
-                            }
-                    	}
-                        if(frequency == "Yearly"){
-                            //TO DO add the (First-Fourth), (Mon-Fri) of (Jan-Dec)
-                            input "xYears", "enum", title: "Every selected month of the year", submitOnChange: true, required: false, multiple: false,
-                                options: ["1": "January", "2":"February", "3":"March", "4":"April", "5":"May", "6":"June", "7":"July", "8":"August", "9":"September", "10":"October", "11":"November", "12":"December"]
-                            if(xYears){
-                                input "xYearsDay", "number", title: "...on this day of the month", range: "1..31", submitOnChange: true, required: true
-                                input "xYearsStarting", "time", title: "starting at time...", submitOnChange: true, required: true                     
-                            }
-                        }
+                    	if(tSchedule == "Recurring"){
+                            input "frequency", "enum", title: "Recurring", submitOnChange: true, required: fale, 
+                                options: ["Minutes", "Hourly", "Daily", "Weekly", "Monthly", "Yearly"]
+                                if(frequency == "Minutes"){
+                                    input "xMinutes", "number", title: "Every X minute(s) - maximum 60", range: "1..59", submitOnChange: true, required: false
+                                }
+                                if(frequency == "Hourly"){
+                                    input "xHours", "number", title: "Every X hour(s) - maximum 24", range: "1..23", submitOnChange: true, required: false
+                                }	
+                                if(frequency == "Daily"){
+                                    input "xDays", "number", title: "Every X day(s) - maximum 31", range: "1..31", submitOnChange: true, required: false
+                                    input "xDaysWeekDay", "bool", title: "OR Every Week Day (MON-FRI)", required: false, defaultValue: false
+                                    if(xDays || xDaysWeekDay){input "xDaysStarting", "time", title: "starting at time...", submitOnChange: true, required: true}
+                                }   
+                                if(frequency == "Weekly"){
+                                    input "xWeeks", "enum", title: "Every selected day(s) of the week", submitOnChange: true, required: false, multiple: true,
+                                        options: ["SUN": "Sunday", "MON": "Monday", "TUE": "Tuesday", "WED": "Wednesday", "THU": "Thursday", "FRI": "Friday", "SAT": "Saturday"]                        
+                                    if(xWeeks){input "xWeeksStarting", "time", title: "starting at time...", submitOnChange: true, required: true}
+                                }
+                                if(frequency == "Monthly"){
+                                    //TO DO add every (First-Fourth), (Mon-Fri) of every (X) month
+                                    input "xMonths", "number", title: "Every X month(s) - maximum 12", range: "1..12", submitOnChange: true, required: false
+                                    if(xMonths){
+                                        input "xMonthsDay", "number", title: "...on this day of the month", range: "1..31", submitOnChange: true, required: true
+                                        input "xMonthsStarting", "time", title: "starting at time...", submitOnChange: true, required: true
+                                    }
+                                }
+                                if(frequency == "Yearly"){
+                                    //TO DO add the (First-Fourth), (Mon-Fri) of (Jan-Dec)
+                                    input "xYears", "enum", title: "Every selected month of the year", submitOnChange: true, required: false, multiple: false,
+                                        options: ["1": "January", "2":"February", "3":"March", "4":"April", "5":"May", "6":"June", "7":"July", "8":"August", "9":"September", "10":"October", "11":"November", "12":"December"]
+                                    if(xYears){
+                                        input "xYearsDay", "number", title: "...on this day of the month", range: "1..31", submitOnChange: true, required: true
+                                        input "xYearsStarting", "time", title: "starting at time...", submitOnChange: true, required: true                     
+                                    }
+                                }
+                       	}
                 }
             }   
             if(actionType != "Default"){
@@ -540,7 +539,7 @@ def initialize() {
 	sunriseTimeHandler(location.currentValue("sunriseTime"))
     }
     if (frequency) cronHandler(frequency)
-    if (oneTime) oneTimeHandler(oneTime)
+    if (oneTime) oneTimeHandler()
     if (myWeatherAlert) {
 		runEvery5Minutes(mGetWeatherAlerts)
 		state.weatherAlert
@@ -1953,22 +1952,30 @@ def cronHandler(var) {
     ONE TIME SCHEDULING HANDLER
 ***********************************************************************************************************************/
 def oneTimeHandler(var) {
-	def result 
-    log.warn "one time var is $var"
-    if(var=="At Certain Time (today)") {
-     	runOnce(xTimeToday, scheduledTimeHandler)
+	def result
+    def todayYear = new Date(now()).format("yyyy")
+    def todayMonth = new Date(now()).format("MM")
+    def todayDay = new Date(now()).format("dd")
+    def yyyy = xFutureYear ?: todayYear
+    def MM = xFutureMonth ?: todayMonth
+    def dd = xFutureDay ?: todayDay
+    
+    if(!xFutureDay) {
+     	runOnce(xFutureTime, scheduledTimeHandler)
     }
-    if(var=="At Certain Date and Time (in the future)") {
-        def offset = location.timeZone.rawOffset
-        result = "${xFutureYear}-${xFutureMonth}-${xFutureDay} ${hhmm(xFutureTime)}"
-        
-        Date date = Date.parse("yyyy-MM-dd HH:mm", result)
-        //defScheduleddt = new Date(date).format("yyyy-MM-dd'T'HH:mm:ss'Z'", location.timeZone) 
-       
-       log.warn "future date = $date"
-        //"2015-10-21T16:00:00.000-0600"
+    else{
+    	def timeSchedule = hhmmssZ(xFutureTime)
+        result = "${yyyy}-${xFutureMonth}-${xFutureDay}T${timeSchedule}" 
+        //result = "${xFutureYear}-${MM}-${dd}T${timeSchedule}" 
+       	Date date = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSSZ", result)
         runOnce(date, scheduledTimeHandler)
 	}
+}
+private hhmmssZ(time, fmt = "HH:mm:ss.SSSZ") {
+	def t = timeToday(time, location.timeZone)
+	def f = new java.text.SimpleDateFormat(fmt)
+	f.setTimeZone(location.timeZone ?: timeZone(time))
+	f.format(t)
 }
 /***********************************************************************************************************************
     SUN STATE HANDLER
@@ -2145,12 +2152,6 @@ private getTimeOk() {
     return result
 }
 private hhmm(time, fmt = "h:mm a") {
-	def t = timeToday(time, location.timeZone)
-	def f = new java.text.SimpleDateFormat(fmt)
-	f.setTimeZone(location.timeZone ?: timeZone(time))
-	f.format(t)
-}
-private hhmmss(time, fmt = "HH:mm:ss") {
 	def t = timeToday(time, location.timeZone)
 	def f = new java.text.SimpleDateFormat(fmt)
 	f.setTimeZone(location.timeZone ?: timeZone(time))
