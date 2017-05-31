@@ -1,16 +1,15 @@
 {
   "intents": [
     {
-      "intent": "message",
       "slots": [
         {
           "name": "ttstext",
-          "type": "AMAZON.LITERAL"
+          "type": "LIST_OF_WORDS"
         }
-      ]
+      ],
+      "intent": "LivingRoom"
     },
     {
-      "intent": "mDetails",
       "slots": [
         {
           "name": "calendarName",
@@ -44,7 +43,8 @@
           "name": "duration",
           "type": "AMAZON.NUMBER"
         }
-      ]
+      ],
+      "intent": "mDetails"
     }
   ]
 }
