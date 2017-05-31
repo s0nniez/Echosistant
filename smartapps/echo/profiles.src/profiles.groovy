@@ -65,23 +65,56 @@ def mainProfilePage() {
         section("Audio and Text Message Settings") {
            	href "pSend", title: "Send These Message Types", description: pSendComplete(), state: pSendSettings()   
         }
-//        if(pSendSettings() == "complete"){
+        if(pSendSettings() == "complete"){
             section ("Output Settings and Profile Actions") {    
                 href "pConfig", title: "Message Output Settings", description: pConfigComplete(), state: pConfigSettings()
                 href "pActions", title: "Select Location and Device Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
             }
-//        }
+        }
+        section("Select Devices physically located in this Profile <Room Control Feedback>") {
+       		href "fDevices", title: "Feedback devices located in this Room", description: pConfigComplete(), state: pConfigSettings()
+            }
         section("Keypads") {
-        	href "pKeypads", title: "Keypad Configuration and Actions Control Settings", description: pKeypadComplete(), state: pKeypadSettings()
+        	href "pKeypads", title: "Keypad Configuration and Actions Control Settings", description: pSendComplete(), state: pSendSettings()
             }
        	section("Devices/Group Control Settings and Restrictions") {
 	    	href "pGroups", title: "Create Groups and Select Devices", description: pGroupComplete(), state: pGroupSettings()
-//			if (pGroupSettings() == "complete" || pSendSettings() == "complete" ){
+			if (pGroupSettings() == "complete" || pSendSettings() == "complete" ){
             	href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()
 			}
-//        }
+        }
 		}
 	}
+page name: "fDevices"
+	def fDevices(){
+    	dynamicPage(name: "fDevices", title: "", uninstall: false){
+        	section("Lights, Bulbs, and Switches") {
+            input "fSwitches", "capability.switch", title: "Select Lights, Bulbs, and Switches...", multiple: true, required: false, submitOnChange: true
+            }
+            section("Doors") {
+            input "fDoors", "capability.contactSensor", title: "Select contacts connected only to Doors...", multiple: true, required: false, submitOnChange: true
+            }
+            section("Windows") {
+            input "fWindows", "capability.contactSensor", title: "Select contacts connected only to Windows...", multiple: true, required: false, submitOnChange: true
+            }
+            section("Fans") {
+            input "fFans", "capability.switchLevel", title: "Select devices that control Fans and Ceiling Fans...", multiple: true, required: false, submitOnChange: true
+            }
+            section("Smart Vents") {
+            input "fVents", "capability.switchLevel", title: "Select smart vents in this profiles room...", multiple: true, required: false, submitOnChange: true
+            }
+            section("Window Coverings") {
+            input "fShades", "capability.windowShade", title: "Select devices that control your Window Coverings...", multiple: true, required: false, submitOnChange: true
+            }
+            section("Locks") {
+            input "fLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
+			}
+            section("Batteries"){
+            input "fBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
+            } 
+        }
+    }    
+            	
 page name: "pKeypads"
 	def pKeypads(){
     	dynamicPage(name: "pKeypads", title: "", uninstall: false){
@@ -637,6 +670,7 @@ def initialize() {
   		}
 	}
 
+
 /******************************************************************************************************
    PARENT STATUS CHECKS
 ******************************************************************************************************/
@@ -665,7 +699,7 @@ def profileEvaluate(params) {
 	def String ttsR = (String) null
 	def String command = (String) null
 	def String deviceType = (String) null
-    def String colorMatch = (String) null 
+    def String colorMatch = (String) null
 
     //Recorded Messages
 	def repeat = tts.startsWith("repeat last message") ? true : tts.contains("repeat last message") ? true : tts.startsWith("repeat message") ? true : false
@@ -675,6 +709,9 @@ def profileEvaluate(params) {
     def whatMessages = tts.startsWith("what messages") ? true : tts.startsWith("how many messages") ? true : tts.contains("have messages") ? true : tts.contains("have any messages") ? true : false
     def deleteMessages = tts.startsWith("delete message 1") ?  "recording" : tts.startsWith("delete message 2") ? "recording1" : tts.startsWith("delete message 3") ? "recording2" : tts.startsWith("delete all messages") ? "all" : tts.startsWith("delete messages") ? "all" : null
 	log.warn "Delete messages = ${deleteMessages}"
+    //Feedback
+    def feedback = tts.startsWith("how many") ? "feedbackModule" : tts.startsWith("which") ? "feedbackModule" : tts.startsWith("what") ? "feedbackModule" : "feedbackModule"
+		feedback = tts.startsWith("are") ? "feedbackModule" : tts.startsWith("check") ? "feedbackModule" : "feedbackModule"
     //Reminders
     def reminder = tts.startsWith("set a reminder ") ? "set a reminder " : tts.startsWith("set reminder ") ? "set reminder" : tts.startsWith("remind me ") ? "remind me " : tts.startsWith("set the reminder") ? "set the reminder" : null
     def cancelReminder = tts.startsWith("cancel reminder") ? true : tts.startsWith("cancel the reminder") ? true : tts.startsWith("cancel a reminder") ? true : false
@@ -697,6 +734,14 @@ def profileEvaluate(params) {
 	//Sending event to WebCoRE
     sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
 	
+    if (command == "undefined") {
+		outputTxt = "Sorry, I didn't get that, "
+        state.pTryAgain = true
+        state.pContCmdsR = "clear"
+        state.lastAction = null
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+	}    
+	
     if (parent.debug) log.debug "sendNotificationEvent sent to CoRE from ${app.label}"
     
     if (pSendSettings() == "complete" || pGroupSettings() == "complete"){
@@ -705,11 +750,88 @@ def profileEvaluate(params) {
 				outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]       
     		}
-            def  getCMD = getCommand(tts) 
+            def getCMD = getCommand(tts) 
                 deviceType = getCMD.deviceType
-                command = getCMD.command 
-                if(parent.debug) log.debug "received a control command: ${command}, deviceType:  ${deviceType}"
-            //Voice Activated Commands
+                command = getCMD.command
+                if(parent.debug) log.debug "I have received a control command: ${command}, deviceType:  ${deviceType}"
+//>>>FEEDBACK>>>>
+
+		if (feedback == "feedbackModule") { // Variables for device current values ie - open/close/on/off
+                def fDevice = tts.contains("vent") ? fVents : tts.contains("light") ? fSwitches : tts.contains("door") ? fDoors : tts.contains("window") ? fWindows : tts.contains("fan") ? fFans : 
+                tts.contains("lock") ? fLocks : tts.contains("shade") ? fShades : tts.contains("curtains") ? fShades : tts.contains("blinds") ? fShades : null
+                def fValue = tts.contains("vent") ? "switch" : tts.contains("light") ? "switch" : tts.contains("door") ? "contact" : tts.contains("window") ? "contact" : tts.contains("fan") ? "switchLevel" : 
+                tts.contains("lock") ? "lock" : tts.contains("shade") ? "windowShade" : tts.contains("blind") ? "windowShade" : tts.contains("curtains") ? "windowShade" : null
+                def fName = tts.contains("vent") ? "vent" : tts.contains("lock") ? "locks" : tts.contains("door") ? "door" : tts.contains("window") ? "window" : tts.contains("fan") ? "fan" : 
+            	tts.contains("light") ? "lights" : tts.contains("shade") ? "shades" : tts.contains("blind") ? "blinds" : tts.contains("curtains") ? "curtains" : null
+				if (tts.contains("check") && tts.contains("light")) { command = "on" }
+                if (tts.contains("check")) {
+                	if (tts.contains("lock") || tts.contains("door") || tts.contains("window") || tts.contains("vent") || tts.contains("shades") || tts.contains("blind") || tts.contains("curtain")) {
+					command = "open" }}
+//>>> Mode Status Feedback >>>>
+            if (tts.contains("mode")){
+                    outputTxt = "The Current Mode is " + location.currentMode      
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
+            }
+//>>> Security Status Feedback >>>>
+            //TO DO: restrict security based on command
+            if (tts.contains("smart home monitor") || tts.contains("alarm system") || tts.contains("alarm")){
+                    def sSHM = location.currentState("alarmSystemStatus")?.value       
+                    sSHM = sSHM == "off" ? "disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
+                    outputTxt = "Your Smart Home Monitor Status is " +  sSHM
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]				
+            }
+//>>> Misc Devices Feedback - Returns a Number Of Devices >>>>            
+				if (tts.contains("window") || tts.contains("vent") || tts.contains("lock") || tts.contains("blind") || tts.contains("curtain") || tts.contains("shade") || tts.contains("fan") || tts.contains("door") || tts.contains("light")) {
+                    def devList = []
+                    if (fDevice == null) {
+                    	outputTxt = "I'm sorry, it seems that you have not selected any devices for this query, please configure your feedback devices in the EchoSistant smartapp."}
+                    else if (fDevice != null) {
+                    if (fDevice.latestValue("${fValue}").contains(command)) {
+                        fDevice.each { deviceName ->
+                                    if (deviceName.latestValue("${fValue}")=="${command}") {
+                                        String device  = (String) deviceName
+                                        devList += device
+                                        log.info "device = ${fDevice}, value = ${fValue}, deviceType = ${fName}, device list = '${devList}'"
+                                    	}
+                        			}
+                            	}
+                            }
+                            if (tts.startsWith("how many") || tts.startsWith("check")) { 
+                            if (devList.size() > 0) {
+                            	if (devList.size() == 1) {
+                            		outputTxt = "There is " + devList.size() + " " + fName + " " + command + " in the ${app.label}, would you like anything else? "                           			
+                            		}
+                            		else {outputTxt = "There are " + devList.size() + " " + fName + "'s " + command + " in the ${app.label}, would you like to know which ones? "
+                            		}
+                        		}
+                            else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )
+                            }    
+                            if (tts.startsWith("are there")) {
+                    		if (devList.size() > 0) {
+                            	if (devList.size() == 1) {
+                            		outputTxt = "Yes, The " + devList + " is the only " + fName + " " + command +  "  in the ${app.label}, would you like anything else? "                           			
+                            		}
+                            		else {outputTxt = "Yes, there are " + devList.size() + " " + fName + "'s " + command + " in the ${app.label}, would you like to know which ones? "
+                                	}
+                        		}    
+                        	else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )
+                            }
+                            if (tts.startsWith("what") || tts.startsWith("which")) {
+                    		if (devList.size() > 0) {
+                            	if (devList.size() == 1) {
+                            		outputTxt = "The " + devList + " is the only " + fName + " " + command +  "  in the ${app.label}, would you like anything else? "                           			
+                            		}
+                            		else {outputTxt = "The following ${fName}'s are " + command + " in the ${app.label} " + devList + ", would you like anything else?"
+                        			}
+                        		}
+                            else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )   
+                        	}
+                        }    
+                    	else {outputTxt = "I'm sorry, There are no ${fName}'s " + command }
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                    	}
+					}
+	 //Voice Activated Commands
             if(muteAll == "mute" || muteAll == "unmute"){
                 if(muteAll == "mute"){
                     state.pMuteAll = true
@@ -1004,6 +1126,11 @@ def profileEvaluate(params) {
                 /**********************
                 FREE TEXT CONTROL ENGINE 
                 ***********************/
+                //Feedback for devices
+                if (gHues?.size()>0) {
+                	if (feedback == true) {
+                    	}
+                    }    
                 //Colored Lights
                 if (gHues?.size()>0) {
                     //HUE SCENES
@@ -1211,9 +1338,9 @@ def profileEvaluate(params) {
                             } 
                             outputTxt = "Ok, setting  " + deviceD.label + " volume to " + newLevel + " percent"
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        } 
-                    }
-                }
+                        	} 
+                    	}
+                	}
                 }
                 if (parent.debug) {log.debug "end of control engine, command=${command}, ${deviceType}"}
                 if (sonosDevice || synthDevice || recipients || sms) { //added 2/19/17 Bobby  
@@ -1222,16 +1349,16 @@ def profileEvaluate(params) {
                     outputTxt = ttsHandler(tts)
                     pContCmdsR = "profile"
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-            }
-        }
-	}
-    else {
+                	}
+            	}
+        	}
+			else {
 		outputTxt = "Sorry, you must first set up your profile before trying to execute it."
 		pTryAgain = true
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-	}
-}
+		}
+    }
+
 /******************************************************************************************************
    ADVANCED CONTROL HANDLER
 ******************************************************************************************************/
@@ -1239,7 +1366,8 @@ def advCtrlHandler(data) {
 	def deviceCommand = data.command
 	def deviceType = data.deviceType
     def result
-    if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
+    def feedback = data.feedback
+	if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
     deviceType = deviceType == "light" && gSwitches ? gSwitches : deviceType == "light1" && gCustom1 ? gCustom1 : deviceType == "light2" && gCustom2 ? gCustom2 : deviceType == "light3" && gCustom3 ? gCustom3 : deviceType == "light4" && gCustom4 ? gCustom4 : deviceType == "light5" && gCustom5 ? gCustom5 : null
 		if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "on" || deviceCommand == "off") { 
                     deviceType.each {s ->
@@ -1262,6 +1390,7 @@ def advCtrlHandler(data) {
                                 				result = "Ok, turning " + gCustom5N + deviceCommand
                                 				}
                             				}
+                        				
                         else {
                             def	currLevel = s?.latestValue("level")
                             def currState = s?.latestValue("switch") 
@@ -1308,6 +1437,7 @@ def advCtrlHandler(data) {
                     return result
     	}
     }
+    
     if (deviceType == "fan"){
 		def cHigh = 99
 		def cMedium = 66
@@ -1755,9 +1885,9 @@ private flashLights() {
 			delay += offFor
 		}
 	}
-}
+}        
 /******************************************************************************************************
-   CUSTOM COMMANDS
+   CUSTOM COMMANDS - CONTROL
 ******************************************************************************************************/
 private getCommand(text){
    	def String command = (String) null
@@ -1773,7 +1903,7 @@ private getCommand(text){
                 if (command == "undefined") {
                     command = text.contains("not bright enough") ? "increase" : text.contains("brighter")  ? "increase" : text.contains("too dark") ? "increase" : text.contains("brighten") ? "increase" : "undefined"
                 }
-                log.warn "command = $command"
+          //      log.warn "command = $command"
                 deviceType = "light"
         }
         if (gCustom1N) {
@@ -1909,20 +2039,63 @@ private getCommand(text){
                 deviceType = "fan"
             }      
         }
+
 // Vents
         if (text.contains("vent")) {  // Changed "vents" to "vent" to fix bug.  Jason 2/21/2017
             if (text.contains("open")) {
-                command = "open" 
+                command = "on" 
                 deviceType = "vent"
+            }
+            if (text.contains("close")) {
+                command = "off" 
+                deviceType = "vent"
+            }
+//            else { 
+//                command = "undefined"
+//                deviceType = "vent"
+//            }
+        }
+// Doors
+        if (text.contains("door")) {
+            if (text.contains("open")) {
+            	command = "open" 
+                deviceType = "door"
             }
             else if (text.contains("close")) {
-                command = "close" 
-                deviceType = "vent"
+                command = "closed" 
+                deviceType = "door"
             }
-            else { 
-                command = "undefined"
-                deviceType = "vent"
+            else {
+            	command = "undefined"
+                deviceType = "door"
+                }
+            }    
+
+// Locks
+        if (text.contains("lock")) {
+            if (text.contains("unlocked")) {
+            	command = "unlocked" 
+                deviceType = "locks"
             }
+            if (text.contains("locked")) {
+                command = "locked" 
+                deviceType = "locks"
+	            }
+            }    
+// Windows
+        if (text.contains("window")) {  // Added for the feedback module by Jason 5/26/2017
+            if (text.contains("open")) {
+                command = "open" 
+                deviceType = "window"
+            }
+            else if (text.contains("close")) {
+                command = "closed" 
+                deviceType = "window"
+            }
+//            else { 
+//                command = "undefined"
+//                deviceType = "window"
+//            }
         }
 // Shades
         if (text.contains("shade") || text.contains("blinds") || text.contains("curtains") ) {  // Changed "vents" to "vent" to fix bug.  Jason 2/21/2017
@@ -1930,6 +2103,10 @@ private getCommand(text){
                 command = "open" 
                 deviceType = "shade"
             }
+            else if (text.contains("closed")) {
+            	command = "closed"
+                deviceType = "shade"
+            }    
             else if (text.contains("close")) {
                 command = "close" 
                 deviceType = "shade"
@@ -2202,6 +2379,7 @@ def fillColorSettings() {
 		[ name: "Yellow Green",				rgb: "#9ACD32",		h: 80,		s: 61,		l: 50,	],
 	]
 }
+ 
 /************************************************************************************************************
    Keypads and Locks actions handler 
 ************************************************************************************************************/       
@@ -2412,6 +2590,212 @@ def sendStayCommand() {
   		}
   	sendSHMEvent("Stay")
   	execRoutine("Stay")
+}
+
+/******************************************************************************
+	 FEEDBACK SUPPORT - DEVICE MATCH											
+******************************************************************************/
+private deviceMatchHandler(fDevice) {
+    def pPIN = false
+    def String deviceType = (String) null
+	def currState
+    def stateDate
+    def stateTime
+	def deviceMatch
+    def result
+    	state.pTryAgain = false
+		if(cTstat){
+           deviceMatch = cTstat?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+			if(deviceMatch){
+				deviceType = "cTstat"
+                currState = deviceMatch.currentState("thermostatOperatingState").value
+                stateDate = deviceMatch.currentState("thermostatOperatingState").date
+                stateTime = deviceMatch.currentState("thermostatOperatingState").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)            
+            	return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "thermostatOperatingState" ]
+            }
+        }
+        if (fSwitches){
+		deviceMatch = fSwitches?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+			if(deviceMatch){
+				deviceType = "fSwitches" 
+				currState = deviceMatch.currentState("switch").value
+				stateDate = deviceMatch.currentState("switch").date
+				stateTime = deviceMatch.currentState("switch").date.time
+				def timeText = getTimeVariable(stateTime, deviceType)
+            	return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "switch"]
+        	}
+        }
+        if (cContact){
+        deviceMatch =cContact?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cContact" 
+				currState = deviceMatch.currentState("contact").value
+				stateDate = deviceMatch.currentState("contact").date
+				stateTime = deviceMatch.currentState("contact").date.time
+				def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "contact"]
+            }
+        }
+        if (cMotion){
+        deviceMatch =cMotion?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cMotion" 
+                currState = deviceMatch.currentState("motion").value 
+                stateDate = deviceMatch.currentState("motion").date
+                stateTime = deviceMatch.currentState("motion").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "motion"]
+        	}
+        } 
+        if (cLock){
+        deviceMatch =cLock?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cLock"
+                currState = deviceMatch.currentState("lock").value 
+                stateDate = deviceMatch.currentState("lock").date
+                stateTime = deviceMatch.currentState("lock").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "lock"]
+        	}
+        }        
+        if (cPresence){
+        deviceMatch =cPresence.find {d -> d.label?.toLowerCase() == fDevice.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cPresence"
+                currState = deviceMatch.currentState("presence")?.value 
+                stateDate = deviceMatch.currentState("presence")?.date
+                stateTime = deviceMatch.currentState("presence")?.date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, , "mainCap": "presence"]
+        	}
+        }  
+        if (cDoor){
+        deviceMatch =cDoor?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cDoor"
+                currState = deviceMatch.currentState("door").value 
+                stateDate = deviceMatch.currentState("door").date
+                stateTime = deviceMatch.currentState("door").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "door"]
+        	}
+        }  
+        if (cVent){
+		deviceMatch =cVent?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cVent"
+                currState = deviceMatch.currentState("switch").value 
+                currState = currState == "on" ? "open" : currState == "off" ? "closed" : "unknown"
+                stateDate = deviceMatch.currentState("switch").date
+                stateTime = deviceMatch.currentState("switch").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, , "mainCap": "switch"]
+        	}
+        }
+        if (cWater){
+		deviceMatch =cWater?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cWater"
+                currState = deviceMatch.currentState("water").value 
+                stateDate = deviceMatch.currentState("water").date
+                stateTime = deviceMatch.currentState("water").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText,  "mainCap": "water"]
+        	}
+        }        
+        if (cMedia){
+            if (fDevice == "TV") {
+                deviceMatch = cMedia.first()
+            }
+            else {
+                deviceMatch =cMedia?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            }   
+            if(deviceMatch)	{
+                deviceType = "cMedia"
+                currState = deviceMatch.currentState("currentActivity").value 
+                currState = currState == "--" ? " off " : " running the " + currState + " activity "
+                stateDate = deviceMatch.currentState("currentActivity").date
+                stateTime = deviceMatch.currentState("currentActivity").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText,  "mainCap": "currentActivity"]
+            }
+        }        
+        if (cFan){
+		deviceMatch =cFan?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cFan"
+                currState = deviceMatch.currentState("switch").value 
+                stateDate = deviceMatch.currentState("switch").date
+                stateTime = deviceMatch.currentState("switch").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "switch"] 
+            }
+        }         
+        if (cRelay){
+		deviceMatch =cRelay?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+				deviceType == "cRelay"
+                if (cContactRelay) {
+                currState = cContactRelay.currentState("contact").value 
+                stateDate = cContactRelay.currentState("contact").date
+                stateTime = cContactRelay.currentState("contact").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText,  "mainCap": "contact"] 
+                }
+			}
+        }
+        if (cBattery){
+        deviceMatch =cBattery?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+            if(deviceMatch)	{
+                deviceType = "cBattery"
+                currState = cBattery.currentState("battery").value
+				stateTime = cBattery.currentState("battery").date.time
+                def timeText = getTimeVariable(stateTime, deviceType)  
+                return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": "", "tText": timeText.tText,  "mainCap": "battery"]
+            } 
+     	}
+}
+/******************************************************************************
+	 FEEDBACK SUPPORT - DEVICE CAPABILITIES											
+******************************************************************************/
+private getCaps(capDevice,capType, capMainCap, capState) {
+    def deviceName = capDevice
+    def deviceType = capType
+    def deviceCap = capMainCap
+    def deviceState = capState
+    def result
+    def attr = [:]
+    	state.pContCmdsR = "caps"
+	def supportedCaps = deviceName.capabilities
+    supportedCaps.each { c ->
+		def capName = c.name
+            c.attributes.each {a ->
+        		def attrName = a.name
+                 def attrValue = deviceName.latestValue(attrName)               
+                 if (a.name != null && a.name !=checkInterval && a.name !=polling  && a.name !=refresh && attrValue != null ) {
+                    if (a.name == "temperature") 		{ result = "The " + attrName + " is " + attrValue + " degrees, " }
+                    if (a.name == "motion") 			{ result = result + attrName + " is " + attrValue +", " }
+                    if (a.name == "contact") 			{ result = result + attrName + " is " + attrValue +", " }                    
+                    if (a.name == "humidity") 			{ result = result + attrName + " is " + attrValue + ", " }
+                    if (a.name == "illuminance") 		{ result = result + "lux level is " + attrValue + ", " }
+                    if (a.name == "water") 				{ result = result + attrName + " is " + attrValue +", " }                    
+                    if (a.name == "switch") 			{ result = result + attrName + " is " + attrValue +", " } 
+					if (a.name == "presence") 			{ result = result + attrName + " is " + attrValue + ", " }                    
+                    if (a.name == "heatingSetpoint") 	{ result = result + "Heating Set Point is " + attrValue + " degrees, " }
+                    if (a.name == "coolingSetpoint") 	{ result = result + "Cooling Set Point is" + attrValue + " degrees, " }
+                    if (a.name == "thermostatMode") 	{ result = result + "The thermostat Mode is " + attrValue + ", " }
+                    if (a.name == "thermostatFanMode") 	{ result = result + "The Fan Mode is " + attrValue + ", " }
+					if (a.name == "battery") 			{ result = result + attrName + " level is " + attrValue + " percent, " }
+                        attr << ["${attrName}": attrValue]
+            	}
+           }
+     }
+	result = result.replace("null", "")
+    state.lastAction = result
+    state.pContCmdsR = "caps"
+    result = attr?.size()
+    return result
 }
 
 /************************************************************************************************************
