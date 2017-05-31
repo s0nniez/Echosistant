@@ -756,7 +756,7 @@ def profileEvaluate(params) {
                 if(parent.debug) log.debug "I have received a control command: ${command}, deviceType:  ${deviceType}"
 //>>>FEEDBACK>>>>
 
-		if (feedback == "feedbackModule") { // Variables for device current values ie - open/close/on/off
+		if (feedback == "feedbackModule") { 		// Variables for device current values ie - open/close/on/off
                 def fDevice = tts.contains("vent") ? fVents : tts.contains("light") ? fSwitches : tts.contains("door") ? fDoors : tts.contains("window") ? fWindows : tts.contains("fan") ? fFans : 
                 tts.contains("lock") ? fLocks : tts.contains("shade") ? fShades : tts.contains("curtains") ? fShades : tts.contains("blinds") ? fShades : null
                 def fValue = tts.contains("vent") ? "switch" : tts.contains("light") ? "switch" : tts.contains("door") ? "contact" : tts.contains("window") ? "contact" : tts.contains("fan") ? "switchLevel" : 
@@ -771,7 +771,7 @@ def profileEvaluate(params) {
             if (tts.contains("mode")){
                     outputTxt = "The Current Mode is " + location.currentMode      
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]			
-            }
+            		}
 //>>> Security Status Feedback >>>>
             //TO DO: restrict security based on command
             if (tts.contains("smart home monitor") || tts.contains("alarm system") || tts.contains("alarm")){
@@ -779,8 +779,8 @@ def profileEvaluate(params) {
                     sSHM = sSHM == "off" ? "disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
                     outputTxt = "Your Smart Home Monitor Status is " +  sSHM
                     return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]				
-            }
-//>>> Misc Devices Feedback - Returns a Number Of Devices >>>>            
+            		}
+//>>> Misc Devices Feedback >>>>            
 				if (tts.contains("window") || tts.contains("vent") || tts.contains("lock") || tts.contains("blind") || tts.contains("curtain") || tts.contains("shade") || tts.contains("fan") || tts.contains("door") || tts.contains("light")) {
                     def devList = []
                     if (fDevice == null) {
@@ -796,6 +796,7 @@ def profileEvaluate(params) {
                         			}
                             	}
                             }
+                    // RETURNS A NUMBER OF DEVICES //        
                             if (tts.startsWith("how many") || tts.startsWith("check")) { 
                             if (devList.size() > 0) {
                             	if (devList.size() == 1) {
@@ -806,7 +807,8 @@ def profileEvaluate(params) {
                         		}
                             else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )
                             }    
-                            if (tts.startsWith("are there")) {
+                    // RETURNS A 'YES, THERE ARE ## OF DEVICES' ~~ Added to keep normal language //        
+                            if (tts.startsWith("are")) {
                     		if (devList.size() > 0) {
                             	if (devList.size() == 1) {
                             		outputTxt = "Yes, The " + devList + " is the only " + fName + " " + command +  "  in the ${app.label}, would you like anything else? "                           			
@@ -816,6 +818,7 @@ def profileEvaluate(params) {
                         		}    
                         	else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )
                             }
+                    // RETURNS A LIST OF DEVICES //        
                             if (tts.startsWith("what") || tts.startsWith("which")) {
                     		if (devList.size() > 0) {
                             	if (devList.size() == 1) {
@@ -826,11 +829,12 @@ def profileEvaluate(params) {
                         		}
                             else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )   
                         	}
-                        }    
+                           
                     	else {outputTxt = "I'm sorry, There are no ${fName}'s " + command }
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                     	}
 					}
+                    
 	 //Voice Activated Commands
             if(muteAll == "mute" || muteAll == "unmute"){
                 if(muteAll == "mute"){
@@ -1358,7 +1362,7 @@ def profileEvaluate(params) {
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
 		}
     }
-
+}
 /******************************************************************************************************
    ADVANCED CONTROL HANDLER
 ******************************************************************************************************/
