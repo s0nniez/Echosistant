@@ -830,7 +830,7 @@ def profileEvaluate(params) {
                             else (outputTxt = "There are no ${fName}'s " + command + " in the ${app.label} " )   
                         	}
                            
-                    	else {outputTxt = "I'm sorry, There are no ${fName}'s " + command }
+                    //	else {outputTxt = "I'm sorry, There are no ${fName}'s " + command }
                         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
                     	}
 					}
