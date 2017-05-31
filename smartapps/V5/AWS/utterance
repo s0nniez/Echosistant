@@ -1,16 +1,4 @@
-message {van|ttstext}
-message {van dog|ttstext}
-message {remain go|ttstext}
-message {dinner's ready|ttstext}
-message {its dinner time|ttstext}
-message {its time for dinner|ttstext}
-message {its dinner time come downstairs|ttstext}
-message {dinner is ready come downstairs now|ttstext}
-message {im not going to tell you again|ttstext}
-message {dinner is ready we are eating without you|ttstext}
-message {dinner is ready we are going to eat without you|ttstext}
-message {my glasses are in the bathroom bring them downstairs with you|ttstext}
-message {dinner is ready we are going to eat all of it without you down here|ttstext}
+LivingRoom {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext} {ttstext}
 mDetails {startingD} at {startingT}
 mDetails {endingD}
 mDetails {duration} {unit}
@@ -22,4 +10,3 @@ mDetails send to {profile}
 mDetails forward to {profile}
 mDetails {type} for {startingD} at {startingT}
 mDetails {type} for {startingD}
-mDetails {type}
