@@ -1129,11 +1129,13 @@ def profileFeedbackEvaluate(params) {
 
 					outputTxt = "Your homes status is, " + devListDoor.size() + " doors open, " + devListWindow.size() + " windows open, " + devListLight.size + " lights on, " + devListLock.size + " locks unlocked, "
                     outputTxt = outputTxt + " and your Smart Home Monitor Status is: ${sSHM}"
- 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                     }
+ 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
                else {
                 outputTxt = "The house status is all secure, " +
                     " and your Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}"
- 					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 						}
+ 					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
                     }
                 }    
 //>>> Security Status Feedback >>>>
@@ -1208,15 +1210,17 @@ def profileFeedbackEvaluate(params) {
 		}
 	//	else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )   
 		}
- 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]         }
-	}                        
+ 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+        }
+	}
+    }
 	else {
 		outputTxt = "Sorry, you must first set up your profile before trying to execute it."
 		pTryAgain = true
 		return outputTxt
 		}
     }
-}    
+//}    
 //>>> Temp >>>>      
             if(tts.contains("temperature")) {
          		if(fTstat == null){
@@ -1270,20 +1274,23 @@ def profileFeedbackEvaluate(params) {
                 }            
                 if (outputTxt == null && fDevice != "undefined") { 
                     outputTxt = "Device named " + fDevice + " doesn't have a temperature sensor" 
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 }
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
                 else {
                     if(fIndoor){
                         def sensors = fIndoor.size()
                         def tempAVG = fIndoor ? getAverage(fIndoor, "temperature") : "undefined device"          
                         def currentTemp = tempAVG
                         outputTxt = "The indoor temperature is " + currentTemp
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                     }
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
                     else {
                     	if(state.pShort != true) {
                      		outputTxt = "Sorry, I couldn't quite get that, what device would you like to use to get the indoor temperature?"
                         }
                         else {outputTxt = "I'm sorry, it seems that you have not selected any devices with the temperature attribute"}
-                		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                     }
+                		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                        }
                 } 
             }
 //>>> Temp >>>>>
@@ -1293,10 +1300,12 @@ def profileFeedbackEvaluate(params) {
                     def tempAVG = fIndoor ? getAverage(fIndoor, "temperature") : "undefined device"          
                     def currentTemp = tempAVG
                     outputTxt = "The indoor temperature is " + currentTemp
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 }
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
                 else {
                     outputTxt = "There are no indoor sensors selected, please go to the SmartThings app and select one or more sensors"
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 }                            
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }                            
             }
 //>>> Temp >>>>
             if (tts.contains("temperature outside") || tts.contains("outdoor temperature") || tts.contains("temperature is outside") || tts.contains("hot outside") || tts.contains("cold outside")){
@@ -1306,10 +1315,12 @@ def profileFeedbackEvaluate(params) {
                     def currentTemp = tempAVG
                     def forecastT = mGetWeatherTemps()
                     outputTxt = forecastT + ",. The current temperature is " + currentTemp
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 }
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
                 else {
                     outputTxt = "There are no outdoor sensors selected, go to the SmartThings app and select one or more sensors"
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 }                            
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }                            
             }
 //>>> Weather >>>>
             if (tts.contains("weather") || tts.contains("forecast")){
@@ -1327,15 +1338,18 @@ def profileFeedbackEvaluate(params) {
             if (tts.contains("alert") || tts.contains("warning")){
 				outputTxt = mGetWeatherAlerts()
             }
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]             }
-			if (tts.contains("wind ") || tts.contains("windy") || tts.contains("rain") || tts.contains("precipitation") || tts.contains("UV ") || tts.contains("condition")){
+            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+			}
+            if (tts.contains("wind ") || tts.contains("windy") || tts.contains("rain") || tts.contains("precipitation") || tts.contains("UV ") || tts.contains("condition")){
 				def wElement = tts.contains("wind") ? "wind" : tts.contains("rain") ? "rain" : tts.contains("precipitation") ? "precip" : tts.contains("UV ") ? "uv" : tts.contains("weather conditions") ? "cond" : null
 				outputTxt = mGetWeatherElements(wElement)
-				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]             }
+				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]	
+                }
 			if (tts.contains("humidity") || tts.contains("outside humidity") || tts.contains("humid is outside") || tts.contains("outside humidity") || tts.contains("current conditions")){
 				def wElement = tts.contains("humid") ? "humid" : tts.contains("current ") ? "cond" : null
 				outputTxt = mGetWeatherElements(wElement)
-				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]             }
+				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+                }
         }
   
 /******************************************************************************************************
