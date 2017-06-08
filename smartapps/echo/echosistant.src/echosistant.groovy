@@ -114,10 +114,6 @@ page name: "mIntent"
             section ("EchoSistant Security") {
             	href "mSecurity", title: "Configure EchoSistant Security Options", description: mSecurityD(), state: mSecurityS()
             }
-            section ("Quick Notes") {
-            	href "mPetNotes", title: "Configure the Pets Notes", description: mPetNotesD(), state: mPetNotesS()
-                href "mFamilyNotes", title: "Configure the Family Notes", description: mKidNotesD(), state: mKidNotesS()
-                }    
             section ("FaceBook Messenger Control") {
                 href "mFacebook", title: "Enter Credentials for Facebook Messenger Control", description: "", state: complete
             }
@@ -318,31 +314,7 @@ page name: "mIntent"
                                 }
                             }    
                                 }}}}
-		page name: "mPetNotes"
-        	def mPetNotes(){
-            	dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
-                    section ("Pets Notes") {
-                    	input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
-                        if (petNoteAct) {
-                    	input "pCat", "text", title: "Name your Cat...", required: false, default: null
-                        input "pCat1", "text", title: "Name your other Cat...", required: false, default: null
-                        input "pDog", "text", title: "Name your Dog...", required: false, default: null
-                        input "pDog1", "text", title: "Name your other Dog...", required: false, default: null
-                        input "pSMS", "bool", title: "Do you want to send an SMS when notes are made?", required: false, defaultValue: false, submitOnChange: true
-                        	if (pSMS) {
-            					input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
-                				if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-           							input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
-                				if (psendText){      
-                    				paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
-                    				input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
-                						}
-                                    }    
-                                    input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
-                            		}
-                                }    
-                			}
-                        }    
+   
         page name: "mSecurity"    
             def mSecurity(){
                 dynamicPage(name: "mSecurity", title: "",install: false, uninstall: false) {
@@ -424,8 +396,6 @@ page name: "mIntent"
             dynamicPage(name: "mProfiles", title:"", install: true, uninstall: false) {
                 section ("Messaging & Control (${getChildSize("Profiles")})") {
                 	href "mMainProfile", title: "Messaging & Control Profiles...", description: none
-                    
-                	href "mMainTestProfile", title: "Messaging & Control Test Profiles...", description: none
                     }
 				if (notifyOn) {
         			section ("Notifications & Reporting (${getChildSize("NotificationProfile")})") {
@@ -449,16 +419,6 @@ page name: "mIntent"
                 }                   
             }            
 		}
-        page name: "mMainTestProfile"
-        	def mMainTestProfile() {
-            	dynamicPage ( name: "mMainTestProfile", title: "", install: true, uninstall: false) {
-                    if (childApps?.size()>0) {  
-                        section("Messaging & Control Test Profile",  uninstall: false){
-                            app(name: "Test Profiles", appName: "Test Profiles", namespace: "Echo", title: "Create a New Messaging & Control Test Profile", multiple: true,  uninstall: false)
-                        }
-                    }
-				}
-            }
          page name: "mMainProfile"    
             def mMainProfile() {
                 dynamicPage (name: "mMainProfile", title: "", install: true, uninstall: false) {
@@ -972,46 +932,7 @@ def initialize() {
             if (state.per8EveMed == null) {state.per8EveMed = "I'm sorry, I have not been told when ${pPerson8}'s evening medicine was taken" }
             	}
             }
-        	if (petNoteAct) {
-            if (state.litterboxClean == null) {state.litterboxClean = "I'm sorry, I have not been told when the litter box wascleaned" }
-            if (state.litterboxScoop == null) {state.litterboxScoop = "I'm sorry, I have not been told when the litter box was scooped" }
-            if (pCat) {
-            	log.info "Initializing variables for '${pCat}'"
-            	if (state.catWalkNotify == null) {state.catWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
-            	if (state.catShotNotify == null) {state.catShotNotify = "I'm sorry, I have not been told when the cat was shot" }
-            	if (state.catBathNotify == null) {state.catBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
-            	if (state.catFedNotify == null) {state.catFedNotify = "I'm sorry, I have not been told when the cat was fed" }
-				if (state.catMedNotify == null) {state.catMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
-            	if (state.catBrushNotify == null) {state.catBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
-            	}
-            if (pDog) {
-            	log.info "Initializing variables for '${pDog}'"
-            	if (state.dogWalkNotify == null) {state.dogWalkNotify = "I'm sorry, I have not been told when the dog was walked" }
-            	if (state.dogBathNotify == null) {state.dogBathNotify = "I'm sorry, I have not been told when the dog was walked" }
-            	if (state.dogShotNotify == null) {state.dogShotNotify = "I'm sorry, I have not been told when the dog was shot" }
-            	if (state.dogFedNotify == null) {state.dogFedNotify = "I'm sorry, I have not been told when the dog was fed" }
-            	if (state.dogMedNotify == null) {state.dogMedNotify = "I'm sorry, I have not been told when the dog was medicated" }
-            	if (state.dogBrushNotify == null) {state.dogBrushNotify = "I'm sorry, I have not been told when the dog was brushed" }
-            	}
-            if (pCat1) {
-            	log.info "Initializing variables for '${pCat1}'"
-            	if (state.catWalk1Notify == null) {state.catWalk1Notify = "I'm sorry, I have not been told when the cat was walked" }
-            	if (state.catShot1Notify == null) {state.catShot1Notify = "I'm sorry, I have not been told when the cat was shot" }
-            	if (state.catBath1Notify == null) {state.catBath1Notify = "I'm sorry, I have not been told when the cat was bathed" }
-            	if (state.catFed1Notify == null) {state.catFed1Notify = "I'm sorry, I have not been told when the cat was fed" }
-				if (state.catMed1Notify == null) {state.catMed1Notify = "I'm sorry, I have not been told when the cat was medicated" }
-            	if (state.catBrus1hNotify == null) {state.catBrush1Notify = "I'm sorry, I have not been told when the cat was brushed" }
-            	}
-            if (pDog1) {
-            	log.info "Initializing variables for '${pDog1}'"
-                if (state.dogWalk1Notify == null) {state.dogWalk1Notify = "I'm sorry, I have not been told when the dog was walked" }
-            	if (state.dogShot1Notify == null) {state.dogShot1Notify = "I'm sorry, I have not been told when the dog was shot" }
-            	if (state.dogBath1Notify == null) {state.dogBath1Notify = "I'm sorry, I have not been told when the dog was walked" }
-            	if (state.dogFed1Notify == null) {state.dogFed1Notify = "I'm sorry, I have not been told when the dog was fed" }
-            	if (state.dogMed1Notify == null) {state.dogMed1Notify = "I'm sorry, I have not been told when the dog was medicated" }
-            	if (state.dogBrush1Notify == null) {state.dogBrush1Notify = "I'm sorry, I have not been told when the dog was brushed" }
-            	}
-            }
+
             state.pendingConfirmation = false
             unschedule("startLoop")
             unschedule("continueLoop")
