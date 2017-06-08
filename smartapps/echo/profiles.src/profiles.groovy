@@ -65,25 +65,25 @@ def mainProfilePage() {
         section("Audio and Text Message Settings") {
            	href "pSend", title: "Send These Message Types", description: pSendComplete(), state: pSendSettings()   
         }
-        if(pSendSettings() == "complete"){
-            section ("Output Settings and Profile Actions") {    
+        section ("Output Settings and Profile Actions") {    
                 href "pConfig", title: "Message Output Settings", description: pConfigComplete(), state: pConfigSettings()
                 href "pActions", title: "Select Location and Device Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
             }
-        }
+        section("Devices/Group Control Settings and Restrictions") {
+	    	href "pGroups", title: "Create Groups and Select Devices for Control", description: pGroupComplete(), state: pGroupSettings()
+			href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()
+			}
         section("Select Devices physically located in this Profile <Room Control Feedback>") {
-       		href "fDevices", title: "Feedback devices located in this Room", description: pConfigComplete(), state: pConfigSettings()
+       		href "fDevices", title: "Feedback on devices located in this Room", description: pConfigComplete(), state: pConfigSettings()
             }
 		section("Keypads") {
         	href "pKeypads", title: "Keypad Configuration and Actions Control Settings", description: pSendComplete(), state: pSendSettings()
             }
-       	section("Devices/Group Control Settings and Restrictions") {
-	    	href "pGroups", title: "Create Groups and Select Devices", description: pGroupComplete(), state: pGroupSettings()
-			if (pGroupSettings() == "complete" || pSendSettings() == "complete" ){
-            	href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()
-			}
+        section ("Quick Notes") {
+           	href "mPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
+            href "mFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
+            }    
         }
-		}
 	}
 page name: "fDevices"
 	def fDevices(){
@@ -195,6 +195,30 @@ section("Configure Smart Home Monitor Settings") {
         	}
 		}    
 	}
+page name: "mPetNotes" 
+	def mPetNotes(){
+		dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
+		section ("Family Pets Notes") {
+			input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
+			if (petNoteAct) {
+				paragraph "Your Family Pet's notes are now active for ${app.label}."
+				paragraph "The following notes have been set for ${app.label}:"
+                paragraph "${state.petShotNotify}"
+				}
+			input "pSMS", "bool", title: "Configure Notifications for ${app.label}", required: false, defaultValue: false, submitOnChange: true
+			if (pSMS) {
+				input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
+            if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+            	input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true 
+			if (psendText){      
+				paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+				input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
+				}
+			input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
+			}
+        }    
+	}	    
+}                	
 page name: "pVPNotifyPage"
 	def pVPNotifyPage() {
 		dynamicPage(name: "pVPNotifyPage", title: "Notification Settings") {
@@ -864,7 +888,16 @@ def initialize() {
             state.pendingConfirmation = false
             unschedule("startLoop")
             unschedule("continueLoop")
-}
+	if (petNoteAct) {
+		log.info "Initializing variables for '${app.label}'"
+		if (state.petWalkNotify == null) {state.petWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
+		if (state.petShotNotify == null) {state.petShotNotify = "I'm sorry, I have not been told when the cat was shot" }
+		if (state.petBathNotify == null) {state.petBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
+		if (state.petFedNotify == null) {state.petFedNotify = "I'm sorry, I have not been told when the cat was fed" }
+		if (state.petMedNotify == null) {state.petMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
+		if (state.petBrushNotify == null) {state.petBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
+		}
+	}
 
 
 /******************************************************************************************************
@@ -1013,8 +1046,33 @@ def profileFeedbackEvaluate(params) {
             if(tts.endsWith("settings")) {
 				outputTxt = settingsFeedback()
                 }
-            
-  
+//>>> PetNotes Feedback >>>>
+	if(tts.startsWith("when") || tts.startsWith("did")) {
+    	if(tts.contains("was") || tts.contains("you")) {
+        	if(tts.contains("she") || tts.contains("he") || tts.contains("${app.label}") || tts.contains("get") || tts.contains("your")) {
+                    if (tts.contains("medicated") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
+                        outputTxt = "I have been told that " + state.petMedNotify + " , I have also been told that " + state.petShotNotify
+                        }//	return outputTxt}
+                    	else if (tts.contains("medicated") && state.petShotNotify.contains("last")) { outputTxt = "I have not been told when ${app.label} was medicated, but " + state.petShotNotify 
+                        }//	return outputTxt}
+                        else if (tts.contains("medicated")) { outputTxt = state.petMedNotify 
+                        }//	return outputTxt}
+                  	if (tts.contains("shot") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
+                  			outputTxt = "I have been told that " + state.petShotNotify + " , I have also been told that " + state.petMedNotify
+                        }//	return outputTxt}
+                    	else if (tts.contains("shot") && state.petMedNotify.contains("last")) { 
+                        	outputTxt = "I have not been told when ${app.label} was shot, but " + state.petMedNotify 
+                        }//	return outputTxt}
+                        else if (tts.contains("shot")) { outputTxt = state.petShotNotify 
+                        }//	return outputTxt}
+                    else if (tts.contains("fed") && state.petFedNotify != null ) {outputTxt = state.petFedNotify}
+                	else if (tts.contains("bathed") && state.petBathNotify != null ) {outputTxt = state.petBathNotify}
+                	else if (tts.contains("walked") && state.petWalkNotify != null ) {outputTxt = state.petWalkNotify}
+                	else if (tts.contains("brushed") && state.petBrushNotify != null ) {outputTxt = state.petBrushNotify}
+                	}
+                }    
+				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]    
+  			}
 //>>> Presence Feedback >>>>
 	if (tts.startsWith("who") || tts.contains("people")) {
     	if (deviceType == "fbPresence") {
@@ -1820,7 +1878,29 @@ def profileEvaluate(params) {
                         }
                             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                     }     
-                }          
+                } 
+                //PET NOTES CONTROL
+                if (tts.startsWith("she") || tts.startsWith("he")) {
+                	if (command == "shot" || command == "medicated" || command == "walked" || command == "bathed" || command == "brushed") {
+                    	log.info "Pet Notes Control action executed"
+					def timeDate = new Date().format("hh:mm aa", location.timeZone)
+    				def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
+    					if (tts.contains("was") || tts.contains("has") || tts.contains("got")) {
+    					if (tts.contains("shot") || tts.contains("brushed") || tts.contains("fed") || tts.contains("bathed") || tts.contains("walked") || tts.contains("medicated")) {
+        				outputTxt = "Ok, recording that ${app.label} was last ${command} on " + dateDate + " at " + timeDate    
+            				if(command == "shot" || command == "shop") {state.petShotNotify = "${app.label} was last shot on " + dateDate + " at " + timeDate }
+            				if(command == "brushed") {state.petBrushNotify = "${app.label} was last brushed on " + dateDate + " at " + timeDate }
+            				if(command == "fed") {state.petFedNotify = "${app.label} was last fed on " + dateDate + " at " + timeDate }
+            				if(command == "bathed") {state.petBathNotify = "${app.label} was last bathed on " + dateDate + " at " + timeDate }
+            				if(command == "walked") {state.petWalkNotify = "${app.label} was last walked on " + dateDate + " at " + timeDate }
+							if(command == "medicated") {state.petMedNotify = "${app.label} was last medicated on " + dateDate + " at " + timeDate }
+        						if(psendText) { sendtxt(outputTxt) }
+								if(pPush) { sendPush outputTxt }
+        						}
+					      	}
+					}
+   				 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+				}                        
                 //VENTS AND WINDOWS CONTROL
                 if (deviceType == "vent" || deviceType == "shade") { 
                         if (command == "open"  || command == "close") {
@@ -2321,11 +2401,10 @@ private void sendtxt(message) {
         sendText(sms, message)
         if (parent.debug) log.debug "Processing message for selected phones"
 	}
-        if (pSMS) {
+        if (psendText) {
         	processpsms(psms, message)
             }
-        log.info "SMS sent to '${psms}' from line 5267"    
-}
+        }
 private void sendTextvp(message) { 
 		if (vpPhone != null) {
     	def vpPhones = vpPhone.split("\\,")
@@ -2360,10 +2439,15 @@ private void sendText(number, message) {
             if (parent.debug) log.debug "Sending sms to selected phones"
         }
     }
-}    
-
-
-
+}
+private void processpsms(psms, message) {
+    if (psendText) {
+        def phones = psms.split("\\,")
+        for (phone in phones) {
+            sendSms(phone, message)
+        }
+    }
+}
 
 /***********************************************************************************************************************
     MISC. - REMINDERS HANDLER
@@ -2491,6 +2575,16 @@ private getFeedbackCommand(text){
    	def String command = (String) null
 	def String deviceType = (String) null
     	text = text.toLowerCase()
+//PET NOTES
+  //  if (text.startsWith("when")) {
+    	if (text.contains("was") && text.contains("${app.label}")) {
+        log.info "pet notes feedback commands method"
+    	if (text.contains("shot") || text.contains("brushed") || text.contains("fed") || text.contains("bathed") || text.contains("walked") || text.contains("medicated")) {
+			command = text.contains("shot") ? "shot" : text.contains("brushed") ? "brushed" : text.contains("fed") ? "fed" : text.contains("walked") ? "walked" : text.contains("medicated") ? "medicated" : "undefined"
+			deviceType = "fbPetNotification"
+            }
+        }
+ //   }
 //Presence Feedback
 	if (text.startsWith("who") || text.contains("people")) {
     	deviceType = "fbPresence"
@@ -2622,6 +2716,15 @@ private getCommand(text){
    	def String command = (String) null
 	def String deviceType = (String) null
     	text = text.toLowerCase()
+//PET NOTES
+    if (text.startsWith("she") || text.startsWith("he")) {
+    	if (text.contains("was") || text.contains("has been")) {
+    	if (text.contains("shot") || text.contains("brushed") || text.contains("fed") || text.contains("bathed") || text.contains("walked") || text.contains("medicated")) {
+			command = text.contains("shot") ? "shot" : text.contains("brushed") ? "brushed" : text.contains("fed") ? "fed" : text.contains("walked") ? "walked" : text.contains("medicated") ? "medicated" : "undefined"
+			deviceType = "petNotification"
+            }
+        }
+    }
 //LIGHT SWITCHES        
 	if (gSwitches || gCustom1N || gCustom2N || gCustom3N || gCustom4N || gCustom5N){
         if (gSwitches) {
@@ -2849,7 +2952,7 @@ private getCommand(text){
                 command = "undefined"
                 deviceType = "shade"
             }
-        }
+       } 
 //Volume
         if  (text.contains("mute") || text.contains("be quiet") || text.contains("pause speaker")){
                 command = "mute"
@@ -2871,6 +2974,7 @@ private getCommand(text){
             command = "undefined"
             deviceType = "volume"
         }
+        
 //Harmony
         if (text.contains("tv")) {
             if  (text.contains("start") || text.startsWith("turn on") || text.contains("switch to") || text.contains("on")){
@@ -3037,8 +3141,8 @@ private getCustomCmd(command, unit, group, num) {
             		return result
             	}
            }      
+		}
 	}
-}
 
 
 /************************************************************************************************************
@@ -3478,6 +3582,51 @@ def sendStayCommand() {
   	sendSHMEvent("Stay")
   	execRoutine("Stay")
 }
+/************************************************************************************************************
+  PET NOTES FEEDBACK HANDLER 
+************************************************************************************************************/
+def petNotesFeedback(tts, command) {
+	log.info "We made it to the petNotesFeedback handler at line 3557"
+    log.info "received info: command = ${command} and tts = ${tts}"
+    //OTHER 
+    def String deviceType = (String) null
+    def String outputTxt = (String) null
+    def String result = (String) null
+	def currState
+    def stateDate
+    def stateTime
+    if (debug){
+    def pProcess = true
+    state.pTryAgain = false
+                if (tts.contains("when") && tts.contains("was")) {
+                	if (tts.contains("she") || tts.contains("he")  ) {
+                    if (tts.contains("medicated") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
+                        outputTxt = "I have been told that " + state.petMedNotify + " , I have also been told that " + state.petShotNotify
+                        }//	return outputTxt}
+                    	else if (tts.contains("medicated") && state.petShotNotify.contains("last")) { outputTxt = "I have not been told when ${app.label} was medicated, but " + state.petShotNotify 
+                        }//	return outputTxt}
+                        else if (tts.contains("medicated")) { outputTxt = state.petMedNotify 
+                        }//	return outputTxt}
+                  	if (tts.contains("shot") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
+                  			outputTxt = "I have been told that " + state.petShotNotify + " , I have also been told that " + state.petMedNotify
+                        }//	return outputTxt}
+                    	else if (tts.contains("shot") && state.petMedNotify.contains("last")) { 
+                        	outputTxt = "I have not been told when ${app.label} was shot, but " + state.petMedNotify 
+                        }//	return outputTxt}
+                        else if (tts.contains("shot")) { outputTxt = state.petShotNotify 
+                        }//	return outputTxt}
+                    else if (tts.contains("fed") && state.petFedNotify != null ) {outputTxt = state.petFedNotify}
+                	else if (tts.contains("bathed") && state.petBathNotify != null ) {outputTxt = state.petBathNotify}
+                	else if (tts.contains("walked") && state.petWalkNotify != null ) {outputTxt = state.petWalkNotify}
+                	else if (tts.contains("brushed") && state.petBrushNotify != null ) {outputTxt = state.petBrushNotify}
+                //    return outputTxt
+                   }
+                   
+				}
+                return outputTxt
+			}
+        }      
+		
 /******************************************************************************
 	 FEEDBACK SUPPORT - GET AVERAGE										
 ******************************************************************************/
@@ -4327,6 +4476,60 @@ private filtersHandler() {
     	sendtxt(tts)
     }
 }
+/***********************************************************************************************************************
+    MISC. - PET NOTIFICATIONS HANDLER - This sets the variable and repeats the variable
+***********************************************************************************************************************/
+private petNotifyHandler(tts, command) {
+    def String outputTxt = (String) null 
+    def result 
+    def timeDate = new Date().format("hh:mm aa", location.timeZone)
+    def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
+    if (tts.startsWith("she") || tts.startsWith("he")) {
+    	if (tts.contains("was") || tts.contains("has been")) {
+    	if (tts.contains("shot") || tts.contains("brushed") || tts.contains("fed") || tts.contains("bathed") || tts.contains("walked") || tts.contains("medicated")) {
+        outputTxt = "Ok, recording that ${app.label} was last ${command} on " + dateDate + " at " + timeDate    
+            if(command == "shot" || command == "shop") {state.petShotNotify = "${app.label} was last shot on " + dateDate + " at " + timeDate }
+            if(command == "brushed") {state.petBrushNotify = "${app.label} was last brushed on " + dateDate + " at " + timeDate }
+            if(command == "fed") {state.petFedNotify = "${app.label} was last fed on " + dateDate + " at " + timeDate }
+            if(command == "bathed") {state.petBathNotify = "${app.label} was last bathed on " + dateDate + " at " + timeDate }
+            if(command == "walked") {state.petWalkNotify = "${app.label} was last walked on " + dateDate + " at " + timeDate }
+			if(command == "medicated") {state.petMedNotify = "${app.label} was last medicated on " + dateDate + " at " + timeDate }
+        if(psendText) { sendtxt(outputTxt) }
+		if(pPush) { sendPush outputTxt }
+        }
+    //	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+      	}
+    }
+    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+}    
+/***********************************************************************************************************************
+    Notifications and Reminders Variables Reset Handlers
+***********************************************************************************************************************/
+page name: "petBrushReset"
+	def petBrushReset(){dynamicPage(name: "petBrushReset", title: "", uninstall: false) {
+        	section ("${app.label}'s Brushed Note Reset") {paragraph "${app.label}'s brushed note has been reset, please tap Done"
+            state.petBrushNotify = "I'm sorry, I have not been told when ${app.label} was brushed"}}}
+page name: "petShotReset"
+	def petShotReset(){dynamicPage(name: "petShotReset", title: "", uninstall: false) {
+        	section ("${app.label}'s Shot Note Reset") {paragraph "${app.label}'s shot note has been reset, please tap Done"
+            state.petShotNotify = "I'm sorry, I have not been told when ${app.label} was shot"}}}
+page name: "petFedReset"
+	def petFedReset(){dynamicPage(name: "petFedReset", title: "", uninstall: false) {
+        	section ("${app.label}'s Feeding Note Reset") {paragraph "${app.label}'s feeding note has been reset, please tap Done"
+            state.petFedNotify = "I'm sorry, I have not been told when ${app.label} was fed"}}}
+page name: "petBathReset"
+	def petBathReset(){dynamicPage(name: "petBathReset", title: "", uninstall: false) {
+        	section ("${app.label}'s Bath Note Reset") {paragraph "${app.label}'s bath note has been reset, please tap Done"
+            state.petBathNotify = "I'm sorry, I have not been told when ${app.label} was bathed"}}}
+page name: "petWalkReset"
+	def petWalkReset(){dynamicPage(name: "petWalkReset", title: "", uninstall: false) {
+        	section ("${app.label}'s Walk Note Reset") {paragraph "${app.label}'s walk note has been reset, please tap Done"
+            state.petWalkNotify = "I'm sorry, I have not been told when ${app.label} was walked"}}}
+page name: "petMedReset"
+	def petMedReset(){dynamicPage(name: "petMedReset", title: "", uninstall: false) {
+        	section ("${app.label}'s Medication Note Reset") {paragraph "${app.label}'s medication note has been reset, please tap Done"
+            state.petMedNotify = "I'm sorry, I have not been told when ${app.label} was medicated"}}}
+
 /************************************************************************************************************
    Page status and descriptions 
 ************************************************************************************************************/       
@@ -4396,4 +4599,5 @@ def pGroupComplete() {def text = "Tap here to Configure"
     if (gSwitches || gFans || gHues || sVent || sMedia || sSpeaker) {
     	text = "Configured"}
         else text = "Tap here to Configure"
-        text}        
+        text
+        }      
