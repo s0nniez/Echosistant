@@ -931,7 +931,6 @@ def profileFeedbackEvaluate(params) {
 	def String command = (String) null
 	def String deviceType = (String) null
     def String colorMatch = (String) null
-
     if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
 	//Sending event to WebCoRE
     sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
@@ -1052,19 +1051,19 @@ def profileFeedbackEvaluate(params) {
         	if(tts.contains("she") || tts.contains("he") || tts.contains("${app.label}") || tts.contains("get") || tts.contains("your")) {
                     if (tts.contains("medicated") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
                         outputTxt = "I have been told that " + state.petMedNotify + " , I have also been told that " + state.petShotNotify
-                        }//	return outputTxt}
+                        }
                     	else if (tts.contains("medicated") && state.petShotNotify.contains("last")) { outputTxt = "I have not been told when ${app.label} was medicated, but " + state.petShotNotify 
-                        }//	return outputTxt}
+                        }
                         else if (tts.contains("medicated")) { outputTxt = state.petMedNotify 
-                        }//	return outputTxt}
+                        }
                   	if (tts.contains("shot") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
                   			outputTxt = "I have been told that " + state.petShotNotify + " , I have also been told that " + state.petMedNotify
-                        }//	return outputTxt}
+                        }
                     	else if (tts.contains("shot") && state.petMedNotify.contains("last")) { 
                         	outputTxt = "I have not been told when ${app.label} was shot, but " + state.petMedNotify 
-                        }//	return outputTxt}
+                        }
                         else if (tts.contains("shot")) { outputTxt = state.petShotNotify 
-                        }//	return outputTxt}
+                        }
                     else if (tts.contains("fed") && state.petFedNotify != null ) {outputTxt = state.petFedNotify}
                 	else if (tts.contains("bathed") && state.petBathNotify != null ) {outputTxt = state.petBathNotify}
                 	else if (tts.contains("walked") && state.petWalkNotify != null ) {outputTxt = state.petWalkNotify}
@@ -1074,7 +1073,7 @@ def profileFeedbackEvaluate(params) {
 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]    
   			}
 //>>> Presence Feedback >>>>
-	if (tts.startsWith("who") || tts.contains("people")) {
+    if (tts.startsWith("who") || tts.contains("people")) {
     	if (deviceType == "fbPresence") {
 		state.pTryAgain = false
     		if(fPresence == null) {
@@ -1106,33 +1105,29 @@ def profileFeedbackEvaluate(params) {
 		}
 		else {
 			outputTxt = "The following " + devListNP.size() + " people are not at home: " + devListNP
-			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             }
 		}
 		else outputTxt = "Everyone is at home"
-			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-            }
-			else if (tts.endsWith("here") || tts.endsWith("at home") || tts.endsWith("present") || tts.endsWith("home")) {
+    	}
+		else if (tts.endsWith("here") || tts.endsWith("at home") || tts.endsWith("present") || tts.endsWith("home")) {
 			if (devListNP.size() == 0) {
 				outputTxt = "Everyone is at home"
-				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }
                 if (devListP.size() > 0) {
 			if (devListP.size() == 1) {
 			outputTxt = "Only" + devListP + "is at home"                         			
-			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             }
 			else {
-				outputTxt = "The following " + devListP?.size() + " people are at home: " + devListP
-				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+				outputTxt = "The following " + devListP.size() + " people are at home: " + devListP
                 }
-			}
-			else outputTxt = "No one is home"
-			return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-            	}
             }
-		}
-	}
+			else outputTxt = "No one is home"
+          	}
+        }
+    }
+    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]    
 }
+	
 /// check the house                        
 			if (tts.startsWith("check")) {
             if (tts.endsWith("home") || tts.endsWith("house") || tts.endsWith("my home") || tts.endsWith("my house")) {
@@ -1194,8 +1189,8 @@ def profileFeedbackEvaluate(params) {
                     " and your Smart Home Monitor Status is: ${location.currentState("alarmSystemStatus")?.value}"
  					return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                     }
-                    }
-                }    
+                }
+            }    
 //>>> Security Status Feedback >>>>
 	if (tts.contains("smart home monitor") || tts.contains("alarm system") || tts.contains("alarm") || tts.contains("security")){
 		def sSHM = location.currentState("alarmSystemStatus").value      
@@ -1266,11 +1261,10 @@ def profileFeedbackEvaluate(params) {
 			else {outputTxt = "No, the '${devList}'is not ${command}"
 			}
 		}
-	//	else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )   
-		}
- 		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-        }
 	}
+ 	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+        	}
+		}
     }
 	else {
 		outputTxt = "Sorry, you must first set up your profile before trying to execute it."
