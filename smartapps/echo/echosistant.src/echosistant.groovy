@@ -851,6 +851,8 @@ def initialize() {
         state.lastWeatherCheck
         state.lastWeatherUpdate
         //CoRE
+        webCoRE_list('name')
+        webCoRE_execute(Name) 
         sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
         def children = getChildApps()
     	if (debug) log.debug "Refreshing Profiles for CoRE, ${getChildApps()*.label}"
@@ -998,7 +1000,12 @@ def childUninstalled() {
 	if (debug) log.debug "Profile has been deleted, refreshing Profiles for CoRE, ${getChildApps()*.label}"
     sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
 } 
-
+private webCoRE_handle(){return'webCoRE'}
+private webCoRE_init(pistonExecutedCbk){state.webCoRE=state.webCoRE instanceof Map?state.webCoRE:[:]+pistonExecutedCbk?[cbk:pistonExecutedCbk]:[:];subscribe(location,"${webCoRE_handle()}.pistonList",webCoRE_handler);if(pistonExecutedCbk)subscribe(location,"${webCoRE_handle()}.pistonExecuted",webCoRE_handler);webCoRE_poll();}
+private webCoRE_poll(){sendLocationEvent([name: webCoRE_handle(),value:'poll',isStateChange:true,displayed:false])}
+private webCoRE_execute(pistonIdOrName,data=[:]){def i=(state.webCoRE?.pistons?:[]).find{(it.name==pistonIdOrName)||(it.id==pistonIdOrName)}?.id;if(i){sendLocationEvent([name:i,value:app.label,isStateChange:true,displayed:false,data:data])}}
+private webCoRE_list(mode){def p=state.webCoRE?.pistons;if(p)p.collect{mode=='id'?it.id:(mode=='name'?it.name:[id:it.id,name:it.name])}}
+public  webCoRE_handler(evt){switch(evt.value){case 'pistonList':List p=state.webCoRE?.pistons?:[];Map d=evt.jsonData?:[:];if(d.id&&d.pistons&&(d.pistons instanceof List)){p.removeAll{it.iid==d.id};p+=d.pistons.collect{[iid:d.id]+it}.sort{it.name};state.webCoRE = [updated:now(),pistons:p];};break;case 'pistonExecuted':def cbk=state.webCoRE?.cbk;if(cbk&&evt.jsonData)"$cbk"(evt.jsonData);break;}}
 def getChildSize(child) {
 	def childList = []
 	def childMasterApp
@@ -3908,7 +3915,10 @@ def processTts() {
                     	pContCmdsR = pResponse.pContCmdsR
                     	pTryAgain = pResponse.pTryAgain
                     	}
-                    if (ptts.startsWith("what") || ptts.startsWith("tell") || ptts.startsWith("how") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("how many") || ptts.startsWith("check") || ptts.startsWith("who")) {
+                   	if (ptts.startsWith("what reminders") || ptts.startsWith("what messages") || ptts.startsWith("how many messages") || ptts.startsWith("what's up")) {
+                        def pResponse = child.profileEvaluate(dataSet)
+                        }
+                    	else if (ptts.startsWith("what") || ptts.startsWith("tell") || ptts.startsWith("how") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("how many") || ptts.startsWith("check") || ptts.startsWith("who")) {
                         def pResponse = child.profileFeedbackEvaluate(dataSet)
                         log.info "child.profileFeedbackEvaluate executed from the main at line 3688"
                     	outputTxt = pResponse.outputTxt
@@ -3916,7 +3926,7 @@ def processTts() {
                     	pContCmdsR = pResponse.pContCmdsR
                     	pTryAgain = pResponse.pTryAgain
                     	}
-                   else {
+					else {
                         def pResponse = child.profileEvaluate(dataSet)
                     	log.info "child.profileMessagingEvaluate executed from the main at line 3704"
                         outputTxt = pResponse?.outputTxt
