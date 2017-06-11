@@ -986,14 +986,20 @@ def profileFeedbackEvaluate(params) {
 
 
 //>>> Mode Status Feedback >>>>
-	if (tts.contains("mode")){
-		outputTxt = "The Current Mode is " + location.currentMode      
-		 return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-		}
-
+	if (tts.contains("mode")) {
+    	outputTxt = "The Current Mode is " + location.currentMode      
+			return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+			}
+        if (tts.contains("tell me")) {
+        	if (tts.contains("mode")){
+    		outputTxt = "The Current Mode is " + location.currentMode      
+			return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+        	}
+        }
+	
 //>>> Garage Doors Feedback >>>>
 	if (tts.contains("garage")) {
-    	if (deviceType == "fbGarageOpen" || deviceType == "fbGarageClose" || tts.contains("check")) {
+    	if (deviceType == "fbGarageOpen" || deviceType == "fbGarageClose") {
     	log.info "garage door method is active"
         if (fGarage == null) {
 			outputTxt = "I'm sorry, it seems that you have not selected any devices for this query, please configure your feedback devices in the EchoSistant smartapp."
@@ -1007,6 +1013,11 @@ def profileFeedbackEvaluate(params) {
             		outputTxt = "Yes, the ${deviceName} is ${command}"
             		}
                 }
+                else if (tts.contains("check") && command == "open") {
+            		def status = deviceName.currentValue("contact")
+                    outputTxt = "The ${deviceName} is currently " + status
+            		}
+                
             else { outputTxt = "No, the ${deviceName} is not currently ${command}" }
         	}
 		}
@@ -1441,6 +1452,9 @@ def profileFeedbackEvaluate(params) {
 				outputTxt = mGetWeatherElements(wElement)
 				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
                 }
+        else {
+        	profileEvaluate(params)
+			}
         }
   
 /******************************************************************************************************
@@ -2714,7 +2728,7 @@ private getFeedbackCommand(text){
             }    
 // Garage Doors
         if (text.contains("garage") && text.contains("door")) {  
-            if (text.contains("open")) {
+            if (text.contains("open") || text.contains("check")) {
                 command = "open" 
                 deviceType = "fbGarageOpen"
             }

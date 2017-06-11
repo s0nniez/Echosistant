@@ -3907,7 +3907,7 @@ def processTts() {
                     dataSet = [ptts:ptts, pintentName:pintentName] 
 					def childRelease = child.checkRelease()
 					log.warn "childRelease = $childRelease"
-                    if (ptts.endsWith("tonight") || ptts.contains("weather") || ptts.contains("temperature") || ptts.contains("forecast") || ptts.contains("humidity") || ptts.contains("rain") || ptts.contains("wind") || ptts.contains("humidity")) {
+                    if (ptts.startsWith("get") || ptts.endsWith("tonight") || ptts.contains("weather") || ptts.contains("temperature") || ptts.contains("forecast") || ptts.contains("humidity") || ptts.contains("rain") || ptts.contains("wind") || ptts.contains("humidity")) {
                     	def pResponse = child.profileFeedbackEvaluate(dataSet)
                         log.info "child.profileWeatherEvaluate executed from the main at line 3680"
                     	outputTxt = pResponse.outputTxt
@@ -3915,10 +3915,7 @@ def processTts() {
                     	pContCmdsR = pResponse.pContCmdsR
                     	pTryAgain = pResponse.pTryAgain
                     	}
-                   	if (ptts.startsWith("what reminders") || ptts.startsWith("what messages") || ptts.startsWith("how many messages") || ptts.startsWith("what's up")) {
-                        def pResponse = child.profileEvaluate(dataSet)
-                        }
-                    	else if (ptts.startsWith("what") || ptts.startsWith("tell") || ptts.startsWith("how") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("how many") || ptts.startsWith("check") || ptts.startsWith("who")) {
+					if (ptts.startsWith("give") || ptts.startsWith("for") || ptts.startsWith("tell") || ptts.startsWith("what") || ptts.startsWith("how") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("how many") || ptts.startsWith("check") || ptts.startsWith("who")) {
                         def pResponse = child.profileFeedbackEvaluate(dataSet)
                         log.info "child.profileFeedbackEvaluate executed from the main at line 3688"
                     	outputTxt = pResponse.outputTxt
@@ -3929,10 +3926,10 @@ def processTts() {
 					else {
                         def pResponse = child.profileEvaluate(dataSet)
                     	log.info "child.profileMessagingEvaluate executed from the main at line 3704"
-                        outputTxt = pResponse?.outputTxt
-                    	pContCmds = pResponse?.pContCmds
-                    	pContCmdsR = pResponse?.pContCmdsR
-                    	pTryAgain = pResponse?.pTryAgain
+                        outputTxt = pResponse.outputTxt
+                    	pContCmds = pResponse.pContCmds
+                    	pContCmdsR = pResponse.pContCmdsR
+                    	pTryAgain = pResponse.pTryAgain
                     	}
                 	}
             	}
