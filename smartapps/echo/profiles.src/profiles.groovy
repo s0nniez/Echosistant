@@ -1,19 +1,7 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
- ************************************ FOR INTERNAL USE ONLY ******************************************************
-							
- 								DON'T FORGET TO UPDATE RELEASE NUMBER!!!!!
- 
- ************************************ FOR INTERNAL USE ONLY ******************************************************
  *
- *		5/25/2017		Version:4.0 R.0.3.5		Keypad support, Virtual Person enhancement, Garage Door Support
- *		4/20/2017		Version:4.0 R.0.3.4 	WebCoRE integration
- *		4/20/2017		Version:4.0 R.0.3.2c	Added SHM state change when profile runs option
- *		4/10/2017		Version:4.0 R.0.3.2b	Added Virtual Person status change when profile runs option
- *		4/5/2017		Version:4.0 R.0.3.2a	Added "Cut on" and "Cut off" commands for lights and Automation Disable
- *		4/03/2017		Version:4.0 R.0.3.2		Fixed Alexa output when controlling groups and custom groups
- *		3/21/2017		Version:4.0 R.0.3.1 	added window covering group
- *		3/15/2017		Version:4.0 R.0.3.0 	minor bug fixes
+ *		6/12/2017		Version:5.0 R.0.0.1		Alpha Release
  *		2/17/2017		Version:4.0 R.0.0.1		Public Release
  * 
  *  Copyright 2016 Jason Headley & Bobby Dobrescu
@@ -60,8 +48,25 @@ preferences {
 def mainProfilePage() {	
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
 		section ("Name Your Profile (must match the Intent Name)") {
- 		   	label title:"Profile Name", required:false, defaultValue: "New Profile"  
+ 		   	label title:"Profile Name", required:true
         } 
+        section("Messaging and Intercom") {
+           	href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
+        }        
+        section("Feedback and Control") {
+           	href "feedback", title: "Feedback and Control Devices and Groups ", description: pSendComplete(), state: pSendSettings()   
+        }        
+        section ("Echo Mailbox") {
+			href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
+        }
+        section ("Restrictions") {
+			href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
+        }         
+	}
+}
+page name: "messaging"
+	def messaging(){
+		dynamicPage(name: "messaging", title: "", uninstall: false){    
         section("Audio and Text Message Settings") {
            	href "pSend", title: "Send These Message Types", description: pSendComplete(), state: pSendSettings()   
         }
@@ -69,22 +74,28 @@ def mainProfilePage() {
                 href "pConfig", title: "Message Output Settings", description: pConfigComplete(), state: pConfigSettings()
                 href "pActions", title: "Select Location and Device Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
             }
-        section("Devices/Group Control Settings and Restrictions") {
-	    	href "pGroups", title: "Create Groups and Select Devices for Control", description: pGroupComplete(), state: pGroupSettings()
-			href "pRestrict", title: "General Profile Restrictions", description: pRestrictComplete(), state: pRestrictSettings()
-			}
-        section("Select Devices physically located in this Profile <Room Control Feedback>") {
-       		href "fDevices", title: "Feedback on devices located in this Room", description: pConfigComplete(), state: pConfigSettings()
-            }
-		section("Keypads") {
-        	href "pKeypads", title: "Keypad Configuration and Actions Control Settings", description: pSendComplete(), state: pSendSettings()
-            }
-        section ("Quick Notes") {
-           	href "mPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
-            href "mFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
-            }    
-        }
 	}
+}
+page name: "feedback"
+	def feedback(){
+		dynamicPage(name: "feedback", title: "", uninstall: false){  
+        section("") {
+	    	href "pGroups", title: "Groups", description: pGroupComplete(), state: pGroupSettings()
+			href "fDevices", title: "Devices"//, description: pRestrictComplete(), state: pRestrictSettings()
+			href "pKeypads", title: "Keypad Configuration and Actions Control Settings", description: pSendComplete(), state: pSendSettings()
+			href "mDefaults", title: "Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
+            }        
+	}
+}
+page name: "mailbox"
+	def mailbox(){
+		dynamicPage(name: "mailbox", title: "", uninstall: false){  
+        section("") {
+            href "mPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
+            href "mFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
+			}        
+	}
+}
 page name: "fDevices"
 	def fDevices(){
     	dynamicPage(name: "fDevices", title: "", uninstall: false){
@@ -129,7 +140,50 @@ page name: "fDevices"
             
         }
 	}   
-            	
+    page name: "mDefaults"
+        def mDefaults(){
+                dynamicPage(name: "mDefaults", title: "", uninstall: false){
+                    section ("General Control") {            
+                        input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
+                        input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
+                        input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false						
+                    }
+                    section ("Fan Control") {            
+                        input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
+                        input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
+                        input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
+                        input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
+                    }
+                    section ("Activity Defaults") {            
+                        input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
+                        input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
+                    }
+					section ("Alexa Voice Settings") {            
+                        input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
+                        input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
+                        input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
+                    }
+                    section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {
+						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
+                        input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
+                        input "cFilterSonosDevice", "capability.musicPlayer", title: "Send Audio Notification when due, to this Sonos Type Device(s)", required: false, multiple: true   
+                        if (cFilterSonosDevice) {
+                            input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+                        }
+						if (location.contactBookEnabled){
+                        	input "recipients", "contact", title: "Send Text Notification when due, to this recipient(s) ", multiple: true, required: false
+           				}
+                        else {      
+                            input name: "sms", title: "Send Text Notification when due, to this phone(s) ", type: "phone", required: false
+                        		paragraph "You may enter multiple phone numbers separated by comma (E.G. 8045551122,8046663344)"
+                            input "push", "bool", title: "Send Push Notification too?", required: false, defaultValue: false
+                        }
+                     }
+                    section ("Weather Settings") {
+                        href "mWeatherConfig", title: "Tap here to configure the Weather defaults", description: "", state: complete
+                    }                     
+                }
+        }            	
 page name: "pKeypads"
 	def pKeypads(){
     	dynamicPage(name: "pKeypads", title: "", uninstall: false){
@@ -313,8 +367,6 @@ log.debug "The Virtual Person Device '${app.label}' has been deleted from your S
         deleteChildDevice(it.deviceNetworkId)
     }
 }               
-
-
 page name: "pSend"
     def pSend(){
         dynamicPage(name: "pSend", title: "", uninstall: false){
@@ -617,155 +669,6 @@ private pVirToggle() {
             }
     	}
 	}
-/************************************************************************************************************
-		Begining Process - Lambda via page b
-************************************************************************************************************/
-def processBegin(){
-    def versionTxt  = params.versionTxt 		
-    def versionDate = params.versionDate
-    def releaseTxt = params.releaseTxt
-    def event = params.intentResp
-        state.lambdaReleaseTxt = releaseTxt
-        state.lambdaReleaseDt = versionDate
-        state.lambdatextVersion = versionTxt
-    def versionSTtxt = textVersion()
-    def releaseSTtxt = release()
-    def pPendingAns = false 
-    def pContinue = state.pMuteAlexa
-    def pShort = state.pShort
-    def String outputTxt = (String) null 
-    	state.pTryAgain = false
-
-    if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^" 
-    if (debug) log.debug "Launch Data: (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
-
-//try {
-    if (event == "noAction") {//event == "AMAZON.NoIntent" removed 1/20/17
-    	state.pinTry = null
-        state.savedPINdata = null
-        state.pContCmdsR = null // added 1/20/2017
-        state.pTryAgain = false
-    }
-// >>> NO Intent <<<<    
-    if (event == "AMAZON.NoIntent"){
-    	if(state.pContCmdsR == "level" || state.pContCmdsR == "repeat"){
-            if (state.lastAction != null) {
-            	if (state.pContCmdsR == "level") {state.pContCmdsR = "repeat"}
-                def savedData = state.lastAction
-                outputTxt = controlHandler(savedData) 
-                pPendingAns = "level"
-            }
-            else {
-                state.pContCmdsR = null
-                pPendingAns = null
-            }
-        }
-        if( state.pContCmdsR == "door"){
-            if (state.lastAction != null) {
-                state.lastAction = null
-                state.pContCmdsR = null 
-                pPendingAns = null 
-            }
-        }
-        if( state.pContCmdsR == "feedback" ||  state.pContCmdsR == "bat" || state.pContCmdsR == "act"){
-            if (state.lastAction != null) {
-                state.lastAction = null
-                state.pContCmdsR = null 
-                pPendingAns = null 
-            }
-        }
-        if( state.pContCmdsR == "init" || state.pContCmdsR == "undefined"){
-        	state.pTryAgain = false
-        }
-        if( state.pContCmdsR == null){
-        	state.pTryAgain = false
-        }
-    }
-// >>> YES Intent <<<<     
-    if (event == "AMAZON.YesIntent") {
-        if (state.pContCmdsR == "level" || state.pContCmdsR == "repeat") {
-            state.pContCmdsR = null
-            state.lastAction = null
-            pPendingAns = "level"
-        }
-        else {
-        	state.pTryAgain = false
-        }
-        if(state.pContCmdsR == "door"){
-            if (state.lastAction != null) {
-                def savedData = state.lastAction
- 				//NEW PIN VALIDATION!!!!! ///// ADD THE THE usePIN variable below to run the PIN VALIDATION
- 				if(state.usePIN_D == true) {
-     				//RUN PIN VALIDATION PROCESS
-                	def pin = "undefined"
-               		def command = "validation"
-                	def num = 0
-                	def unit = "doors"
-                	outputTxt = pinHandler(pin, command, num, unit)
-                    pPendingAns = "pin"
-                    if (state.pinTry == 3) {pPendingAns = "undefined"}
-                    log.warn "try# ='${state.pinTry}'"
-					return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-            	}
-                else {
-                outputTxt = controlHandler(savedData) 
-                pPendingAns = "door"
-            	}
-        	}
-        }
-        if(state.pContCmdsR == "feedback"){
-            if (state.lastAction != null) {
-                def savedData = state.lastAction
-                outputTxt = getMoreFeedback(savedData) 
-                pPendingAns = "feedback"
-				return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-            }
-        }
-		if(state.pContCmdsR == "bat" || state.pContCmdsR == "act"){
-            if (state.lastAction != null) {
-                def savedData = state.lastAction
-                outputTxt = savedData
-                pPendingAns = "feedback"
-                state.pContCmdsR = null
-				return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-            }
-       }
-       if(state.pContCmdsR == "caps"){
-            if (state.lastAction!= null) {
-                outputTxt = state.lastAction
-                pPendingAns = "caps"
-				state.pContCmdsR = null 
-				state.lastAction = null
-                return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-            }
-        }        
-     }
-// >>> Handling a Profile Intent <<<<      
-     if (!event.startsWith("AMAZON") && event != "main" && event != "security" && event != "feedback" && event != "profile" && event != "noAction"){
-        childApps?.each {child ->
-			if (child?.label.toLowerCase() == event?.toLowerCase()) { 
-                pContinue = child?.checkState()  
-            }
-       	}
-        //if Alexa is muted from the child, then mute the parent too / MOVED HERE ON 2/9/17
-        pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
-		return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	     
-	}
-	if (debug){
-    	log.debug "Begining Process data: (event) = '${event}', (ver) = '${versionTxt}', (date) = '${versionDate}', (release) = '${releaseTxt}'"+ 
-      	"; data sent: pContinue = '${pContinue}', pShort = '${pShort}',  pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', releaseSTtxt = '${releaseSTtxt}' outputTxt = '${outputTxt}' ; "+
-        "other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
-	}
-    return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	 
-	
-} 
-/*catch (Throwable t) {
-        log.error t
-        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
-        state.pTryAgain = true
-        return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-	}
-}   */
 /************************************************************************************************************
 		Smart Home Monitor Status Change when Profile Executes
 ************************************************************************************************************/    
