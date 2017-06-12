@@ -567,86 +567,107 @@ def processBegin(){
    TEXT TO SPEECH PROCESS - Lambda via page t
 ************************************************************************************************************/
 def processTts() {
-		//LAMBDA VARIABLES
-		def ptts = params.ttstext 
-        def pintentName = params.intentName
-        //OTHER VARIABLES
-        def String outputTxt = (String) null 
- 		def String pContCmdsR = (String) null
-        def pContCmds = false
-        def pTryAgain = false
-        def pPIN = false
-        def dataSet = [:]
-        if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
-                
-        pContCmdsR = "profile"
-		def tProcess = true
-//try {
-        
-	if (ptts == "this is a test"){
-		outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
-		return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
-    }
-        
-        if(ptts.contains("no ") || ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes" && state.pContCmdsR != "wrongIntent"){
-        	if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts.contains("thank")){
-                outputTxt = "ok, I am here if you need me"
-                pContCmds = false
-                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        	}
-			else {
-                outputTxt = "ok, please continue, "
-                pContCmds = false
-                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        	}        
-        }
-        else{
-            childApps.each {child ->
-                if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
-                    if (debug) log.debug "Found a profile: '${pintentName}'"
-                    pintentName = child.label
-                    // recording last message
-                    state.lastMessage = ptts
-                    state.lastIntent = pintentName
-                    state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
-                    dataSet = [ptts:ptts, pintentName:pintentName] 
-					def childRelease = child.checkRelease()
-					log.warn "childRelease = $childRelease"
-                    def pResponse = child.profileEvaluate(dataSet)
-                    outputTxt = pResponse?.outputTxt
-                    pContCmds = pResponse?.pContCmds
-                    pContCmdsR = pResponse?.pContCmdsR
-                    pTryAgain = pResponse?.pTryAgain
-                }
-            }
-            if (outputTxt?.size()>0){
-                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-            }
-            else {
-                if (state.pShort != true){
-                	outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + pintentName + " or the command may not be supported"
-                }
-                else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "} 
-                pTryAgain = true
-                return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
-            }
-        	
-            def hText = "run a messaging and control profile"
-			if (state.pShort != true){ 
-				outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
-			}
-			else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "}         
-			pTryAgain = true
-			return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]              
-    	}
+//LAMBDA VARIABLES
+def ptts = params.ttstext 
+def pintentName = params.intentName
+//OTHER VARIABLES
+def String outputTxt = (String) null 
+def String pContCmdsR = (String) null
+def pContCmds = false
+def pTryAgain = false
+def pPIN = false
+def dataSet = [:]
+if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"
 
+    pContCmdsR = "profile"
+	def tProcess = true
+//try {
+
+if (ptts == "this is a test"){
+	outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
+	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
+}
+
+    if(ptts.contains("no ") || ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes" && state.pContCmdsR != "wrongIntent"){
+    	if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts.contains("thank")){
+            outputTxt = "ok, I am here if you need me"
+            pContCmds = false
+            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+    	}
+		else {
+            outputTxt = "ok, please continue, "
+            pContCmds = false
+            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+    	}        
+    }
+    else{
+         childApps.each {child ->
+            if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
+                if (debug) log.debug "Found a profile: '${pintentName}'"
+                pintentName = child.label
+                // recording last message
+                state.lastMessage = ptts
+                state.lastIntent = pintentName
+                state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
+                dataSet = [ptts:ptts, pintentName:pintentName] 
+				def childRelease = child.checkRelease()
+				log.warn "childRelease = $childRelease"
+                if (ptts.startsWith("get") || ptts.endsWith("tonight") || ptts.contains("weather") || ptts.contains("temperature") || ptts.contains("forecast") || ptts.contains("humidity") || ptts.contains("rain") || ptts.contains("wind") || ptts.contains("humidity")) {
+                	def pResponse = child.profileFeedbackEvaluate(dataSet)
+                    log.info "child.profileWeatherEvaluate executed from the main at line 3680"
+                	outputTxt = pResponse.outputTxt
+                	pContCmds = pResponse.pContCmds
+                	pContCmdsR = pResponse.pContCmdsR
+                	pTryAgain = pResponse.pTryAgain
+                	}
+				if (ptts.startsWith("give") || ptts.startsWith("for") || ptts.startsWith("tell") || ptts.startsWith("what") || ptts.startsWith("how") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("how many") || ptts.startsWith("check") || ptts.startsWith("who")) {
+                    def pResponse = child.profileFeedbackEvaluate(dataSet)
+                    log.info "child.profileFeedbackEvaluate executed from the main at line 3688"
+                	outputTxt = pResponse.outputTxt
+                	pContCmds = pResponse.pContCmds
+                	pContCmdsR = pResponse.pContCmdsR
+                	pTryAgain = pResponse.pTryAgain
+                	}
+				else {
+                    def pResponse = child.profileEvaluate(dataSet)
+                	log.info "child.profileMessagingEvaluate executed from the main at line 3704"
+                    outputTxt = pResponse.outputTxt
+                	pContCmds = pResponse.pContCmds
+                	pContCmdsR = pResponse.pContCmdsR
+                	pTryAgain = pResponse.pTryAgain
+                	}
+            	}
+        	}
+        if (outputTxt?.size()>0){
+            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+        }
+        else {
+            if (state.pShort != true){
+            	outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + pintentName + " or the command may not be supported"
+            }
+            else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "} 
+            pTryAgain = true
+            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
+        }
+
+        def hText = "run a messaging and control profile"
+		if (state.pShort != true){ 
+			outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
+			return outputTxt
+        }
+		else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "
+        	return outputTxt
+            }         
+		pTryAgain = true
+		return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]              
+	}
 } 
 /*catch (Throwable t) {
-        log.error t
-        outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
-        state.pTryAgain = true
-        return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-    } 
+log.error t
+outputTxt = "Oh no, something went wrong. If this happens again, please reach out for help!"
+state.pTryAgain = true
+return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+} 
 }	*/
 /************************************************************************************************************
    REMINDERS AND EVENTS PROCESS - Lambda via page r
