@@ -1,8 +1,6 @@
 /* 
  * Message and Control Profile - EchoSistant Add-on 
  *
- *		6/12/2017		Version:5.0 R.0.0.1		Alpha Release
- *		2/17/2017		Version:4.0 R.0.0.1		Public Release
  * 
  *  Copyright 2016 Jason Headley & Bobby Dobrescu
  *
@@ -27,8 +25,11 @@ definition(
 	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
 	iconX3Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png")
 /**********************************************************************************************************************************************/
+private def textVersion() {
+	def text = "5.0"
+}
 private release() {
-	def text = "R.0.3.5"
+    def text = "R.5.0.1"
 }
 /**********************************************************************************************************************************************/
 preferences {

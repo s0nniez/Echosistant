@@ -31,7 +31,7 @@ private def textVersion() {
 	def text = "5.0"
 }
 private release() {
-    def text = "R.5.0.0"
+    def text = "R.5.0.1"
 }
 /**********************************************************************************************************************************************/
 preferences {   
@@ -44,7 +44,6 @@ preferences {
             page name: "mBonus"
             	page name: "mDashboard"
                 	page name: "mDashConfig"
-                    page name: "pageTwo"
                     page name: "mWeatherConfig"
                     page name: "scheduled"
 }            
@@ -60,6 +59,10 @@ page name: "mainParentPage"
                 	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"                               
             }    
                 //Dashboard
+			section ("") {
+                    input "activateDashboard", "bool", title: "Show Echo: DashBoard", required: false, default: false, submitOnChange: true
+                }
+				if (activateDashboard) {  
                 section ("Echo Dashboard") { 
                     //href "mBonus", title: 
 				def shmLocation = location.currentState("alarmSystemStatus")?.value
@@ -96,8 +99,6 @@ page name: "mainParentPage"
                 paragraph "The ${tStat2} is ${temp2}°. The thermostat is set to ${setPH2}°, is in ${mode2} mode and is currently ${oper2}."
             if ("${mode2}" == "off")
                 paragraph "The ${tStat2} thermostat is currently ${mode2}, and the temperature is ${temp2}°." 
-
-
                 def Sens1temp = (tempSens1?.currentValue("temperature"))
                 def Sens2temp = (tempSens2?.currentValue("temperature"))
                 def Sens3temp = (tempSens3?.currentValue("temperature"))
@@ -117,8 +118,11 @@ page name: "mainParentPage"
                 href "scheduled", title: "Echo Mailbox", description: "Tap here to check your mailbox", state: complete
                 
                 }
-            }
-
+                section ("Echo Dashboard Options") {
+					href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
+                }
+        	}
+    	}
     }
 	page name: "mProfiles"    
             def mProfiles() {
@@ -143,12 +147,6 @@ page name: "mSettings"
  					href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
                 		image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/wiki.png"
                 	} 
-                section ("Home Status Dashboard") {
-                    input "activateDashboard", "bool", title: "Activate the DashBoard on the Home Page", required: false, default: false, submitOnChange: true
-                    if (activateDashboard) {
-                        href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
-                    }
-                }
                 section("Debugging") {
                     input "debug", "bool", title: "Enable Debug Logging", default: true, submitOnChange: true 
                     }
