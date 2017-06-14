@@ -12,16 +12,8 @@
     {
       "slots": [
         {
-          "name": "calendarName",
-          "type": "LIST_OF_CALENDARS"
-        },
-        {
           "name": "type",
           "type": "LIST_OF_EVENTS"
-        },
-        {
-          "name": "profile",
-          "type": "LIST_OF_PROFILES"
         },
         {
           "name": "unit",
