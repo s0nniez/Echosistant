@@ -1,8 +1,7 @@
 /**
  *  EchoSistant - Lambda Code
  *
- *  Version 5.2.00 - 6/6/2017 Added Reminders Profile
- *  Version 5.1.00 - 3/21/2017 Added Reminders Profile
+ *  Version 5.0.01 - 6/14/2017 Alpha
  * 
  *  Special thanks for Michael Struck @MichaelS (Developer of AskAlexa) for allowing me
  *  to build off of his base code.  Special thanks to Keith DeLong  @N8XD for his 
