@@ -16,10 +16,7 @@ mDetails {startingD} at {startingT}
 mDetails {endingD}
 mDetails {duration} {unit}
 mDetails {duration} {unit}
-mDetails {calendarName}
 mDetails {unit}
 mDetails {duration} {unit}
-mDetails send to {profile}
-mDetails forward to {profile}
 mDetails {type} for {startingD} at {startingT}
 mDetails {type} for {startingD}
