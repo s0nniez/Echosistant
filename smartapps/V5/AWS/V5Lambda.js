@@ -1,17 +1,18 @@
 /**
  *  EchoSistant - Lambda Code
  *
- *  Version 5.0.0 - 3/21/2017 Added Reminders Profile
+ *  Version 5.2.00 - 6/6/2017 Added Reminders Profile
+ *  Version 5.1.00 - 3/21/2017 Added Reminders Profile
  * 
  *  Special thanks for Michael Struck @MichaelS (Developer of AskAlexa) for allowing me
  *  to build off of his base code.  Special thanks to Keith DeLong  @N8XD for his 
  *  assistance in troubleshooting.... as I learned.....  Special thanks to Bobby
  *  @SBDOBRESCU for jumping on board and being a co-consipirator in this adventure.
  *
- *  Version 5.0.0 - 3/24/2017 Beta Release
- *  Version 4.0.0 - 2/17/2017 Public Release
- *  Version 3.0.0 - 12/1/2016  Added new parent variables
- *  Version 2.0.0 - 11/20/2016  Continued Commands
+ *  Version 5.0.00 - 3/24/2017 Beta Release
+ *  Version 4.0.00 - 2/17/2017 Public Release
+ *  Version 3.0.00 - 12/1/2016  Added new parent variables
+ *  Version 2.0.00 - 11/20/2016  Continued Commands
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -27,16 +28,16 @@
 exports.handler = function( event, context ) {
     var https = require( 'https' );
     // Paste app code here between the breaks------------------------------------------------
-    var STappID = 'd9e4caa5-3498-42af-8529-c6a766422fee';
-    var STtoken = '7a8834f4-294b-493f-a0ff-94a5aab94473';
-    var url='https://graph.api.smartthings.com:443/api/smartapps/installations/' + STappID + '/' ;
+    var STappID = 'xxxxxx-ecc1-4077-8b95-xxxxxx'; 
+    var STtoken = 'xxxxxx-7c5f-4955-a3d2-xxxxxx';
+    var url= 'https://graph.api.smartthings.com:443/api/smartapps/installations/' + STappID + '/' ;
         //---------------------------------------------------------------------------------------
         var cardName ="";
         var areWeDone = true;
 //-------- Validation process and begining interaction with SmartThings app-------------------- 
         var versionTxt = '5.0';
-        var versionDate= '2/17/2017';
-        var releaseTxt = "5.0.00";
+        var versionDate= '6/1/2017';
+        var releaseTxt = "5.2.00";
         var intentResp = "noAction";
         if (event.request.type == "IntentRequest"){
             intentResp = event.request.intent.name;
@@ -82,7 +83,7 @@ exports.handler = function( event, context ) {
                 }
                 else if (intentName == "AMAZON.YesIntent" && pPendingAns == "caps" && short === true ) {
                     areWeDone=false;
-                    text = text + ", anything else?";
+                    text = text + ", anythingI else?";
                     return output(text, context, cardName, areWeDone);
                 }
                 else if (intentName == "AMAZON.YesIntent" && pPendingAns == "pin") {
@@ -101,39 +102,6 @@ exports.handler = function( event, context ) {
                 else if (intentName.startsWith("AMAZON") && intentName.endsWith("Intent")) { 
                     alexaResp (intentName, context, "Amazon Intent", areWeDone, short); 
                 }
-//-------- Devicce Control Type Request------------------------------------------------------------------
-                else if (intentName == "main"){           
-                    var cCommand = event.request.intent.slots.cCommand.value;
-                    var cNum = event.request.intent.slots.cNum.value;
-                    var cPIN = event.request.intent.slots.cPIN.value;
-                    var cDevice = event.request.intent.slots.cDevice.value;
-                    var cUnit = event.request.intent.slots.cUnit.value;
-                    var cGroup = event.request.intent.slots.cGroup.value;
-                    url += 'c?cDevice=' + cDevice + '&cGroup=' + cGroup + '&cCommand=' + cCommand + '&cNum=' + cNum + '&cPIN=' + cPIN + '&cUnit=' + cUnit + '&intentName=' + intentName;    
-                    process = true;
-                    cardName = "EchoSistant Control";
-                }
-//-------- Security Control Type Request------------------------------------------------------------------
-                else if (intentName == "security"){           
-                    var sCommand = event.request.intent.slots.cCommand.value;
-                    var sNum = event.request.intent.slots.cNum.value;
-                    var sPIN = event.request.intent.slots.cPIN.value;
-                    var sType = event.request.intent.slots.sType.value;
-                    var sControl = event.request.intent.slots.sControl.value;
-                    url += 's?sControl=' + sControl + '&sCommand=' + sCommand + '&sType=' + sType + '&sNum=' + sNum + '&sPIN=' + sPIN + '&intentName=' + intentName;    
-                    process = true;
-                    cardName = "EchoSistant Security";
-                }
-//-------- Feedback Type Request------------------------------------------------------------------
-                else if (intentName == "feedback"){           
-                    var fDevice = event.request.intent.slots.cDevice.value;
-                    var fQuery = event.request.intent.slots.fQuery.value;
-                    var fOperand = event.request.intent.slots.fOperand.value;
-                    var fCommand = event.request.intent.slots.cCommand.value;
-                    url += 'f?fDevice=' + fDevice + '&fCommand=' + fCommand + '&fQuery=' + fQuery + '&fOperand=' + fOperand + '&intentName=' + intentName;
-                    process = true;
-                    cardName = "EchoSistant Feedback";
-                }
 //-------- Reminder Type Request------------------------------------------------------------------
                 else if (intentName == "message"){           
                     var rMessage = event.request.intent.slots.ttstext.value;
@@ -147,10 +115,9 @@ exports.handler = function( event, context ) {
                     var rFrequency = event.request.intent.slots.unit.value;
                     var rStartingDate = event.request.intent.slots.startingD.value;
                     var rStartingTime = event.request.intent.slots.startingT.value;
-                    var rEndingDate = event.request.intent.slots.endingD.value;
                     var rDuration = event.request.intent.slots.duration.value;
                     var rProfile = event.request.intent.slots.profile.value;
-                    url += 'r?rCalendarName=' + rCalendarName + '&rType=' + rType + '&rFrequency=' + rFrequency + '&rStartingDate=' + rStartingDate + '&rStartingTime=' + rStartingTime + '&rEndingDate=' + rEndingDate + '&rDuration=' + rDuration + '&intentName=' + intentName;
+                    url += 'r?rCalendarName=' + rCalendarName + '&rType=' + rType + '&rProfile=' + rProfile + '&rFrequency=' + rFrequency + '&rStartingDate=' + rStartingDate + '&rStartingTime=' + rStartingTime + '&rDuration=' + rDuration + '&intentName=' + intentName;
                     process = true;
                     cardName = "EchoSistant Event Details";
                 }                
