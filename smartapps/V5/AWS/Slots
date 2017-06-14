@@ -1,6 +1,3 @@
-LIST_OF_CALENDARS
-< add here calendar names >
-
 LIST_OF_UNITS
 hourly
 daily
@@ -26,9 +23,6 @@ recurring
 recurring reminder
 event
 calendar event
-
-LIST_OF_PROFILES
-< insert her names of profiles to send events to >
 
 LIST_OF_WORDS
 a
