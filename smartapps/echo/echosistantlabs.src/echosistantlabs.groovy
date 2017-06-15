@@ -31,7 +31,7 @@ private def textVersion() {
 	def text = "5.0"
 }
 private release() {
-    def text = "R.5.0.1"
+    def text = "R.5.0.1a"
 }
 /**********************************************************************************************************************************************/
 preferences {   
@@ -433,7 +433,7 @@ def processBegin(){
     def String outputTxt = (String) null 
     	state.pTryAgain = false
     if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^" 
-    if (debug) log.debug "Launch Data: (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
+    //if (debug) log.debug "Launch Data: (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
 //try {
     if (event == "noAction") {//event == "AMAZON.NoIntent" removed 1/20/17
     	state.pinTry = null
@@ -536,7 +536,7 @@ def processBegin(){
         }        
      }
 // >>> Handling a Profile Intent <<<<      
-     if (!event.startsWith("AMAZON") && event != "main" && event != "security" && event != "feedback" && event != "profile" && event != "noAction"){
+    if (!event.startsWith("AMAZON") && event != "main" && event != "security" && event != "feedback" && event != "profile" && event != "noAction"){
 		childApps?.each {child ->
 			if (child?.label.toLowerCase() == event?.toLowerCase()) { 
                 pContinue = child?.checkState()  
@@ -561,44 +561,59 @@ def processBegin(){
         return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
 	}
 }   */
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Could possibly updated these lists from a website
+String getWeatherWords() 	{"get,tonight,weather,temperature,forecast,humidity,rain,wind,humidity"}
+String getFeedBackWords() 	{"give,for,tell,what,how,is,when,which,are,how many,check,who"}
+String getStopWords() 		{"no,stop,cancel,kill it,zip it,thank"}
+
+//New Word Parsing Functions. 
+String parseWordReturn(String input, String fromList) {
+	return fromList.split(",").find({input.contains(it)})
+}
+Boolean parseWordFound(String input, String fromList) {
+	return fromList.split(",").find({input.contains(it)}) ? true : false
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /************************************************************************************************************
    TEXT TO SPEECH PROCESS - Lambda via page t
 ************************************************************************************************************/
 def processTts() {
-//LAMBDA VARIABLES
-def ptts = params.ttstext 
-def pintentName = params.intentName
-//OTHER VARIABLES
-def String outputTxt = (String) null 
-def String pContCmdsR = (String) null
-def pContCmds = false
-def pTryAgain = false
-def pPIN = false
-def dataSet = [:]
-if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"
+    //LAMBDA VARIABLES
+    def ptts = params.ttstext 
+    def pintentName = params.intentName
+    //OTHER VARIABLES
+    def String outputTxt = (String) null 
+    def String pContCmdsR = (String) null
+    def pContCmds = false
+    def pTryAgain = false
+    def pPIN = false
+    def dataSet = [:]
+    if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"
 
     pContCmdsR = "profile"
 	def tProcess = true
 //try {
 
-if (ptts == "this is a test"){
-	outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
-	return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
-}
+    if (ptts == "this is a test"){
+        outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
+    }
 
-    if(ptts.contains("no ") || ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts == "yes" && state.pContCmdsR != "wrongIntent"){
-    	if(ptts == "no" || ptts == "stop" || ptts == "cancel" || ptts == "kill it" || ptts == "zip it" || ptts.contains("thank")){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//Might need some tweaking here...
+    if(parseWordFound(ptts, stopWords) && state.pContCmdsR != "wrongIntent"){
+        if(ptts.contains("thank")){
             outputTxt = "ok, I am here if you need me"
             pContCmds = false
             return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-    	}
-		else {
+        }
+        else {
             outputTxt = "ok, please continue, "
             pContCmds = false
             return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-    	}        
-    }
-    else{
+        }        
+    } else {
          childApps.each {child ->
             if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
                 if (debug) log.debug "Found a profile: '${pintentName}'"
@@ -610,32 +625,32 @@ if (ptts == "this is a test"){
                 dataSet = [ptts:ptts, pintentName:pintentName] 
 				def childRelease = child.checkRelease()
 				log.warn "childRelease = $childRelease"
-                if (ptts.startsWith("get") || ptts.endsWith("tonight") || ptts.contains("weather") || ptts.contains("temperature") || ptts.contains("forecast") || ptts.contains("humidity") || ptts.contains("rain") || ptts.contains("wind") || ptts.contains("humidity")) {
+                if (parseWordFound(ptts, weatherWords)) {
                 	def pResponse = child.profileFeedbackEvaluate(dataSet)
                     log.info "child.profileWeatherEvaluate executed from the main at line 3680"
                 	outputTxt = pResponse.outputTxt
                 	pContCmds = pResponse.pContCmds
                 	pContCmdsR = pResponse.pContCmdsR
                 	pTryAgain = pResponse.pTryAgain
-                	}
-				if (ptts.startsWith("give") || ptts.startsWith("for") || ptts.startsWith("tell") || ptts.startsWith("what") || ptts.startsWith("how") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("how many") || ptts.startsWith("check") || ptts.startsWith("who")) {
+                }
+				if (parseWordFound(ptts, feedBackWords)) {
                     def pResponse = child.profileFeedbackEvaluate(dataSet)
-                    log.info "child.profileFeedbackEvaluate executed from the main at line 3688"
+                    log.info "child.profileFeedbackEvaluate executed from the main at line 624"
                 	outputTxt = pResponse.outputTxt
                 	pContCmds = pResponse.pContCmds
                 	pContCmdsR = pResponse.pContCmdsR
                 	pTryAgain = pResponse.pTryAgain
-                	}
-				else {
+                } else {
                     def pResponse = child.profileEvaluate(dataSet)
-                	log.info "child.profileMessagingEvaluate executed from the main at line 3704"
+                	log.info "child.profileMessagingEvaluate executed from the main at line 632"
                     outputTxt = pResponse.outputTxt
                 	pContCmds = pResponse.pContCmds
                 	pContCmdsR = pResponse.pContCmdsR
                 	pTryAgain = pResponse.pTryAgain
-                	}
-            	}
-        	}
+                }
+            }
+        }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
         if (outputTxt?.size()>0){
             return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
         }
