@@ -58,16 +58,13 @@ page name: "mainParentPage"
 				href "mSettings", title: "General Settings", description: mSettingsD(), state: mSettingsS(),
                 	image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"                               
             }    
-                //Dashboard
-			section ("") {
-                    input "activateDashboard", "bool", title: "Show Echo: DashBoard", required: false, default: false, submitOnChange: true
-                }
+                
 				if (activateDashboard) {  
                 section ("Echo Dashboard") { 
                     //href "mBonus", title: 
 				def shmLocation = location.currentState("alarmSystemStatus")?.value
             	def shmStatus = shmLocation == "off" ? "Disarmed" : shmLocation == "away" ? "Armed (Away)" : shmLocation == "stay" ? "Armed (Stay)" : null
-                paragraph 	"Location:\nCurrent Mode: ${location.currentMode} \n"  +
+                paragraph 	"Current Mode: ${location.currentMode} \n"  +
                         	"Smart Home Monitor Status: ${shmStatus}"
                     if (mLocalWeather) paragraph "Weather: ${state.todayWeather}"
                     if (activeAlert) paragraph "Active Weather Alerts: ${state.activeAlert}"
@@ -118,9 +115,6 @@ page name: "mainParentPage"
                 href "scheduled", title: "Echo Mailbox", description: "Tap here to check your mailbox", state: complete
                 
                 }
-                section ("Echo Dashboard Options") {
-					href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
-                }
         	}
     	}
     }
@@ -147,6 +141,15 @@ page name: "mSettings"
  					href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
                 		image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/wiki.png"
                 	} 
+                //Dashboard on main page
+				section ("") {
+                    input "activateDashboard", "bool", title: "Show Echo: DashBoard", required: false, default: false, submitOnChange: true
+                	}
+                if (activateDashboard) {
+                section ("Echo Dashboard Options") {
+					href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
+                	}
+                }
                 section("Debugging") {
                     input "debug", "bool", title: "Enable Debug Logging", default: true, submitOnChange: true 
                     }
