@@ -29,7 +29,7 @@ private def textVersion() {
 	def text = "5.0"
 }
 private release() {
-    def text = "R.5.0.1a"
+    def text = "R.5.0.1c"
 }
 /**********************************************************************************************************************************************/
 preferences {
@@ -45,1221 +45,1225 @@ preferences {
 //dynamic page methods
 def mainProfilePage() {	
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
-		section ("Name Your Profile (must match the AWS Intent Name)") {
- 		   	label title:"Profile Name", required:true
+        section ("Name Your Profile (must match the AWS Intent Name)") {
+            label title:"Profile Name", required:true
         } 
         section("Audio, SMS, Push Messaging and Alexa Responses") {
-           	href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
+            href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
         }        
         section("Devices, Groups, Feedback, and Keypads") {
-           	href "feedback", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
+            href "feedback", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
         }        
         section ("Echo Mailbox") {
-			href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
+            href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
         }
         section ("Quick Notes") {
-        	href "mQuickNotes", title: "Quick Notes to Alexa", description: pSendComplete(), state: pSendSettings() 
+            href "mQuickNotes", title: "Quick Notes to Alexa", description: pSendComplete(), state: pSendSettings() 
         }
         section ("Restrictions") {
-			href "pRestrict", title: "General Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
+            href "pRestrict", title: "General Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
         }         
-	}
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
 /////////// OUTGOING MESSAGING   
 //////////////////////////////////////////////////////////////////////////////
 page name: "messaging"
-	def messaging(){
-		dynamicPage(name: "messaging", title: "", uninstall: false){    
-             section ("Audio Messages", hideWhenEmpty: true){
-                input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false, submitOnChange: true 
-                input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
-                if (sonosDevice) {
-                    input "volume", "number", title: "Temporarily change volume", description: "0-100% (default value = 30%)", required: false
-                }  
-                if (synthDevice || sonosDevice) {
+def messaging(){
+    dynamicPage(name: "messaging", title: "", uninstall: false){    
+        section ("Audio Messages", hideWhenEmpty: true){
+            input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false, submitOnChange: true 
+            input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
+            if (sonosDevice) {
+                input "volume", "number", title: "Temporarily change volume", description: "0-100% (default value = 30%)", required: false
+            }  
+            if (synthDevice || sonosDevice) {
                 input "pRunMsg", "Text", title: "Play this predetermined message when this profile executes...", required: false
                 input "pPreMsg", "text", title: "Play this message before your spoken message...", defaultValue: none, submitOnChange: true, required: false 
-            	input "pDisableALLProfile", "bool", title: "Disable Audio Output on the Remote Speaker(s)?", required: false
-                }
-            }    
-            section ("SMS Messages" ) {
-            	input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
-                if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-           			input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
-                if (sendText){      
-                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
-                    input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
-                	input "pRunTextMsg", "Text", title: "Send this predetermined text when this profile executes...", required: false
-                    input "pPreTextMsg", "text", title: "Append this text before the text message...", defaultValue: none, required: false 
-            		}
-                }    
-            section ("Push Messages") {
-            	input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false
-            	input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false
-            }        
-            section ("Alexa Responses") {
-                    input "pAlexaCustResp", "text", title: "Custom Response from Alexa...", required: false, defaultValue: none
-                    input "pAlexaRepeat", "bool", title: "Alexa repeats the sent message to the sender as the response...", defaultValue: false, submitOnChange: true
-                        if (pAlexaRepeat) {			
-                        	if (pAlexaRepeat && pAlexaCustResp){
-                           		paragraph 	"NOTE: only one custom Alexa response can"+
-                            				" be delivered at once. Please only enable Custom Response OR Repeat Message"
-                            }				
-                        }
-                    input "pContCmdsProfile", "bool", title: "Disable Conversation? (Alexa no longer prompts for additional commands, after a message is sent to a remote speaker, except for 'try again' if an error ocurs)", defaultValue: false
-             		input "pDisableAlexaProfile", "bool", title: "Disable Alexa Feedback Responses (silence Alexa - overrides all other Alexa Options)?", defaultValue: false
-                    }                 
-    			}
+                input "pDisableALLProfile", "bool", title: "Disable Audio Output on the Remote Speaker(s)?", required: false
             }
+        }    
+        section ("SMS Messages" ) {
+            input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
+            if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+            input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
+            if (sendText){      
+                paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
+                input "pRunTextMsg", "Text", title: "Send this predetermined text when this profile executes...", required: false
+                input "pPreTextMsg", "text", title: "Append this text before the text message...", defaultValue: none, required: false 
+            }
+        }    
+        section ("Push Messages") {
+            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false
+            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false
+        }        
+        section ("Alexa Responses") {
+            input "pAlexaCustResp", "text", title: "Custom Response from Alexa...", required: false, defaultValue: none
+            input "pAlexaRepeat", "bool", title: "Alexa repeats the sent message to the sender as the response...", defaultValue: false, submitOnChange: true
+            if (pAlexaRepeat) {			
+                if (pAlexaRepeat && pAlexaCustResp){
+                    paragraph 	"NOTE: only one custom Alexa response can"+
+                        " be delivered at once. Please only enable Custom Response OR Repeat Message"
+                }				
+            }
+            input "pContCmdsProfile", "bool", title: "Disable Conversation? (Alexa no longer prompts for additional commands, after a message is sent to a remote speaker, except for 'try again' if an error ocurs)", defaultValue: false
+            input "pDisableAlexaProfile", "bool", title: "Disable Alexa Feedback Responses (silence Alexa - overrides all other Alexa Options)?", defaultValue: false
+        }                 
+    }
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// CONTROL AND FEEDBACK 
 //////////////////////////////////////////////////////////////////////////////
 page name: "feedback"
-	def feedback(){
-		dynamicPage(name: "feedback", title: "", uninstall: false){  
+def feedback(){
+    dynamicPage(name: "feedback", title: "", uninstall: false){  
         section("") {
-	    	href "pGroups", title: "Device Groups Control", description: pGroupComplete(), state: pGroupSettings()
-			href "fDevices", title: "Device Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
-			href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
-			href "mDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
+            href "pGroups", title: "Device Groups Control", description: pGroupComplete(), state: pGroupSettings()
+            href "fDevices", title: "Device Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
+            href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
+            href "mDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
             href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
         }        
-	}
+    }
 }
 //////////////////////////////////////////////////////////////////////////////
 /////////// DEVICE GROUPS CONTROL
 //////////////////////////////////////////////////////////////////////////////
-	page name: "pGroups"
-        def pGroups() {
-            dynamicPage(name: "pGroups", title: "",install: false, uninstall: false) {
-                section ("Group These Switches", hideWhenEmpty: true){
-                        input "gSwitches", "capability.switch", title: "Dimmers and Switches...", multiple: true, required: false, submitOnChange: true
-                        if (gSwitches) {
-                            paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa, turn on/off the lights in the " + app.label
-                        }
-                        input "gDisable", "capability.switch", title: "Disable Automation Switches (disable = off, enable = on)", multiple: true, required: false, submitOnChange: true
-						if (gDisable) {
-                            input "reverseDisable", "bool", title: "Reverse Disable Command (disable = on, enable = off)", required: false, defaultValue: false
-                            paragraph "You can now use this group by speaking commands to Alexa:  \n" +
-                            " E.G: Disable Automation in the " + app.label
-                        }
-						input "gFans", "capability.switch", title: "Ceiling Fans...", multiple: true, required: false, submitOnChange: true
-                        if (gFans) {
-                            paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa turn on/off the fan in the " + app.label
-                        }
-						input "gHues", "capability.colorControl", title: "Colored Lights...", multiple: true, required: false, submitOnChange: true
-                        if (gHues) {
-                            paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa set the color to red in the " + app.label
-                        }
-                    }
-                section ("Vents and Window Coverings", hideWhenEmpty: true){ 
-                    input "gVents", "capability.switchLevel", title: "Smart Vent(s)...", multiple: true, required: false, submitOnChange: true
-						if (sVent) {
-                            paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa open/close the vents in the " + app.label
-                        }
-					input "gShades",  "capability.windowShade", title: "Window Covering Devices...", multiple: true, required: false   
-                    	if (gShades) {
-                            paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa open/close the blinds/curtains/window coverings in the " + app.label
-                        }
-                	}                
-                section ("Custom Groups", hideWhenEmpty: true){
-                	href "gCustom", title: "Create Custom Groups", description: "Tap to set"
-                    }
-                section ("Media - Playing Music" , hideWhenEmpty: true){
-					input "sMedia", "capability.mediaController", title: "Use This Media Controller", multiple: false, required: false, submitOnChange: true
-                    	if (sMedia) {
-                            paragraph "You can now control this device by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa start < Harmony Activity Name > in the " + app.label
-                        }
-						if (sSpeaker || sSynth) {
-                            paragraph "You can now control this device by speaking commands to Alexa:  \n" +
-                            " E.G: Alexa mute/unmute < Media Device Name > in the " + app.label
-                        }
-                    input "sSpeaker", "capability.musicPlayer", title: "Use This Media Player Device For Volume Control", required: false, multiple: false, submitOnChange: true
-					input "sSynth", "capability.speechSynthesis", title: "Use This Speech Synthesis Capable Device", multiple: false, required: false, submitOnChange: true
-                }             
+page name: "pGroups"
+def pGroups() {
+    dynamicPage(name: "pGroups", title: "",install: false, uninstall: false) {
+        section ("Group These Switches", hideWhenEmpty: true){
+            input "gSwitches", "capability.switch", title: "Dimmers and Switches...", multiple: true, required: false, submitOnChange: true
+            if (gSwitches) {
+                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa, turn on/off the lights in the " + app.label
             }
-      	}
-        page name: "gCustom"    
-            def gCustom(){
-                dynamicPage(name: "gCustom", title: "",install: false, uninstall: false) {
-                    section ("Create a Group", hideWhenEmpty: true){
-                        input "gCustom1", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                        input "gCustom1N", "text", title: "Name this Group...", multiple: false, required: false
-                    }
-                    if (gCustom1) {
-                        section ("+ Create another Group", hideWhenEmpty: true){
-                            input "gCustom2", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                            input "gCustom2N", "text", title: "Name this Group...", multiple: false, required: false
-                        }
-                    }
-                    if (gCustom2) {
-                        section ("+ Create another Group", hideWhenEmpty: true){
-                            input "gCustom3", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                            input "gCustom3N", "text", title: "Name this Group...", multiple: false, required: false
-                        }
-                    }
-                    if (gCustom3) {    
-                        section ("+ Create another Group", hideWhenEmpty: true){
-                            input "gCustom4", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                            input "gCustom4N", "text", title: "Name this Group...", multiple: false, required: false
-                        }
-                    }
-                    if (gCustom4) {    
-                        section ("+ Create another Group", hideWhenEmpty: true){
-                            input "gCustom5", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                            input "gCustom5N", "text", title: "Name this Group...", multiple: false, required: false
-                        }
-                    }
-                }
+            input "gDisable", "capability.switch", title: "Disable Automation Switches (disable = off, enable = on)", multiple: true, required: false, submitOnChange: true
+            if (gDisable) {
+                input "reverseDisable", "bool", title: "Reverse Disable Command (disable = on, enable = off)", required: false, defaultValue: false
+                paragraph "You can now use this group by speaking commands to Alexa:  \n" +
+                    " E.G: Disable Automation in the " + app.label
             }
+            input "gFans", "capability.switch", title: "Ceiling Fans...", multiple: true, required: false, submitOnChange: true
+            if (gFans) {
+                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa turn on/off the fan in the " + app.label
+            }
+            input "gHues", "capability.colorControl", title: "Colored Lights...", multiple: true, required: false, submitOnChange: true
+            if (gHues) {
+                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa set the color to red in the " + app.label
+            }
+        }
+        section ("Vents and Window Coverings", hideWhenEmpty: true){ 
+            input "gVents", "capability.switchLevel", title: "Smart Vent(s)...", multiple: true, required: false, submitOnChange: true
+            if (sVent) {
+                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa open/close the vents in the " + app.label
+            }
+            input "gShades",  "capability.windowShade", title: "Window Covering Devices...", multiple: true, required: false   
+            if (gShades) {
+                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa open/close the blinds/curtains/window coverings in the " + app.label
+            }
+        }                
+        section ("Custom Groups", hideWhenEmpty: true){
+            href "gCustom", title: "Create Custom Groups", description: "Tap to set"
+        }
+        section ("Media - Playing Music" , hideWhenEmpty: true){
+            input "sMedia", "capability.mediaController", title: "Use This Media Controller", multiple: false, required: false, submitOnChange: true
+            if (sMedia) {
+                paragraph "You can now control this device by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa start < Harmony Activity Name > in the " + app.label
+            }
+            if (sSpeaker || sSynth) {
+                paragraph "You can now control this device by speaking commands to Alexa:  \n" +
+                    " E.G: Alexa mute/unmute < Media Device Name > in the " + app.label
+            }
+            input "sSpeaker", "capability.musicPlayer", title: "Use This Media Player Device For Volume Control", required: false, multiple: false, submitOnChange: true
+            input "sSynth", "capability.speechSynthesis", title: "Use This Speech Synthesis Capable Device", multiple: false, required: false, submitOnChange: true
+        }             
+    }
+}
+page name: "gCustom"    
+def gCustom(){
+    dynamicPage(name: "gCustom", title: "",install: false, uninstall: false) {
+        section ("Create a Group", hideWhenEmpty: true){
+            input "gCustom1", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
+            input "gCustom1N", "text", title: "Name this Group...", multiple: false, required: false
+        }
+        if (gCustom1) {
+            section ("+ Create another Group", hideWhenEmpty: true){
+                input "gCustom2", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
+                input "gCustom2N", "text", title: "Name this Group...", multiple: false, required: false
+            }
+        }
+        if (gCustom2) {
+            section ("+ Create another Group", hideWhenEmpty: true){
+                input "gCustom3", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
+                input "gCustom3N", "text", title: "Name this Group...", multiple: false, required: false
+            }
+        }
+        if (gCustom3) {    
+            section ("+ Create another Group", hideWhenEmpty: true){
+                input "gCustom4", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
+                input "gCustom4N", "text", title: "Name this Group...", multiple: false, required: false
+            }
+        }
+        if (gCustom4) {    
+            section ("+ Create another Group", hideWhenEmpty: true){
+                input "gCustom5", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
+                input "gCustom5N", "text", title: "Name this Group...", multiple: false, required: false
+            }
+        }
+    }
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// INDIVIDUAL DEVICE CONTROL AND FEEDBACK 
 //////////////////////////////////////////////////////////////////////////////
 page name: "fDevices"
-	def fDevices(){
-    	dynamicPage(name: "fDevices", title: "", uninstall: false){
-        	section("Light Switches and Bulbs") {
+def fDevices(){
+    dynamicPage(name: "fDevices", title: "", uninstall: false){
+        section("Light Switches and Bulbs") {
             input "fSwitches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
-            }
-        	section("Misc Switches") {
-            input "fMiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
-            }
-            section("Doors") {
-            input "fDoors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
-            }
-            section("Windows") {
-            input "fWindows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
-            }
-            section("Locks") {
-            input "fLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
-			}
-            section("Fans") {
-            input "fFans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
-            }
-            section("Garage Doors") {
-            input "fGarage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false, submitOnChange: true
-            }
-            section("Smart Vents") {
-            input "fVents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
-            }
-            section("Window Coverings") {
-            input "fShades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false, submitOnChange: true
-            }
-            section("Presence") {
-            input "fPresence", "capability.presenceSensor", title: "Allow These Presence Sensors...", required: false, multiple: true
-            }
-            section("Batteries") {
-            input "fBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
-            }
-            section("Motion Sensors") {
-            input "fMotion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-            }
-            section ("Climate Control", hideWhenEmpty: true) { 
-                input "fTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
-                input "fIndoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
-                input "fOutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-            } 
         }
-	}   
+        section("Misc Switches") {
+            input "fMiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
+        }
+        section("Doors") {
+            input "fDoors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
+        }
+        section("Windows") {
+            input "fWindows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
+        }
+        section("Locks") {
+            input "fLocks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
+        }
+        section("Fans") {
+            input "fFans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
+        }
+        section("Garage Doors") {
+            input "fGarage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false, submitOnChange: true
+        }
+        section("Smart Vents") {
+            input "fVents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
+        }
+        section("Window Coverings") {
+            input "fShades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false, submitOnChange: true
+        }
+        section("Presence") {
+            input "fPresence", "capability.presenceSensor", title: "Allow These Presence Sensors...", required: false, multiple: true
+        }
+        section("Batteries") {
+            input "fBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
+        }
+        section("Motion Sensors") {
+            input "fMotion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
+        }
+        section ("Climate Control", hideWhenEmpty: true) { 
+            input "fTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
+            input "fIndoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
+            input "fOutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
+        } 
+    }
+}   
 //////////////////////////////////////////////////////////////////////////////
 /////////// KEYPADS, SHM, GARAGE DOORS, AND VIRTUAL PERSON ACTIONS 
 //////////////////////////////////////////////////////////////////////////////
 page name: "pKeypads"
-	def pKeypads(){
-    	dynamicPage(name: "pKeypads", title: "", uninstall: false){
-			def deviceId = "${app.label}" 
-			def d = getChildDevice("${app.label}")
-            section("Configure the Virtual Person Device") {
-        	input "kpVirPer", "bool", title: "Virtual Person Device Configuration", refreshAfterSelection: true
+def pKeypads(){
+    dynamicPage(name: "pKeypads", title: "", uninstall: false){
+        def deviceId = "${app.label}" 
+        def d = getChildDevice("${app.label}")
+        section("Configure the Virtual Person Device") {
+            input "kpVirPer", "bool", title: "Virtual Person Device Configuration", refreshAfterSelection: true
             if (kpVirPer) {
-            	href "pPerson", title: "Create/Delete Virtual Person Device"
+                href "pPerson", title: "Create/Delete Virtual Person Device"
                 if(d) {
-      				input "sLocksVP","capability.lockCodes", title: "Select Keypads", required: true, multiple: true, submitOnChange: true
-                	input "vpCode", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
-                	input "vpActions", "bool", title: "Perform this profiles actions when the Virtual Person arrives via Keypad", required: false, submitOnChange: true
+                    input "sLocksVP","capability.lockCodes", title: "Select Keypads", required: true, multiple: true, submitOnChange: true
+                    input "vpCode", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+                    input "vpActions", "bool", title: "Perform this profiles actions when the Virtual Person arrives via Keypad", required: false, submitOnChange: true
                     input "notifyVPArrive", "bool", title: "Notify when Virtual Person Arrives", required: false, submitOnChange: true
-					input "notifyVPDepart", "bool", title: "Notify when Virtual Person Departs", required: false, submitOnChange: true
-					if (notifyVPArrive || notifyVPDepart) {
-                	href "pVPNotifyPage", title: "Virtual Person Notification Settings"
-                	}
+                    input "notifyVPDepart", "bool", title: "Notify when Virtual Person Departs", required: false, submitOnChange: true
+                    if (notifyVPArrive || notifyVPDepart) {
+                        href "pVPNotifyPage", title: "Virtual Person Notification Settings"
+                    }
                 }
             }    
         }
-		section("Configure Smart Home Monitor Settings") {
-			input "SHMConfigure", "bool", title: "Smart Home Monitor Controls", refreshAfterSelection: true
-			if (SHMConfigure) {
-      			input "sLocksSHM","capability.lockCodes", title: "Select Keypads", required: true, multiple: true, submitOnChange: true
+        section("Configure Smart Home Monitor Settings") {
+            input "SHMConfigure", "bool", title: "Smart Home Monitor Controls", refreshAfterSelection: true
+            if (SHMConfigure) {
+                input "sLocksSHM","capability.lockCodes", title: "Select Keypads", required: true, multiple: true, submitOnChange: true
                 input "shmCode", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
                 input "keypadstatus", "bool", title: "Send status to keypad?", required: true, defaultValue: false
-				href "pShmNotifyPage", title: "SHM Profile Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
-					}
-            	}    
-                    if (SHMConfigure) {
-						    def hhPhrases = location.getHelloHome()?.getPhrases()*.label
-    						hhPhrases?.sort()
-    					section("Execute These Routines") {
-      						input "armRoutine", "enum", title: "Arm/Away routine", options: hhPhrases, required: false
-      						input "disarmRoutine", "enum", title: "Disarm routine", options: hhPhrases, required: false
-      						input "stayRoutine", "enum", title: "Arm/Stay routine", options: hhPhrases, required: false
-      						input "armDelay", "number", title: "Arm Delay (in seconds)", required: false
-      						input "notifyIncorrectPin", "bool", title: "Notify you when incorrect code is used?", required: false, defaultValue: false, submitOnChange: true
-    						}
-						
-				}
-		section("Garage Door Control via Keypad") {
-			input "garageDoors", "bool", title: "Garage Door Access Controls", refreshAfterSelection: true
-			if (garageDoors) {
-            paragraph "This code is for opening and closing the garage door only, this code will not change SHM Status. This code MUST be different than the SHM code above"
-				input "sLocksGarage","capability.lockCodes", title: "Select Locks/Keypads", required: true, multiple: true, submitOnChange: true
-            	href "pGarageDoorNotify",title: "Garage Door Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
-				input "sDoor1", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
-      			input "doorCode1", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
-				input "gd1Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
-				if (doorCode1) {
-	               	input "sDoor2", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
-    	            input "doorCode2", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
-					input "gd2Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
-					if (doorCode2) {
-            			input "gd3Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
-						input "sDoor3", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
-                		input "doorCode3", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
-                    	}
-					}
-				}
-        	}
-		}    
-	}
+                href "pShmNotifyPage", title: "SHM Profile Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
+            }
+        }    
+        if (SHMConfigure) {
+            def hhPhrases = location.getHelloHome()?.getPhrases()*.label
+            hhPhrases?.sort()
+            section("Execute These Routines") {
+                input "armRoutine", "enum", title: "Arm/Away routine", options: hhPhrases, required: false
+                input "disarmRoutine", "enum", title: "Disarm routine", options: hhPhrases, required: false
+                input "stayRoutine", "enum", title: "Arm/Stay routine", options: hhPhrases, required: false
+                input "armDelay", "number", title: "Arm Delay (in seconds)", required: false
+                input "notifyIncorrectPin", "bool", title: "Notify you when incorrect code is used?", required: false, defaultValue: false, submitOnChange: true
+            }
+
+        }
+        section("Garage Door Control via Keypad") {
+            input "garageDoors", "bool", title: "Garage Door Access Controls", refreshAfterSelection: true
+            if (garageDoors) {
+                paragraph "This code is for opening and closing the garage door only, this code will not change SHM Status. This code MUST be different than the SHM code above"
+                input "sLocksGarage","capability.lockCodes", title: "Select Locks/Keypads", required: true, multiple: true, submitOnChange: true
+                href "pGarageDoorNotify",title: "Garage Door Notification Settings"//, description: notificationPageDescription(), state: notificationPageDescription() ? "complete" : "")
+                input "sDoor1", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
+                input "doorCode1", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+                input "gd1Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
+                if (doorCode1) {
+                    input "sDoor2", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
+                    input "doorCode2", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+                    input "gd2Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
+                    if (doorCode2) {
+                        input "gd3Actions", "bool", title: "Perform this profiles actions when this Garage Door is opened via Keypad", required: false, submitOnChange: true
+                        input "sDoor3", "capability.garageDoorControl", title: "Allow These Garage Door(s)...", multiple: true, required: false, submitOnChange: true
+                        input "doorCode3", "number", title: "Code (4 digits)", required: false, refreshAfterSelection: true
+                    }
+                }
+            }
+        }
+    }    
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// KEYPAD ACTIONS NOTIFICATIONS       
 //////////////////////////////////////////////////////////////////////////////
 page name: "pVPNotifyPage"
-	def pVPNotifyPage() {
-		dynamicPage(name: "pVPNotifyPage", title: "Notification Settings") {
-		section {
-			input "vpPhone", "phone", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true
-				paragraph "For multiple SMS recipients, separate phone numbers with a comma"
-			input "vpNotification", "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true
-			}
+def pVPNotifyPage() {
+    dynamicPage(name: "pVPNotifyPage", title: "Notification Settings") {
+        section {
+            input "vpPhone", "phone", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true
+            paragraph "For multiple SMS recipients, separate phone numbers with a comma"
+            input "vpNotification", "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true
         }
-	}    
+    }
+}    
 page name: "pShmNotifyPage"
-	def pShmNotifyPage() {
-		dynamicPage(name: "pShmNotifyPage", title: "Notification Settings") {
-		section {
-			input "shmPhone", "phone", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true
-				paragraph "For multiple SMS recipients, separate phone numbers with a comma"
-			input(name: "notifySHMArm", title: "Notify when arming SHM", type: "bool", required: false)
-			input(name: "notifySHMDisarm", title: "Notify when disarming SHM", type: "bool", required: false)
-			input "shmNotification", "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true
-			}
+def pShmNotifyPage() {
+    dynamicPage(name: "pShmNotifyPage", title: "Notification Settings") {
+        section {
+            input "shmPhone", "phone", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true
+            paragraph "For multiple SMS recipients, separate phone numbers with a comma"
+            input(name: "notifySHMArm", title: "Notify when arming SHM", type: "bool", required: false)
+            input(name: "notifySHMDisarm", title: "Notify when disarming SHM", type: "bool", required: false)
+            input "shmNotification", "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true
         }
-	}        
+    }
+}        
 page name: "pGarageDoorNotify"
-	def pGarageDoorNotify() {
-		dynamicPage(name: "pGarageDoorNotify", title: "Notification Settings") {
-		section {
-			input(name: "garagePhone", type: "text", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true)
-				paragraph "For multiple SMS recipients, separate phone numbers with a semicolon(;)"
-			input(name: "garagePush", type: "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true)
-			if (phone != null || notification) {
-				input(name: "notifyGdoorOpen", title: "Notify when opening", type: "bool", required: false)
-				input(name: "notifyGdoorClose", title: "Notify when closing", type: "bool", required: false)
-				}
-			}
+def pGarageDoorNotify() {
+    dynamicPage(name: "pGarageDoorNotify", title: "Notification Settings") {
+        section {
+            input(name: "garagePhone", type: "text", title: "Text This Number", description: "Phone number", required: false, submitOnChange: true)
+            paragraph "For multiple SMS recipients, separate phone numbers with a semicolon(;)"
+            input(name: "garagePush", type: "bool", title: "Send A Push Notification", description: "Notification", required: false, submitOnChange: true)
+            if (phone != null || notification) {
+                input(name: "notifyGdoorOpen", title: "Notify when opening", type: "bool", required: false)
+                input(name: "notifyGdoorClose", title: "Notify when closing", type: "bool", required: false)
+            }
         }
-	}   
+    }
+}   
 //////////////////////////////////////////////////////////////////////////////
 /////////// PROFILE DEFAULTS 
 //////////////////////////////////////////////////////////////////////////////
 page name: "mDefaults"
-    def mDefaults(){
-                dynamicPage(name: "mDefaults", title: "", uninstall: false){
-                    section ("General Control") {            
-                        input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
-                        input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
-                        input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false						
-                    }
-                    section ("Fan Control") {            
-                        input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
-                        input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
-                        input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
-                        input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
-                    }
-                    section ("Activity Defaults") {            
-                        input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
-                        input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
-                    }
-					section ("Alexa Voice Settings") {            
-                        input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
-                        input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
-                        input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
-                    }
-                    section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {
-						input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
-                        input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
-                        input "cFilterSonosDevice", "capability.musicPlayer", title: "Send Audio Notification when due, to this Sonos Type Device(s)", required: false, multiple: true   
-                        if (cFilterSonosDevice) {
-                            input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
-                        }
-						if (location.contactBookEnabled){
-                        	input "recipients", "contact", title: "Send Text Notification when due, to this recipient(s) ", multiple: true, required: false
-           				}
-                        else {      
-                            input name: "sms", title: "Send Text Notification when due, to this phone(s) ", type: "phone", required: false
-                        		paragraph "You may enter multiple phone numbers separated by comma (E.G. 8045551122,8046663344)"
-                            input "push", "bool", title: "Send Push Notification too?", required: false, defaultValue: false
-                        }
-                     }
-                    section ("Weather Settings") {
-                        href "mWeatherConfig", title: "Tap here to configure the Weather defaults", description: "", state: complete
-                    }                     
-                }
-       		}            	
+def mDefaults(){
+    dynamicPage(name: "mDefaults", title: "", uninstall: false){
+        section ("General Control") {            
+            input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
+            input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
+            input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false						
+        }
+        section ("Fan Control") {            
+            input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
+            input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
+            input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
+            input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
+        }
+        section ("Activity Defaults") {            
+            input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
+            input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
+        }
+        section ("Alexa Voice Settings") {            
+            input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
+            input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
+            input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
+        }
+        section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {
+            input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
+            input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
+            input "cFilterSonosDevice", "capability.musicPlayer", title: "Send Audio Notification when due, to this Sonos Type Device(s)", required: false, multiple: true   
+            if (cFilterSonosDevice) {
+                input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+            }
+            if (location.contactBookEnabled){
+                input "recipients", "contact", title: "Send Text Notification when due, to this recipient(s) ", multiple: true, required: false
+            }
+            else {      
+                input name: "sms", title: "Send Text Notification when due, to this phone(s) ", type: "phone", required: false
+                paragraph "You may enter multiple phone numbers separated by comma (E.G. 8045551122,8046663344)"
+                input "push", "bool", title: "Send Push Notification too?", required: false, defaultValue: false
+            }
+        }
+        section ("Weather Settings") {
+            href "mWeatherConfig", title: "Tap here to configure the Weather defaults", description: "", state: complete
+        }                     
+    }
+}            	
 //////////////////////////////////////////////////////////////////////////////
 /////////// PROFILE ACTIONS - TRIGGERED WHEN PROFILE EXECUTES 
 //////////////////////////////////////////////////////////////////////////////
 page name: "pActions"
-    def pActions() {
-        dynamicPage(name: "pActions", uninstall: false) {
-        	def routines = location.helloHome?.getPhrases()*.label 
-            if (routines) {routines.sort()}
-            section ("Trigger these lights and/or execute these routines when the Profile runs...") {
-                href "pDeviceControl", title: "Select Devices...", description: pDevicesComplete() , state: pDevicesSettings()
-                input "pMode", "enum", title: "Choose Mode to change to...", options: location.modes.name.sort(), multiple: false, required: false 
-            	def actions = location.helloHome?.getPhrases()*.label 
-                if (actions) {
-                    actions.sort()
-            	input "pRoutine", "enum", title: "Select a Routine to execute", required: false, options: actions, multiple: false, submitOnChange: true
+def pActions() {
+    dynamicPage(name: "pActions", uninstall: false) {
+        def routines = location.helloHome?.getPhrases()*.label 
+        if (routines) {routines.sort()}
+        section ("Trigger these lights and/or execute these routines when the Profile runs...") {
+            href "pDeviceControl", title: "Select Devices...", description: pDevicesComplete() , state: pDevicesSettings()
+            input "pMode", "enum", title: "Choose Mode to change to...", options: location.modes.name.sort(), multiple: false, required: false 
+            def actions = location.helloHome?.getPhrases()*.label 
+            if (actions) {
+                actions.sort()
+                input "pRoutine", "enum", title: "Select a Routine to execute", required: false, options: actions, multiple: false, submitOnChange: true
                 if (pRoutine) {
-                input "pRoutine2", "enum", title: "Select a Second Routine to execute", required: false, options: actions, multiple: false
-            		}
+                    input "pRoutine2", "enum", title: "Select a Second Routine to execute", required: false, options: actions, multiple: false
                 }
-                input "shmState", "enum", title: "Set Smart Home Monitor to...", options:["stay":"Armed Stay","away":"Armed Away","off":"Disarmed"], multiple: false, required: false, submitOnChange: true
-                	if (shmState) {
-                    	input "shmStateKeypads", "capability.lockCodes",  title: "Send status change to these keypads...", multiple: true, required: false, submitOnChange: true
-                        }
-				input "pVirPer", "bool", title: "Toggle the Virtual Person State Automatically when this Profile Runs", default: false, submitOnChange: true, required: false
-			}
+            }
+            input "shmState", "enum", title: "Set Smart Home Monitor to...", options:["stay":"Armed Stay","away":"Armed Away","off":"Disarmed"], multiple: false, required: false, submitOnChange: true
+            if (shmState) {
+                input "shmStateKeypads", "capability.lockCodes",  title: "Send status change to these keypads...", multiple: true, required: false, submitOnChange: true
+            }
+            input "pVirPer", "bool", title: "Toggle the Virtual Person State Automatically when this Profile Runs", default: false, submitOnChange: true, required: false
         }
     }
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// ECHOSISTANT MAILBOX  
 //////////////////////////////////////////////////////////////////////////////
 page name: "mailbox"
-	def mailbox(){
-		dynamicPage(name: "mailbox", title: "", uninstall: false){  
+def mailbox(){
+    dynamicPage(name: "mailbox", title: "", uninstall: false){  
         section("") {
-        	paragraph "This space will be filled at a later time"
-			}        
-		}
-	}
+            paragraph "This space will be filled at a later time"
+        }        
+    }
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// QUICK NOTES MAIN PAGE 
 //////////////////////////////////////////////////////////////////////////////
 page name: "mQuickNotes"
-	def mQuickNotes(){
-		dynamicPage(name: "mQuickNotes", title: "", uninstall: false){  
+def mQuickNotes(){
+    dynamicPage(name: "mQuickNotes", title: "", uninstall: false){  
         section("") {
             href "mPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
             href "mFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
-			}        
-		}
-	}
+        }        
+    }
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// PET NOTES            
 //////////////////////////////////////////////////////////////////////////////
 page name: "mPetNotes" 
-	def mPetNotes(){
-		dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
-		section ("Family Pets Notes") {
-			input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
-			if (petNoteAct) {
-            	input "litterBoxAct", "bool", title: "Does ${app.label} use a litter box?", required: false, default: false, submitOnChange: true
-				paragraph "Your Family Pet's notes are now active for ${app.label}."
-				paragraph "The following notes have been set for ${app.label}:"
+def mPetNotes(){
+    dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
+        section ("Family Pets Notes") {
+            input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
+            if (petNoteAct) {
+                input "litterBoxAct", "bool", title: "Does ${app.label} use a litter box?", required: false, default: false, submitOnChange: true
+                paragraph "Your Family Pet's notes are now active for ${app.label}."
+                paragraph "The following notes have been set for ${app.label}:"
                 paragraph "${state.petShotNotify}"
                 paragraph "${state.litterBoxCleaned}"
-				}
-			input "pSMS", "bool", title: "Configure Notifications for ${app.label}", required: false, defaultValue: false, submitOnChange: true
-			if (pSMS) {
-				input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
-            if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-            	input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true 
-			if (psendText){      
-				paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
-				input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
-				}
-			input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
-			}
+            }
+            input "pSMS", "bool", title: "Configure Notifications for ${app.label}", required: false, defaultValue: false, submitOnChange: true
+            if (pSMS) {
+                input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
+                if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+                input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true 
+                if (psendText){      
+                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                    input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
+                }
+                input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
+            }
         }    
-	}	    
+    }	    
 }                	
 //////////////////////////////////////////////////////////////////////////////
 /////////// VIRTUAL PRESENCE HANDLERS           
 //////////////////////////////////////////////////////////////////////////////
 page name: "pPerson"
-    def pPerson(){
-        dynamicPage(name: "pPerson", title: "", uninstall: false){
-        	section ("Manage the Profile Virtual Person Device", hideWhenEmpty: true){
-                    href "pPersonCreate", title: "Tap Here to Create the Virtual Person Device ~ '${app.label}'"
-                    href "pPersonDelete", title: "Tap Here to Delete the Virtual Person Device ~ '${app.label}'"
-                    }
-                }
-            }
+def pPerson(){
+    dynamicPage(name: "pPerson", title: "", uninstall: false){
+        section ("Manage the Profile Virtual Person Device", hideWhenEmpty: true){
+            href "pPersonCreate", title: "Tap Here to Create the Virtual Person Device ~ '${app.label}'"
+            href "pPersonDelete", title: "Tap Here to Delete the Virtual Person Device ~ '${app.label}'"
+        }
+    }
+}
 //// CREATE VIRTUAL PRESENCE             
-			page name: "pPersonCreate"
-				def pPersonCreate(){
-    				dynamicPage(name: "pPersonCreate", title: "", uninstall: false) {
-						section ("") {
-                    	paragraph "You have created a virtual presence sensor device. You will now see this device in your 'Things' list " +
-                    	" in the SmartThings Mobile App.  You will also see it in the 'MyDevices' tab of the IDE"
-						}
-						virtualPerson()
-                        }
-            		}
+page name: "pPersonCreate"
+def pPersonCreate(){
+    dynamicPage(name: "pPersonCreate", title: "", uninstall: false) {
+        section ("") {
+            paragraph "You have created a virtual presence sensor device. You will now see this device in your 'Things' list " +
+                " in the SmartThings Mobile App.  You will also see it in the 'MyDevices' tab of the IDE"
+        }
+        virtualPerson()
+    }
+}
 
 def virtualPerson() {
-log.trace "Creating EchoSistant Virtual Person Device"
-	def deviceId = "${app.label}" 
-	def d = getChildDevice("${app.label}")
-        if(!d) {
-	            d = addChildDevice("EchoSistant", "EchoSistant Simulated Presence Sensor", deviceId, null, [label:"${app.label}"])
-	            log.trace "Echosistant Virtual Person Device - Created ${app.label} "
-            }
-         else {
-            log.trace "NOTICE!!! Found that the EVPD ${d.displayName} already exists. Only one device per profile permitted"
-        }
-	}  
+    log.trace "Creating EchoSistant Virtual Person Device"
+    def deviceId = "${app.label}" 
+    def d = getChildDevice("${app.label}")
+    if(!d) {
+        d = addChildDevice("EchoSistant", "EchoSistant Simulated Presence Sensor", deviceId, null, [label:"${app.label}"])
+        log.trace "Echosistant Virtual Person Device - Created ${app.label} "
+    }
+    else {
+        log.trace "NOTICE!!! Found that the EVPD ${d.displayName} already exists. Only one device per profile permitted"
+    }
+}  
 
 //// DELETE VIRTUAL PRESENCE
 page name: "pPersonDelete"
-	def pPersonDelete(){
-		dynamicPage(name: "pPersonDelete", title: "", uninstall: false) {
-		section ("") {
-			paragraph "You have deleted a virtual presence sensor device. You will no longer see this device in your " +
-				" SmartThings Mobile App.  "
-			}
-			removeChildDevices(getAllChildDevices())
-			}
-		}
+def pPersonDelete(){
+    dynamicPage(name: "pPersonDelete", title: "", uninstall: false) {
+        section ("") {
+            paragraph "You have deleted a virtual presence sensor device. You will no longer see this device in your " +
+                " SmartThings Mobile App.  "
+        }
+        removeChildDevices(getAllChildDevices())
+    }
+}
 
 private removeChildDevices(delete) {
-	log.debug "The Virtual Person Device '${app.label}' has been deleted from your SmartThings environment"
-    	delete.each {
+    log.debug "The Virtual Person Device '${app.label}' has been deleted from your SmartThings environment"
+    delete.each {
         deleteChildDevice(it.deviceNetworkId)
     }
 }  
 
 //// TOGGLE VP STATUS WHEN PROFILE EXECUTES
 private pVirToggle() {
-	def vp = getChildDevice("${app.label}")
-     if(vp) {
-     if (vp?.currentValue('presence').contains('not')) {
+    def vp = getChildDevice("${app.label}")
+    if(vp) {
+        if (vp?.currentValue('presence').contains('not')) {
             message = "${app.label} has arrived"
             vp.arrived()
-            }
+        }
         else if (vp?.currentValue('presence').contains('present')) {
             message = "${app.label} has departed"
             vp.departed()
-            }
-    	}
-	}
+        }
+    }
+}
 /************************************************************************************************************
 		Smart Home Monitor Status Change when Profile Executes
 ************************************************************************************************************/    
 def shmStateChange() {
-	if (shmState == "stay") {
-    	sendArmStayCommand()
-        }
+    if (shmState == "stay") {
+        sendArmStayCommand()
+    }
     if (shmState == "away") {
-    	sendArmAwayCommand()
-        }
+        sendArmAwayCommand()
+    }
     if (shmState == "off") {
-    	sendDisarmedCommand()
-        }
-    }    
+        sendDisarmedCommand()
+    }
+}    
 
 def sendArmAwayCommand() {
-	if (shmStateKeypads) {
-		shmStateKeypads?.each() { it.acknowledgeArmRequest(3) }
-		}
-		sendSHMEvent("away")
-	}
+    if (shmStateKeypads) {
+        shmStateKeypads?.each() { it.acknowledgeArmRequest(3) }
+    }
+    sendSHMEvent("away")
+}
     
 def sendDisarmedCommand() {
-	if (shmStateKeypads) {
-		shmStateKeypads?.each() { it.acknowledgeArmRequest(0) }
-		}
-		sendSHMEvent("off")
-	}
+    if (shmStateKeypads) {
+        shmStateKeypads?.each() { it.acknowledgeArmRequest(0) }
+    }
+    sendSHMEvent("off")
+}
     
 def sendArmStayCommand() {
-	if (shmStateKeypads) {
-		shmStateKeypads?.each() { it.acknowledgeArmRequest(1) }
-		}
-		sendSHMEvent("stay")
-	}
+    if (shmStateKeypads) {
+        shmStateKeypads?.each() { it.acknowledgeArmRequest(1) }
+    }
+    sendSHMEvent("stay")
+}
 
 private sendSHMEvent1(String shmState) {
-	def event = [
-		name:"alarmSystemStatus",
-		value: shmState,
-		displayed: true,
-		description: "System Status is ${shmState}"
-		]
-	sendLocationEvent(event)
-	}
+    def event = [
+        name:"alarmSystemStatus",
+        value: shmState,
+        displayed: true,
+        description: "System Status is ${shmState}"
+    ]
+    sendLocationEvent(event)
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// PROFILE DEVICE ACTIONS - TRIGGERED WHEN PROFILE EXECUTES 
 //////////////////////////////////////////////////////////////////////////////
 page name: "pDeviceControl"
-    def pDeviceControl() {
-            dynamicPage(name: "pDeviceControl", title: "",install: false, uninstall: false) {
-                 section ("Switches", hideWhenEmpty: true){
-                    input "sSwitches", "capability.switch", title: "Select Lights and Switches...", multiple: true, required: false, submitOnChange: true
-                        if (sSwitches) {
-                        	input "sSwitchCmd", "enum", title: "Command To Send",
-                        		options:["on":"Turn on","off":"Turn off","toggle":"Toggle"], multiple: false, required: false, submitOnChange:true
-                        	input "delaySwitches", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true
-                        	if (delaySwitches) {
-                        		input "sSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
-                        		input "sSecondsOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
-                            }
-                        	if (sSwitchCmd) input "sOtherSwitch", "capability.switch", title: "...and these other switches?", multiple: true, required: false, submitOnChange: true                        
-                        	if (sOtherSwitch) input "sOtherSwitchCmd", "enum", title: "Command To Send to these other switches", 
-                        					options: ["on1":"Turn on","off1":"Turn off","toggle1":"Toggle"], multiple: false, required: false, submitOnChange: true
-                        	if (sOtherSwitchCmd)	input "delayOtherSwitches", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true
-                                if (delayOtherSwitches) {
-                                    input "sOtherSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
-                                    input "sOtherSecondsOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
-                                }
-                	}
+def pDeviceControl() {
+    dynamicPage(name: "pDeviceControl", title: "",install: false, uninstall: false) {
+        section ("Switches", hideWhenEmpty: true){
+            input "sSwitches", "capability.switch", title: "Select Lights and Switches...", multiple: true, required: false, submitOnChange: true
+            if (sSwitches) {
+                input "sSwitchCmd", "enum", title: "Command To Send",
+                    options:["on":"Turn on","off":"Turn off","toggle":"Toggle"], multiple: false, required: false, submitOnChange:true
+                input "delaySwitches", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true
+                if (delaySwitches) {
+                    input "sSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
+                    input "sSecondsOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
                 }
-                section ("Dimmers", hideWhenEmpty: true){
-                    input "sDimmers", "capability.switchLevel", title: "Select Dimmers...", multiple: true, required: false , submitOnChange:true
-                        if (sDimmers) { input "sDimmersCmd", "enum", title: "Command To Send",
-                        					options:["on":"Turn on","off":"Turn off", "set":"Set level"], multiple: false, required: false, submitOnChange:true
-                        }
-                        if (sDimmersCmd) {                       
-                       		input "sDimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true	
-                        	input "delayDimmers", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true      
-                            if (delayDimmers) {
-                            	input "sSecondsDimmers", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
-                                input "sSecondsDimmersOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false                        
-                            }
-                       		input "sOtherDimmers", "capability.switchLevel", title: "...and these other Dimmers...", multiple: true, required: false , submitOnChange:true
-                        		if (sOtherDimmers) { 
-                                	input "sOtherDimmersCmd", "enum", title: "Command To Send to these other Dimmers", 
-                        				options:["on":"Turn on","off":"Turn off","set":"Set level"], multiple: false, required: false, submitOnChange:true
-                        		}
-                        		if (sOtherDimmersCmd) {
-                                   	input "sOtherDimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true
-									input "delayOtherDimmers", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange: true
-									if (delayOtherDimmers) {
-                                       	input "sSecondsOtherDimmers", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
-                                        input "sSecondsOtherDimmersOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false                        
-                                	}
-                     			}
-                		}
+                if (sSwitchCmd) input "sOtherSwitch", "capability.switch", title: "...and these other switches?", multiple: true, required: false, submitOnChange: true                        
+                if (sOtherSwitch) input "sOtherSwitchCmd", "enum", title: "Command To Send to these other switches", 
+                    options: ["on1":"Turn on","off1":"Turn off","toggle1":"Toggle"], multiple: false, required: false, submitOnChange: true
+                if (sOtherSwitchCmd)	input "delayOtherSwitches", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true
+                if (delayOtherSwitches) {
+                    input "sOtherSecondsOn", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
+                    input "sOtherSecondsOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false
                 }
-				section ("Colored lights", hideWhenEmpty: true){
-            		input "sHues", "capability.colorControl", title: "Select These Colored Lights...", multiple: true, required: false, submitOnChange:true
-            			if (sHues) {
-                        	input "sHuesCmd", "enum", title: "Command To Send ", 
-                            				options:["on":"Turn on","off":"Turn off","setColor":"Set Color"], multiple: false, required: false, submitOnChange:true
-							if(sHuesCmd == "setColor") {
-                            input "sHuesColor", "enum", title: "Hue Color?", required: false, multiple:false, options: fillColorSettings().name
-							}
-                            if(sHuesCmd == "setColor" || sHuesCmd == "on") {
-                            input "sHuesLevel", "enum", title: "Light Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]], submitOnChange:true                        
-        					}
-                        }
-                        if (sHuesLevel)	input "sHuesOther", "capability.colorControl", title: "...and these other Colored Lights?", multiple: true, required: false, submitOnChange:true
-            			if (sHuesOther) {
-                        	input "sHuesOtherCmd", "enum", title: "Command To Send to these other Colored Lights", options:["on":"Turn on","off":"Turn off","setColor":"Set Color"], multiple: false, required: false, submitOnChange:true
-							if(sHuesOtherCmd == "setColor") {
-                            input "sHuesOtherColor", "enum", title: "Which Color?", required: false, multiple:false, options: fillColorSettings().name
-                            }
-                            if(sHuesOtherCmd == "on" || sHuesOtherCmd == "setColor") {
-							input "sHuesOtherLevel", "enum", title: "Light Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
-        				}
-					}
+            }
+        }
+        section ("Dimmers", hideWhenEmpty: true){
+            input "sDimmers", "capability.switchLevel", title: "Select Dimmers...", multiple: true, required: false , submitOnChange:true
+            if (sDimmers) { input "sDimmersCmd", "enum", title: "Command To Send",
+                options:["on":"Turn on","off":"Turn off", "set":"Set level"], multiple: false, required: false, submitOnChange:true
+                          }
+            if (sDimmersCmd) {                       
+                input "sDimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true	
+                input "delayDimmers", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange:true      
+                if (delayDimmers) {
+                    input "sSecondsDimmers", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
+                    input "sSecondsDimmersOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false                        
                 }
-                section ("Flash These Switches", hideWhenEmpty: true) {
-                    input "sFlash", "capability.switch", title: "Flash Switch(es)", multiple: true, required: false, submitOnChange:true
-                    if (sFlash) {
-                    	input "numFlashes", "number", title: "This number of times (default 3)", required: false, submitOnChange:true
-                    	input "onFor", "number", title: "On for (default 1 second)", required: false, submitOnChange:true			
-                    	input "offFor", "number", title: "Off for (default 1 second)", required: false, submitOnChange:true
+                input "sOtherDimmers", "capability.switchLevel", title: "...and these other Dimmers...", multiple: true, required: false , submitOnChange:true
+                if (sOtherDimmers) { 
+                    input "sOtherDimmersCmd", "enum", title: "Command To Send to these other Dimmers", 
+                        options:["on":"Turn on","off":"Turn off","set":"Set level"], multiple: false, required: false, submitOnChange:true
+                }
+                if (sOtherDimmersCmd) {
+                    input "sOtherDimmersLVL", "number", title: "Dimmers Level", description: "Set dimmer level", required: false, submitOnChange: true
+                    input "delayOtherDimmers", "bool", title: "Delay Actions?", required: false, defaultValue: false, submitOnChange: true
+                    if (delayOtherDimmers) {
+                        input "sSecondsOtherDimmers", "number", title: "Turn on in Seconds?", defaultValue: none, required: false
+                        input "sSecondsOtherDimmersOff", "number", title: "Turn off in Seconds?", defaultValue: none, required: false                        
                     }
                 }
-			}
-		}    
+            }
+        }
+        section ("Colored lights", hideWhenEmpty: true){
+            input "sHues", "capability.colorControl", title: "Select These Colored Lights...", multiple: true, required: false, submitOnChange:true
+            if (sHues) {
+                input "sHuesCmd", "enum", title: "Command To Send ", 
+                    options:["on":"Turn on","off":"Turn off","setColor":"Set Color"], multiple: false, required: false, submitOnChange:true
+                if(sHuesCmd == "setColor") {
+                    input "sHuesColor", "enum", title: "Hue Color?", required: false, multiple:false, options: fillColorSettings().name
+                }
+                if(sHuesCmd == "setColor" || sHuesCmd == "on") {
+                    input "sHuesLevel", "enum", title: "Light Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]], submitOnChange:true                        
+                }
+            }
+            if (sHuesLevel)	input "sHuesOther", "capability.colorControl", title: "...and these other Colored Lights?", multiple: true, required: false, submitOnChange:true
+            if (sHuesOther) {
+                input "sHuesOtherCmd", "enum", title: "Command To Send to these other Colored Lights", options:["on":"Turn on","off":"Turn off","setColor":"Set Color"], multiple: false, required: false, submitOnChange:true
+                if(sHuesOtherCmd == "setColor") {
+                    input "sHuesOtherColor", "enum", title: "Which Color?", required: false, multiple:false, options: fillColorSettings().name
+                }
+                if(sHuesOtherCmd == "on" || sHuesOtherCmd == "setColor") {
+                    input "sHuesOtherLevel", "enum", title: "Light Level?", required: false, options: [[10:"10%"],[20:"20%"],[30:"30%"],[40:"40%"],[50:"50%"],[60:"60%"],[70:"70%"],[80:"80%"],[90:"90%"],[100:"100%"]]                       
+                }
+            }
+        }
+        section ("Flash These Switches", hideWhenEmpty: true) {
+            input "sFlash", "capability.switch", title: "Flash Switch(es)", multiple: true, required: false, submitOnChange:true
+            if (sFlash) {
+                input "numFlashes", "number", title: "This number of times (default 3)", required: false, submitOnChange:true
+                input "onFor", "number", title: "On for (default 1 second)", required: false, submitOnChange:true			
+                input "offFor", "number", title: "Off for (default 1 second)", required: false, submitOnChange:true
+            }
+        }
+    }
+} 	   
 //////////////////////////////////////////////////////////////////////////////
 /////////// PROFILE RESTRICTIONS
 //////////////////////////////////////////////////////////////////////////////
 page name: "pRestrict"
-    def pRestrict(){
-        dynamicPage(name: "pRestrict", title: "", uninstall: false) {
-			section ("Mode Restrictions") {
-                input "modes", "mode", title: "Only when mode is", multiple: true, required: false
-            }        
-            section ("Days - Audio only on these days"){	
-                input "days", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
-                    "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            }
-            section ("Time - Audio only during these times"){
-                href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
-            }   
-	    }
-	}
+def pRestrict(){
+    dynamicPage(name: "pRestrict", title: "", uninstall: false) {
+        section ("Mode Restrictions") {
+            input "modes", "mode", title: "Only when mode is", multiple: true, required: false
+        }        
+        section ("Days - Audio only on these days"){	
+            input "days", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
+                "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        }
+        section ("Time - Audio only during these times"){
+            href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
+        }   
+    }
+}
 page name: "certainTime"
-    def certainTime() {
-        dynamicPage(name:"certainTime",title: "Only during a certain time", uninstall: false) {
-            section("Beginning at....") {
-                input "startingX", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
-                if(startingX in [null, "A specific time"]) input "starting", "time", title: "Start time", required: false, submitOnChange: true
-                else {
-                    if(startingX == "Sunrise") input "startSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                    else if(startingX == "Sunset") input "startSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                }
-            }
-            section("Ending at....") {
-                input "endingX", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
-                if(endingX in [null, "A specific time"]) input "ending", "time", title: "End time", required: false, submitOnChange: true
-                else {
-                    if(endingX == "Sunrise") input "endSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                    else if(endingX == "Sunset") input "endSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                }
-            }
+def certainTime() {
+    dynamicPage(name:"certainTime",title: "Only during a certain time", uninstall: false) {
+        section("Beginning at....") {
+            input "startingX", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
+            if(startingX in [null, "A specific time"]) input "starting", "time", title: "Start time", required: false, submitOnChange: true
+            else {
+                if(startingX == "Sunrise") input "startSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                else if(startingX == "Sunset") input "startSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                    }
+        }
+        section("Ending at....") {
+            input "endingX", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
+            if(endingX in [null, "A specific time"]) input "ending", "time", title: "End time", required: false, submitOnChange: true
+            else {
+                if(endingX == "Sunrise") input "endSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                else if(endingX == "Sunset") input "endSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                    }
         }
     }
+}
 
 
 /************************************************************************************************************
 		Base Process
 ************************************************************************************************************/    
 def installed() {
-	log.debug "Installed with settings: ${settings}, current app version: ${release()}"
+    log.debug "Installed with settings: ${settings}, current app version: ${release()}"
     state.ProfileRelease ="Profile: "  + release()
-	}
+}
 
 def updated() {
-	log.debug "Updated with settings: ${settings}, current app version: ${release()}"
+    log.debug "Updated with settings: ${settings}, current app version: ${release()}"
     state.ProfileRelease = "Profile: " + release()
-	unsubscribe()
-	initialize()
-	}
+    unsubscribe()
+    initialize()
+}
 
 def initialize() {
-        state.lastMessage
-    	state.lastTime
-        state.recording = null
-        state.recording1
-        state.recording2
-        state.recording3
-        state.lastAction = null
-        state.lastActivity
-        state.reminderAnsPend = 0
-        state.delayAnsPend = 0
-        state.reminder1
-        state.reminder2
-        state.reminder3
-        //Alexa Voice Settings
-		state.pContCmds = settings.pContCmdsProfile == false ? true : settings.pContCmdsProfile == true ? false : true
-        state.pContCmdsR = "init"
-        state.pTryAgain = false
-        //Sound Cancellation    
-        state.pMuteAlexa = settings.pDisableAlexaProfile ?: false
-        state.pMuteAll = settings.pDisableALLProfile ?: false
-        // Turn OFF the Color Loop
-		unschedule("startLoop")
-		unschedule("continueLoop")
-		if (garageDoors) {
-		subscribe(sLocksGarage,"codeEntered",codeEntryHandler)
-    	}
-  		subscribe(sLocksVP, "codeEntered", codeEntryHandler)
-  		if (sLocksSHM) {
-    	subscribe(location,"alarmSystemStatus",alarmStatusHandler)
-    	subscribe(sLocksSHM,"codeEntered",codeEntryHandler)
-  		}
-        //WEATHER UPDATES
-        runEvery1Hour(mGetWeatherUpdates)
-        state.lastWeatherCheck
-        state.lastWeatherUpdate
-        //SHM status change and keypad initialize
-    		subscribe(location, locationHandler)
-            subscribe(location, "alarmSystemStatus",alarmStatusHandler)//used for ES speaker feedback
-			state.responseTxt = null
-            state.lambdaReleaseTxt = "Not Set"
-            state.lambdaReleaseDt = "Not Set" 
-            state.lambdatextVersion = "Not Set"
-        //Alexa Responses
-			state.pTryAgain = false
-        	state.pContCmds = settings.pDisableContCmds == false ? true : settings.pDisableContCmds == true ? false : true
-            state.pMuteAlexa = settings.pEnableMuteAlexa
-			state.pShort = settings.pUseShort
-            state.pContCmdsR = "init"       
-        //PIN Settings
-            state.usePIN_T = settings.uPIN_T
-            state.usePIN_L = settings.uPIN_L
-            state.usePIN_D = settings.uPIN_D
-            state.usePIN_S = settings.uPIN_S             
-			state.usePIN_SHM = settings.uPIN_SHM
-            state.usePIN_Mode = settings.uPIN_Mode
-            state.savedPINdata = null
-            state.pinTry = null
-    	//OTHER 
-    		def String deviceType = (String) null
-    		def String outputTxt = (String) null
-    		def String result = (String) null
-    		def String deviceM = (String) null
-			def currState
-    		def stateDate
-    		def stateTime
-    		def data = [:]
-    			if (fDevice != null) {
-    				fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") }
-    			if (debug){
-    				log.debug 	"Feedback data: (fDevice) = '${fDevice}', "+
-    					"(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
-			def fProcess = true
-    		state.pTryAgain = false
-	if (petNoteAct) {
-		log.info "Initializing variables for '${app.label}'"
-		if (state.petWalkNotify == null) {state.petWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
-		if (state.petShotNotify == null) {state.petShotNotify = "I'm sorry, I have not been told when the cat was shot" }
-		if (state.petBathNotify == null) {state.petBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
-		if (state.petFedNotify == null) {state.petFedNotify = "I'm sorry, I have not been told when the cat was fed" }
-		if (state.petMedNotify == null) {state.petMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
-		if (state.petBrushNotify == null) {state.petBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
-		}
+    state.lastMessage
+    state.lastTime
+    state.recording = null
+    state.recording1
+    state.recording2
+    state.recording3
+    state.lastAction = null
+    state.lastActivity
+    state.reminderAnsPend = 0
+    state.delayAnsPend = 0
+    state.reminder1
+    state.reminder2
+    state.reminder3
+    //Alexa Voice Settings
+    state.pContCmds = settings.pContCmdsProfile == false ? true : settings.pContCmdsProfile == true ? false : true
+    state.pContCmdsR = "init"
+    state.pTryAgain = false
+    //Sound Cancellation    
+    state.pMuteAlexa = settings.pDisableAlexaProfile ?: false
+    state.pMuteAll = settings.pDisableALLProfile ?: false
+    // Turn OFF the Color Loop
+    unschedule("startLoop")
+    unschedule("continueLoop")
+    if (garageDoors) {
+        subscribe(sLocksGarage,"codeEntered",codeEntryHandler)
+    }
+    subscribe(sLocksVP, "codeEntered", codeEntryHandler)
+    if (sLocksSHM) {
+        subscribe(location,"alarmSystemStatus",alarmStatusHandler)
+        subscribe(sLocksSHM,"codeEntered",codeEntryHandler)
+    }
+    //WEATHER UPDATES
+    runEvery1Hour(mGetWeatherUpdates)
+    state.lastWeatherCheck
+    state.lastWeatherUpdate
+    //SHM status change and keypad initialize
+    subscribe(location, locationHandler)
+    subscribe(location, "alarmSystemStatus",alarmStatusHandler)//used for ES speaker feedback
+    state.responseTxt = null
+    state.lambdaReleaseTxt = "Not Set"
+    state.lambdaReleaseDt = "Not Set" 
+    state.lambdatextVersion = "Not Set"
+    //Alexa Responses
+    state.pTryAgain = false
+    state.pContCmds = settings.pDisableContCmds == false ? true : settings.pDisableContCmds == true ? false : true
+    state.pMuteAlexa = settings.pEnableMuteAlexa
+    state.pShort = settings.pUseShort
+    state.pContCmdsR = "init"       
+    //PIN Settings
+    state.usePIN_T = settings.uPIN_T
+    state.usePIN_L = settings.uPIN_L
+    state.usePIN_D = settings.uPIN_D
+    state.usePIN_S = settings.uPIN_S             
+    state.usePIN_SHM = settings.uPIN_SHM
+    state.usePIN_Mode = settings.uPIN_Mode
+    state.savedPINdata = null
+    state.pinTry = null
+    //OTHER 
+    def String deviceType = (String) null
+    def String outputTxt = (String) null
+    def String result = (String) null
+    def String deviceM = (String) null
+    def currState
+    def stateDate
+    def stateTime
+    def data = [:]
+    if (fDevice != null) {
+        fDevice = fDevice.replaceAll("[^a-zA-Z0-9 ]", "") }
+    if (debug){
+        log.debug 	"Feedback data: (fDevice) = '${fDevice}', "+
+            "(fQuery) = '${fQuery}', (fOperand) = '${fOperand}', (fCommand) = '${fCommand}', (fIntentName) = '${fIntentName}'"}
+    def fProcess = true
+    state.pTryAgain = false
+    if (petNoteAct) {
+        log.info "Initializing variables for '${app.label}'"
+        if (state.petWalkNotify == null) {state.petWalkNotify = "I'm sorry, I have not been told when the cat was walked" }
+        if (state.petShotNotify == null) {state.petShotNotify = "I'm sorry, I have not been told when the cat was shot" }
+        if (state.petBathNotify == null) {state.petBathNotify = "I'm sorry, I have not been told when the cat was bathed" }
+        if (state.petFedNotify == null) {state.petFedNotify = "I'm sorry, I have not been told when the cat was fed" }
+        if (state.petMedNotify == null) {state.petMedNotify = "I'm sorry, I have not been told when the cat was medicated" }
+        if (state.petBrushNotify == null) {state.petBrushNotify = "I'm sorry, I have not been told when the cat was brushed" }
+    }
     if (litterBoxAct) {
-    	log.info "Initialing variables for the litter box"
+        log.info "Initialing variables for the litter box"
         if (state.litterBoxCleaned == null) {state.litterBoxCleaned = "I'm sorry, I have not been told when the litter box was cleaned" }
         if (state.litterBoxScooped == null) {state.litterBoxScooped = "I'm sorry, I have not been told when the litter box was scooped" }
-        }
-	}
+    }
+}
 
 /******************************************************************************************************
    PARENT STATUS CHECKS
 ******************************************************************************************************/
 def checkState() {
-	return state.pMuteAlexa
-	}
+    return state.pMuteAlexa
+}
 def checkRelease() {
-	return state.ProfileRelease
-	}
+    return state.ProfileRelease
+}
 
 /******************************************************************************************************
    SPEECH AND TEXT PROCESSING INTERNAL - FEEDBACK
 ******************************************************************************************************/
 def profileFeedbackEvaluate(params) {
-	log.info "profileFeedbackEvaluate has been activated"	
-	def tts = params.ptts
-	def intent = params.pintentName        
-	def childName = app.label       
-	//Data for CoRE 
-	def data = [args: tts]
+    log.info "profileFeedbackEvaluate has been activated"	
+    def tts = params.ptts
+    def intent = params.pintentName        
+    def childName = app.label       
+    //Data for CoRE 
+    def data = [args: tts]
     def dataSet = [:]
     //Output Variables
     def pTryAgain = false
     def pPIN = false
     def String pContCmdsR = (String) "tts"
-	def String outputTxt = (String) null 
-	def String scheduler = (String) null     
-	def String ttsR = (String) null
-	def String command = (String) null
-	def String deviceType = (String) null
+    def String outputTxt = (String) null 
+    def String scheduler = (String) null     
+    def String ttsR = (String) null
+    def String command = (String) null
+    def String deviceType = (String) null
     def String colorMatch = (String) null
     if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"   
-	//Sending event to WebCoRE
+    //Sending event to WebCoRE
     sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
-    
+
     /* I belive this is redundant code as it would be caught at line 605 in the parent app....
-    if(tts.contains("no ") || tts == "no" || tts == "stop" || tts == "cancel" || tts == "kill it" || tts == "zip it" || tts == "yes" && state.pContCmdsR != "wrongIntent"){
-    	if(tts == "no" || tts == "stop" || tts == "cancel" || tts == "kill it" || tts == "zip it" || tts.contains("thank")){
-            outputTxt = "ok, I am here if you need me, so don't be shy"
-            pContCmds = false
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-    	}
-		else {
-            outputTxt = "ok, please continue, "
-            pContCmds = false
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-    	}        
-    }
-    */
+if(tts.contains("no ") || tts == "no" || tts == "stop" || tts == "cancel" || tts == "kill it" || tts == "zip it" || tts == "yes" && state.pContCmdsR != "wrongIntent"){
+if(tts == "no" || tts == "stop" || tts == "cancel" || tts == "kill it" || tts == "zip it" || tts.contains("thank")){
+outputTxt = "ok, I am here if you need me, so don't be shy"
+pContCmds = false
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else {
+outputTxt = "ok, please continue, "
+pContCmds = false
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}        
+}
+*/
 
     if (command == "undefined") {
-		outputTxt = "Sorry, I didn't get that, "
+        outputTxt = "Sorry, I didn't get that, "
         state.pTryAgain = false
         state.pContCmdsR = "clear"
         state.lastAction = null
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-	}    
-	if (parent.debug) log.debug "sendNotificationEvent sent to CoRE from ${app.label}"
-	if (pSendSettings() == "complete" || pGroupSettings() == "complete" || pDevicesSettings() == "complete"){
-    if (intent == childName){
-		if (test){
-            outputTxt = "Congratulations! Your EchoSistant is now setup properly, good job" 
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        }
-        def getCMD = getFeedbackCommand(tts) 
-        deviceType = getCMD.deviceType
-        command = getCMD.command
-        if(parent.debug) log.debug "I have received a feedback command: ${command}, deviceType:  ${deviceType}"
+    }    
+    if (parent.debug) log.debug "sendNotificationEvent sent to CoRE from ${app.label}"
+    if (pSendSettings() == "complete" || pGroupSettings() == "complete" || pDevicesSettings() == "complete"){
+        if (intent == childName){
+            if (test){
+                outputTxt = "Congratulations! Your EchoSistant is now setup properly, good job" 
+                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+            }
+            def getCMD = getFeedbackCommand(tts) 
+            deviceType = getCMD.deviceType
+            command = getCMD.command
+            if(parent.debug) log.debug "I have received a feedback command: ${command}, deviceType:  ${deviceType}"
 
-//>>>FEEDBACK HANDLER>>>>
+            //>>>FEEDBACK HANDLER>>>>
 
-        def fDevice = tts.contains("garage") ? fGarage : tts.contains("vent") ? fVents : tts.contains("light") ? fSwitches : tts.contains("door") ? fDoors : tts.contains("window") ? fWindows : tts.contains("fan") ? fFans : 
-        tts.contains("lock") ? fLocks : tts.contains("shade") ? fShades : tts.contains("curtains") ? fShades : tts.contains("blinds") ? fShades : tts.startsWith("who") ? fPresence : tts.contains("batteries") ? fBattery : null
-        def fValue = tts.contains("garage") ? "contact" : tts.contains("vent") ? "switch" : tts.contains("light") ? "switch" : tts.contains("door") ? "contact" : tts.contains("window") ? "contact" : tts.contains("fan") ? "switch" : 
-        tts.contains("lock") ? "lock" : tts.contains("shade") ? "windowShade" : tts.contains("blind") ? "windowShade" : tts.contains("curtains") ? "windowShade" : null
-        def fName = tts.contains("vent") ? "vents" : tts.contains("lock") ? "locks" : tts.contains("door") ? "doors" : tts.contains("window") ? "windows" : tts.contains("fan") ? "fans" : 
-        tts.contains("light") ? "lights" : tts.contains("shade") ? "shades" : tts.contains("blind") ? "blinds" : tts.contains("curtains") ? "curtains" : null
-        if (tts.contains("check") && tts.contains("light")) { command = "on" }
-        if (tts.contains("check")) {
-        if (tts.contains("lock") || tts.contains("door") || tts.contains("window") || tts.contains("vent") || tts.contains("shades") || tts.contains("blind") || tts.contains("curtain")) {
-        command = "open" }}
+            def fDevice = tts.contains("garage") ? fGarage : tts.contains("vent") ? fVents : tts.contains("light") ? fSwitches : tts.contains("door") ? fDoors : tts.contains("window") ? fWindows : tts.contains("fan") ? fFans : 
+            tts.contains("lock") ? fLocks : tts.contains("shade") ? fShades : tts.contains("curtains") ? fShades : tts.contains("blinds") ? fShades : tts.startsWith("who") ? fPresence : tts.contains("batteries") ? fBattery : null
+            def fValue = tts.contains("garage") ? "contact" : tts.contains("vent") ? "switch" : tts.contains("light") ? "switch" : tts.contains("door") ? "contact" : tts.contains("window") ? "contact" : tts.contains("fan") ? "switch" : 
+            tts.contains("lock") ? "lock" : tts.contains("shade") ? "windowShade" : tts.contains("blind") ? "windowShade" : tts.contains("curtains") ? "windowShade" : null
+            def fName = tts.contains("vent") ? "vents" : tts.contains("lock") ? "locks" : tts.contains("door") ? "doors" : tts.contains("window") ? "windows" : tts.contains("fan") ? "fans" : 
+            tts.contains("light") ? "lights" : tts.contains("shade") ? "shades" : tts.contains("blind") ? "blinds" : tts.contains("curtains") ? "curtains" : null
+            if (tts.contains("check") && tts.contains("light")) { command = "on" }
+            if (tts.contains("check")) {
+                if (tts.contains("lock") || tts.contains("door") || tts.contains("window") || tts.contains("vent") || tts.contains("shades") || tts.contains("blind") || tts.contains("curtain")) {
+                    command = "open" }}
 
-//>>> Mode Status Feedback >>>>
-        if (tts.contains("mode")) {
-            outputTxt = "The Current Mode is " + location.currentMode      
-            return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-        }
-        if (tts.contains("tell me")) {
-            if (tts.contains("mode")){
+            //>>> Mode Status Feedback >>>>
+            if (tts.contains("mode")) {
                 outputTxt = "The Current Mode is " + location.currentMode      
                 return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
-        }
-
-        //>>> Garage Doors Feedback >>>>
-        if (tts.contains("garage")) {
-            if (deviceType == "fbGarageOpen" || deviceType == "fbGarageClose") {
-                log.info "garage door method is active"
-                if (fGarage == null) {
-                    outputTxt = "I'm sorry, it seems that you have not selected any devices for this query, please configure your feedback devices in the EchoSistant smartapp."
-                }
-                else {
-                    fDevice.each { deviceName -> 
-                        if (deviceName.currentValue("contact") == "${command}") {
-                            String device  = (String) deviceName
-                            def status = deviceName.currentValue("contact")
-                            if (status == command) {
-                                outputTxt = "Yes, the ${deviceName} is ${command}"
-                            }
-                        }
-                        else if (tts.contains("check") && command == "open") {
-                            def status = deviceName.currentValue("contact")
-                            outputTxt = "The ${deviceName} is currently " + status
-                        }
-
-                        else { outputTxt = "No, the ${deviceName} is not currently ${command}" }
-                    }
-                }
-            }    
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-        }   	             
-//>>> Battery Level >>>>                        
-        if(tts.contains("batteries") || tts.contains("battery level") || tts.contains("battery")) {
-            def cap = "bat"
-            def dMatch = deviceMatchHandler(fDevice)	
-            if (dMatch.deviceMatch == null) { 		
-                def devList = getCapabilities(cap)
-                if(devList instanceof String){
-                    outputTxt = devList
-                    log.error " devList = ${devList}"
-
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 	}
-                else {
-                    if (tts.startsWith("how") || tts.startsWith("how many") || tts.startsWith("are there") || tts.contains("low") || tts.contains("give") || tts.contains("get")) {
-                        if (devList.listSize > 0) {
-                            if (devList.listSize == 1) {
-                                outputTxt = "There is one device with low battery level , would you like to know which one"                           			
-                            }
-                            else {
-                                outputTxt = "There are " + devList.listSize + " devices with low battery levels, would you like to know which devices"
-                            }
-                            def sdevices = devList.listBat
-                            def devListString = sdevices.join(",")
-                            data.list = devListString
-                            state.lastAction = devListString
-                            state.pContCmdsR = "bat"
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                            }
-                        else {outputTxt = "There are no devices with low battery levels"}
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                         }
-                    else if (tts.contains ("what") || tts.contains ("which")) {
-                        if (devList.listSize > 0) {
-                            outputTxt = "The following devices have low battery levels " + devList.listBat.sort()//.unique()
-                        }
-                        else {outputTxt = "There are no devices with low battery levels "
-                             } 
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                         }
+            if (tts.contains("tell me")) {
+                if (tts.contains("mode")){
+                    outputTxt = "The Current Mode is " + location.currentMode      
+                    return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
                 }
             }
-            else {
-                device = dMatch.deviceMatch
-                currState = device.currentState("battery").value
-                stateTime = device.currentState("battery").date.time
-                def timeText = getTimeVariable(stateTime, deviceType)
-                outputTxt = "The battery level of " + fDevice + " is " + currState + " percent and was registered " + timeText.currDate + " at " + timeText.currTime
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-            }                   
-        }
-        //>>> Settings Feedback >>>>                                    
-        if(tts.endsWith("settings")) {
-            outputTxt = settingsFeedback()
-        }
-        //>>> PetNotes Feedback >>>>
-        if (tts.startsWith("when") || tts.startsWith("has")) {
-            if (tts.contains("litter box") || tts.contains("litterbox")) {
-                if (fCommand == "scooped" && state.litterBoxScooped != null ) {outputTxt = state.litterBoxScooped}
-                if (fCommand == "cleaned" && state.litterBoxCleaned != null ) {outputTxt = state.litterBoxCleaned}
-            }
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
-        }
-        if(tts.startsWith("when") || tts.startsWith("did")) {
-            if(tts.contains("was") || tts.contains("you")) {
-                if(tts.contains("she") || tts.contains("he") || tts.contains("${app.label}") || tts.contains("get") || tts.contains("your")) {
-                    if (tts.contains("medicated") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
-                        outputTxt = "I have been told that " + state.petMedNotify + " , I have also been told that " + state.petShotNotify
-                    }
-                    else if (tts.contains("medicated") && state.petShotNotify.contains("last")) { outputTxt = "I have not been told when ${app.label} was medicated, but " + state.petShotNotify 
-                                                                                                }
-                    else if (tts.contains("medicated")) { outputTxt = state.petMedNotify 
-                                                        }
-                    if (tts.contains("shot") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
-                        outputTxt = "I have been told that " + state.petShotNotify + " , I have also been told that " + state.petMedNotify
-                    }
-                    else if (tts.contains("shot") && state.petMedNotify.contains("last")) { 
-                        outputTxt = "I have not been told when ${app.label} was shot, but " + state.petMedNotify 
-                    }
-                    else if (tts.contains("shot")) { outputTxt = state.petShotNotify 
-                                                   }
-                    else if (tts.contains("fed") && state.petFedNotify != null ) {outputTxt = state.petFedNotify}
-                    else if (tts.contains("bathed") && state.petBathNotify != null ) {outputTxt = state.petBathNotify}
-                    else if (tts.contains("walked") && state.petWalkNotify != null ) {outputTxt = state.petWalkNotify}
-                    else if (tts.contains("brushed") && state.petBrushNotify != null ) {outputTxt = state.petBrushNotify}
-                }
-            }    
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]    
-        }
-        //>>> Presence Feedback >>>>
-        if (tts.startsWith("who") || tts.contains("people") || tts == "check on my family") {
-            if (deviceType == "fbPresence") {
-                state.pTryAgain = false
-                if(fPresence == null) {
-                    outputTxt = "I'm sorry, it seems that you have not selected any presence sensors for this query. Please check the configuration of your EchoSistant App"
-                    return outputTxt}
-                if(fPresence){
-                    def devListP = []
-                    def devListNP = []
-                    if (fPresence.latestValue("presence").contains("present")) {
-                        fPresence.each { deviceName ->
-                            if (deviceName.latestValue("presence")=="present") {
-                                String device  = (String) deviceName
-                                devListP += device
-                            }
-                        }
-                    }
-                    if (fPresence.latestValue("presence").contains("not present")) {
-                        fPresence.each { deviceName ->
-                            if (deviceName.latestValue("presence")=="not present") {
-                                String device  = (String) deviceName
-                                devListNP += device
-                            }
-                        }
-                    }
-                    if (tts.contains("not")) {
-                        if (devListNP.size() > 0) {
-                            if (devListNP.size() == 1) {
-                                outputTxt = "Only" + devListNP + "is not home"                         			
-                            }
-                            else {
-                                outputTxt = "The following " + devListNP.size() + " family members are not at home: " + devListNP
-                            }
-                        }
-                        else outputTxt = "Everyone is at home"
-                    }
-                    else if (tts.endsWith("here") || tts.endsWith("at home") || tts.endsWith("present") || tts.endsWith("home") || tts.startsWith("check")) {
-                        if (devListNP.size() == 0) {
-                            outputTxt = "Everyone is at home"
-                        }
-                        if (devListP.size() > 0) {
-                            if (devListP.size() == 1) {
-                                outputTxt = "Only" + devListP + "is at home"                         			
-                            }
-                            else {
-                                outputTxt = "The following " + devListP.size() + " family members are at home: " + devListP
-                            }
-                        }
-                        else outputTxt = "No one is home"
-                    }
-                }
-            }
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]}
 
-        /// check the house                        
-        if (tts.startsWith("check")) {
-            if (tts.endsWith("home") || tts.endsWith("house") || tts.endsWith("my home") || tts.endsWith("my house")) {
-                log.info "this is the house status"
-                def devListDoor = []
-                if (fDoors != null) {
-                    if (fDoors.latestValue("contact").contains("open")) {
-                        fDoors.each { deviceName ->
-                            if (deviceName.latestValue("contact")=="open") {
-                                String device  = (String) deviceName
-                                devListDoor += device
-                            }
-                        }                
+            //>>> Garage Doors Feedback >>>>
+            if (tts.contains("garage")) {
+                if (deviceType == "fbGarageOpen" || deviceType == "fbGarageClose") {
+                    log.info "garage door method is active"
+                    if (fGarage == null) {
+                        outputTxt = "I'm sorry, it seems that you have not selected any devices for this query, please configure your feedback devices in the EchoSistant smartapp."
                     }
-                }
-                def devListWindow = []
-                if (fWindows != null) {
-                    if (fWindows.latestValue("contact").contains("open")) {
-                        fWindows.each { deviceName ->
-                            if (deviceName.latestValue("contact")=="open") {
+                    else {
+                        fDevice.each { deviceName -> 
+                            if (deviceName.currentValue("contact") == "${command}") {
                                 String device  = (String) deviceName
-                                devListWindow += device
+                                def status = deviceName.currentValue("contact")
+                                if (status == command) {
+                                    outputTxt = "Yes, the ${deviceName} is ${command}"
+                                }
                             }
-                        }
-                    }
-                }
-                def devListLight = []
-                if (fSwitches != null) {
-                    if (fSwitches.latestValue("switch").contains("on")) {
-                        fSwitches.each { deviceName ->
-                            if (deviceName.latestValue("switch")=="on") {
-                                String device  = (String) deviceName
-                                devListLight += device
+                            else if (tts.contains("check") && command == "open") {
+                                def status = deviceName.currentValue("contact")
+                                outputTxt = "The ${deviceName} is currently " + status
                             }
-                        }
-                    }
-                }
-                def devListLock = []
-                if (fLocks != null) {
-                    if (fLocks.latestValue("lock").contains("unlocked")) {
-                        fLocks.each { deviceName ->
-                            if (deviceName.latestValue("lock")=="unlocked") {
-                                String device  = (String) deviceName
-                                devListLock += device
-                            }
-                        }
-                    }
-                }
-                def devListNP = []
-                if (fPresence != null) {
-                    if (fPresence.latestValue("presence").contains("not present")) {
-                        fPresence.each { deviceName ->
-                            if (deviceName.latestValue("presence")=="not present") {
-                                String device  = (String) deviceName
-                                devListNP += device
-                            }
-                        }
-                    }
-                }            
-                if (devListDoor.size() > 0 || devListWindow.size() > 0 || devListLock.size() > 0 || devListNP.size() > 0) {
-                    def sSHM = location.currentState("alarmSystemStatus").value      
-                    sSHM = sSHM == "off" ? "Disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
-                    outputTxt = "The home has " + devListDoor.size() + " doors open, " + devListWindow.size() + " windows open, " + devListLock.size + " locks unlocked, and " + devListNP.size() + " family members are not home, "
-                    outputTxt = outputTxt + " as well as the security system is set to: ${sSHM}"
-                }
-                else if (devListDoor.size() == 0 && devListWindow.size() == 0 && devListLock.size() == 0 && devListNP.size() == 0) {
-                    def sSHM = location.currentState("alarmSystemStatus").value      
-                    sSHM = sSHM == "off" ? "Disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
-                    outputTxt = "All of the doors and windows are closed, the locks are locked, everyone is home, " +
-                        " and the security system is set to: ${sSHM}"
-                }
-            }
-            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-        }    
-        //>>> Security Status Feedback >>>>
-        if (tts.contains("smart home monitor") || tts.contains("alarm system") || tts.contains("alarm") || tts.contains("security")){
-            def sSHM = location.currentState("alarmSystemStatus").value      
-            sSHM = sSHM == "off" ? "Disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
-            outputTxt = "Your Smart Home Monitor Status is " +  sSHM
-            return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]				
-        }
 
-        //>>> Misc Devices Feedback >>>>            
-        if (tts.contains("window") || tts.contains("vent") || tts.contains("lock") || tts.contains("blind") || tts.contains("curtain") || tts.contains("shade") || tts.contains("door") || tts.contains("light")) {
-            if (tts.contains("on") || tts.contains("off") || tts.contains("open") || tts.contains("closed") || tts.startsWith("check")) {
-                def devList = []
-                if ((fDevice == fDoors && fDoors == null) || (fDevice == fWindows && fWindows == null) || (fDevice == fVents && fVents == null) || (fDevice == fLights && fLights == null)) {
-                    outputTxt = "I'm sorry, it seems that you have not selected any devices for this query, please configure your feedback devices in the EchoSistant smartapp."
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-                else //if (fDevice != null) {
-                    if (fDevice.latestValue("${fValue}").contains(command)) {
-                        fDevice.each { deviceName ->
-                            if (deviceName.latestValue("${fValue}")=="${command}") {
-                                String device  = (String) deviceName
-                                devList += device
-                                log.info "device = ${fDevice}, value = ${fValue}, deviceType = ${fName}, device list = '${devList}'"
-                            }
+                            else { outputTxt = "No, the ${deviceName} is not currently ${command}" }
                         }
                     }
-                //}
-                // RETURNS A NUMBER OF DEVICES //        
-                if (tts.startsWith("how many") || tts.startsWith("check")) { 
-                    if (devList.size() > 0) {
-                        if (devList.size() == 1) {
-                            outputTxt = "There is " + devList.size() + " " + fName + " " + command + " in the ${app.label}. "                           			
-                        }
-                        else {outputTxt = "There are " + devList.size() + " " + fName + " " + command + " in the ${app.label}? "
-                             }
-                    }
-                    else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                 }    
-                // RETURNS A 'YES, THERE ARE ## OF DEVICES' ~~ Added to keep normal language //        
-                if (tts.startsWith("are")) {
-                    if (devList.size() > 0) {
-                        if (devList.size() == 1) {
-                            outputTxt = "Yes, The " + devList + " is the only " + fName + " " + command +  "  in the ${app.label}, would you like anything else? "                           			
+                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            }   	             
+            //>>> Battery Level >>>>                        
+            if(tts.contains("batteries") || tts.contains("battery level") || tts.contains("battery")) {
+                def cap = "bat"
+                def dMatch = deviceMatchHandler(fDevice)	
+                if (dMatch.deviceMatch == null) { 		
+                    def devList = getCapabilities(cap)
+                    if(devList instanceof String){
+                        outputTxt = devList
+                        log.error " devList = ${devList}"
+
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                 	
+                    }
+                    else {
+                        if (tts.startsWith("how") || tts.startsWith("how many") || tts.startsWith("are there") || tts.contains("low") || tts.contains("give") || tts.contains("get")) {
+                            if (devList.listSize > 0) {
+                                if (devList.listSize == 1) {
+                                    outputTxt = "There is one device with low battery level , would you like to know which one"                           			
+                                }
+                                else {
+                                    outputTxt = "There are " + devList.listSize + " devices with low battery levels, would you like to know which devices"
+                                }
+                                def sdevices = devList.listBat
+                                def devListString = sdevices.join(",")
+                                data.list = devListString
+                                state.lastAction = devListString
+                                state.pContCmdsR = "bat"
+                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                            
+                            }
+                            else {outputTxt = "There are no devices with low battery levels"}
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                         
                         }
-                        else {outputTxt = "Yes, there are " + devList.size() + " " + fName + " " + command + " in the ${app.label}, would you like to know which ones? "
-                             }
+                        else if (tts.contains ("what") || tts.contains ("which")) {
+                            if (devList.listSize > 0) {
+                                outputTxt = "The following devices have low battery levels " + devList.listBat.sort()//.unique()
+                            }
+                            else {outputTxt = "There are no devices with low battery levels "
+                                 } 
+                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                         
+                        }
+                    }
+                }
+                else {
+                    device = dMatch.deviceMatch
+                    currState = device.currentState("battery").value
+                    stateTime = device.currentState("battery").date.time
+                    def timeText = getTimeVariable(stateTime, deviceType)
+                    outputTxt = "The battery level of " + fDevice + " is " + currState + " percent and was registered " + timeText.currDate + " at " + timeText.currTime
+                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                }                   
+            }
+            //>>> Settings Feedback >>>>                                    
+            if(tts.endsWith("settings")) {
+                outputTxt = settingsFeedback()
+            }
+            //>>> PetNotes Feedback >>>>
+            if (tts.startsWith("when") || tts.startsWith("has")) {
+                if (tts.contains("litter box") || tts.contains("litterbox")) {
+                    if (fCommand == "scooped" && state.litterBoxScooped != null ) {outputTxt = state.litterBoxScooped}
+                    if (fCommand == "cleaned" && state.litterBoxCleaned != null ) {outputTxt = state.litterBoxCleaned}
+                }
+                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+            }
+            if(tts.startsWith("when") || tts.startsWith("did")) {
+                if(tts.contains("was") || tts.contains("you")) {
+                    if(tts.contains("she") || tts.contains("he") || tts.contains("${app.label}") || tts.contains("get") || tts.contains("your")) {
+                        if (tts.contains("medicated") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
+                            outputTxt = "I have been told that " + state.petMedNotify + " , I have also been told that " + state.petShotNotify
+                        }
+                        else if (tts.contains("medicated") && state.petShotNotify.contains("last")) { outputTxt = "I have not been told when ${app.label} was medicated, but " + state.petShotNotify 
+                                                                                                    }
+                        else if (tts.contains("medicated")) { outputTxt = state.petMedNotify 
+                                                            }
+                        if (tts.contains("shot") && state.petShotNotify.contains("last") && state.petMedNotify.contains("last")) {
+                            outputTxt = "I have been told that " + state.petShotNotify + " , I have also been told that " + state.petMedNotify
+                        }
+                        else if (tts.contains("shot") && state.petMedNotify.contains("last")) { 
+                            outputTxt = "I have not been told when ${app.label} was shot, but " + state.petMedNotify 
+                        }
+                        else if (tts.contains("shot")) { outputTxt = state.petShotNotify 
+                                                       }
+                        else if (tts.contains("fed") && state.petFedNotify != null ) {outputTxt = state.petFedNotify}
+                        else if (tts.contains("bathed") && state.petBathNotify != null ) {outputTxt = state.petBathNotify}
+                        else if (tts.contains("walked") && state.petWalkNotify != null ) {outputTxt = state.petWalkNotify}
+                        else if (tts.contains("brushed") && state.petBrushNotify != null ) {outputTxt = state.petBrushNotify}
+                    }
+                }    
+                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]    
+            }
+            //>>> Presence Feedback >>>>
+            if (tts.startsWith("who") || tts.contains("people") || tts == "check on my family") {
+                if (deviceType == "fbPresence") {
+                    state.pTryAgain = false
+                    if(fPresence == null) {
+                        outputTxt = "I'm sorry, it seems that you have not selected any presence sensors for this query. Please check the configuration of your EchoSistant App"
+                        return outputTxt}
+                    if(fPresence){
+                        def devListP = []
+                        def devListNP = []
+                        if (fPresence.latestValue("presence").contains("present")) {
+                            fPresence.each { deviceName ->
+                                if (deviceName.latestValue("presence")=="present") {
+                                    String device  = (String) deviceName
+                                    devListP += device
+                                }
+                            }
+                        }
+                        if (fPresence.latestValue("presence").contains("not present")) {
+                            fPresence.each { deviceName ->
+                                if (deviceName.latestValue("presence")=="not present") {
+                                    String device  = (String) deviceName
+                                    devListNP += device
+                                }
+                            }
+                        }
+                        if (tts.contains("not")) {
+                            if (devListNP.size() > 0) {
+                                if (devListNP.size() == 1) {
+                                    outputTxt = "Only" + devListNP + "is not home"                         			
+                                }
+                                else {
+                                    outputTxt = "The following " + devListNP.size() + " family members are not at home: " + devListNP
+                                }
+                            }
+                            else outputTxt = "Everyone is at home"
+                        }
+                        else if (tts.endsWith("here") || tts.endsWith("at home") || tts.endsWith("present") || tts.endsWith("home") || tts.startsWith("check")) {
+                            if (devListNP.size() == 0) {
+                                outputTxt = "Everyone is at home"
+                            }
+                            if (devListP.size() > 0) {
+                                if (devListP.size() == 1) {
+                                    outputTxt = "Only" + devListP + "is at home"                         			
+                                }
+                                else {
+                                    outputTxt = "The following " + devListP.size() + " family members are at home: " + devListP
+                                }
+                            }
+                            else outputTxt = "No one is home"
+                        }
+                    }
+                }
+                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]}
+
+            /// check the house                        
+            if (tts.startsWith("check")) {
+                if (tts.endsWith("home") || tts.endsWith("house") || tts.endsWith("my home") || tts.endsWith("my house")) {
+                    log.info "this is the house status"
+                    def devListDoor = []
+                    if (fDoors != null) {
+                        if (fDoors.latestValue("contact").contains("open")) {
+                            fDoors.each { deviceName ->
+                                if (deviceName.latestValue("contact")=="open") {
+                                    String device  = (String) deviceName
+                                    devListDoor += device
+                                }
+                            }                
+                        }
+                    }
+                    def devListWindow = []
+                    if (fWindows != null) {
+                        if (fWindows.latestValue("contact").contains("open")) {
+                            fWindows.each { deviceName ->
+                                if (deviceName.latestValue("contact")=="open") {
+                                    String device  = (String) deviceName
+                                    devListWindow += device
+                                }
+                            }
+                        }
+                    }
+                    def devListLight = []
+                    if (fSwitches != null) {
+                        if (fSwitches.latestValue("switch").contains("on")) {
+                            fSwitches.each { deviceName ->
+                                if (deviceName.latestValue("switch")=="on") {
+                                    String device  = (String) deviceName
+                                    devListLight += device
+                                }
+                            }
+                        }
+                    }
+                    def devListLock = []
+                    if (fLocks != null) {
+                        if (fLocks.latestValue("lock").contains("unlocked")) {
+                            fLocks.each { deviceName ->
+                                if (deviceName.latestValue("lock")=="unlocked") {
+                                    String device  = (String) deviceName
+                                    devListLock += device
+                                }
+                            }
+                        }
+                    }
+                    def devListNP = []
+                    if (fPresence != null) {
+                        if (fPresence.latestValue("presence").contains("not present")) {
+                            fPresence.each { deviceName ->
+                                if (deviceName.latestValue("presence")=="not present") {
+                                    String device  = (String) deviceName
+                                    devListNP += device
+                                }
+                            }
+                        }
+                    }            
+                    if (devListDoor.size() > 0 || devListWindow.size() > 0 || devListLock.size() > 0 || devListNP.size() > 0) {
+                        def sSHM = location.currentState("alarmSystemStatus").value      
+                        sSHM = sSHM == "off" ? "Disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
+                        outputTxt = "The home has " + devListDoor.size() + " doors open, " + devListWindow.size() + " windows open, " + devListLock.size + " locks unlocked, and " + devListNP.size() + " family members are not home, "
+                        outputTxt = outputTxt + " as well as the security system is set to: ${sSHM}"
+                    }
+                    else if (devListDoor.size() == 0 && devListWindow.size() == 0 && devListLock.size() == 0 && devListNP.size() == 0) {
+                        def sSHM = location.currentState("alarmSystemStatus").value      
+                        sSHM = sSHM == "off" ? "Disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
+                        outputTxt = "All of the doors and windows are closed, the locks are locked, everyone is home, " +
+                            " and the security system is set to: ${sSHM}"
+                    }
+                }
+                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            }    
+            //>>> Security Status Feedback >>>>
+            if (tts.contains("smart home monitor") || tts.contains("alarm system") || tts.contains("alarm") || tts.contains("security")){
+                def sSHM = location.currentState("alarmSystemStatus").value      
+                sSHM = sSHM == "off" ? "Disarmed" : sSHM == "away" ? "Armed Away" : sSHM == "stay" ? "Armed Home" : "unknown"
+                outputTxt = "Your Smart Home Monitor Status is " +  sSHM
+                return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]				
+            }
+
+            //>>> Misc Devices Feedback >>>>            
+            if (tts.contains("window") || tts.contains("vent") || tts.contains("lock") || tts.contains("blind") || tts.contains("curtain") || tts.contains("shade") || tts.contains("door") || tts.contains("light")) {
+                if (tts.contains("on") || tts.contains("off") || tts.contains("open") || tts.contains("closed") || tts.startsWith("check")) {
+                    def devList = []
+                    if ((fDevice == fDoors && fDoors == null) || (fDevice == fWindows && fWindows == null) || (fDevice == fVents && fVents == null) || (fDevice == fLights && fLights == null)) {
+                        outputTxt = "I'm sorry, it seems that you have not selected any devices for this query, please configure your feedback devices in the EchoSistant smartapp."
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+                    }
+                    else //if (fDevice != null) {
+                        if (fDevice.latestValue("${fValue}").contains(command)) {
+                            fDevice.each { deviceName ->
+                                if (deviceName.latestValue("${fValue}")=="${command}") {
+                                    String device  = (String) deviceName
+                                    devList += device
+                                    log.info "device = ${fDevice}, value = ${fValue}, deviceType = ${fName}, device list = '${devList}'"
+                                }
+                            }
+                        }
+                    //}
+                    // RETURNS A NUMBER OF DEVICES //        
+                    if (tts.startsWith("how many") || tts.startsWith("check")) { 
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
+                                outputTxt = "There is " + devList.size() + " " + fName + " " + command + " in the ${app.label}. "                           			
+                            }
+                            else {outputTxt = "There are " + devList.size() + " " + fName + " " + command + " in the ${app.label}? "
+                                 }
+                        }
+                        else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )
+                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
                     }    
-                    else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )
+                    // RETURNS A 'YES, THERE ARE ## OF DEVICES' ~~ Added to keep normal language //        
+                    if (tts.startsWith("are")) {
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
+                                outputTxt = "Yes, The " + devList + " is the only " + fName + " " + command +  "  in the ${app.label}, would you like anything else? "                           			
+                            }
+                            else {outputTxt = "Yes, there are " + devList.size() + " " + fName + " " + command + " in the ${app.label}, would you like to know which ones? "
+                                 }
+                        }    
+                        else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )
+                        return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+                    }
+                    // RETURNS A LIST OF DEVICES //        
+                    if (tts.startsWith("what") || tts.startsWith("which")) {
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
+                                outputTxt = "The " + devList + " is the only " + fName + " " + command +  " in the ${app.label}, would you like anything else? "                           			
+                            }
+                            else {outputTxt = "The following ${fName} are " + command + " in the ${app.label} " + devList + ", would you like anything else?"
+                                 }
+                        }
+                        else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )   
+                        return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
+                    }
+                    // RETURNS STATUS OF A SPECIFIC DEVICE //    
+                    if (tts.startsWith("is")) {
+                        if (devList.size() > 0) {
+                            if (devList.size() == 1) {
+                                outputTxt = "Yes, the '${devList}'is ${command}"                    			
+                            }
+                            else {outputTxt = "No, the '${devList}'is not ${command}"
+                                 }
+                        }
+                    }
                     return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
                 }
-                // RETURNS A LIST OF DEVICES //        
-                if (tts.startsWith("what") || tts.startsWith("which")) {
-                    if (devList.size() > 0) {
-                        if (devList.size() == 1) {
-                            outputTxt = "The " + devList + " is the only " + fName + " " + command +  " in the ${app.label}, would you like anything else? "                           			
-                        }
-                        else {outputTxt = "The following ${fName} are " + command + " in the ${app.label} " + devList + ", would you like anything else?"
-                             }
-                    }
-                    else (outputTxt = "There are no ${fName} " + command + " in the ${app.label} " )   
-                    return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
-                }
-                // RETURNS STATUS OF A SPECIFIC DEVICE //    
-                if (tts.startsWith("is")) {
-                    if (devList.size() > 0) {
-                        if (devList.size() == 1) {
-                            outputTxt = "Yes, the '${devList}'is ${command}"                    			
-                        }
-                        else {outputTxt = "No, the '${devList}'is not ${command}"
-                             }
-                    }
-                }
-                return ["outputTxt":outputTxt, "pContinue":pContinue,  "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]
             }
         }
-    }
         else {
             outputTxt = "Sorry, you must first set up your profile before trying to execute it."
             pTryAgain = true
@@ -1410,7 +1414,7 @@ def profileFeedbackEvaluate(params) {
 ******************************************************************************************************/
 def profileEvaluate(params) {
 	log.info "profile control & messaging Evaluate has been activated"
-	def tts = params.ptts
+	def tts = params.ptts.toLowerCase()
 	def intent = params.pintentName        
 	def childName = app.label       
 	//Data for CoRE 
@@ -1428,6 +1432,7 @@ def profileEvaluate(params) {
     def String colorMatch = (String) null
 
     //Recorded Messages
+    /*
 	def repeat = tts.startsWith("repeat last message") ? true : tts.contains("repeat last message") ? true : tts.startsWith("repeat message") ? true : false
     def whatsUP = "what's up"
 	def play = tts.startsWith("play message") ? true : tts.startsWith("play the message") ? true : tts.startsWith("play recording") ? true : tts.startsWith("play recorded") ? true : false
@@ -1452,10 +1457,9 @@ def profileEvaluate(params) {
     	muteAll = tts.contains("activate sound") ? "unmute" : tts.contains("enable audio") ? "unmute" : tts.contains("unmute audio") ? "unmute" : muteAll
     def muteAlexa = tts.contains("disable Alexa") ? "mute" : tts.contains("silence Alexa") ? "mute" : tts.contains("mute Alexa") ? "mute" : null
     	muteAlexa = tts.contains("enable Alexa") ? "unmute" : tts.contains("start Alexa") ? "unmute" : tts.contains("unmute Alexa") ? "unmute" : muteAll
-	def test = tts.contains("this is a test") ? true : tts.contains("a test") ? true : false
+    */
     if (parent.debug) log.debug "Message received from Parent with: (tts) = '${tts}', (intent) = '${intent}', (childName) = '${childName}', current app version: ${release()}"  
 	//Sending event to WebCoRE
-    sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
 	
     if (command == "undefined") {
 		outputTxt = "Sorry, I didn't get that, "
@@ -1464,665 +1468,712 @@ def profileEvaluate(params) {
         state.lastAction = null
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
 	}    
-	    
+    
+	sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")    
     if (parent.debug) log.debug "sendNotificationEvent sent to CoRE from ${app.label}"
      
     if (pSendSettings() == "complete" || pGroupSettings() == "complete" || pDevicesSettings() == "complete"){
-        if (intent == childName){
-			if (test){
-				outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
-				return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]       
-    		}
-            def getCMD = getCommand(tts) 
-                deviceType = getCMD.deviceType
-                command = getCMD.command
-                if(parent.debug) log.debug "I have received a control command: ${command}, deviceType:  ${deviceType}"
-                    
-	 //Voice Activated Commands
-            if(muteAll == "mute" || muteAll == "unmute"){
-                if(muteAll == "mute"){
-                    state.pMuteAll = true
-                    outputTxt = "Ok, audio messages have been disabled"       
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                
-                }
-                else { 
-                    state.pMuteAll = false
-                    outputTxt = "Ok, audio messages have been enabled"       
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
-                }
-            }
-            if(muteAlexa == "mute" || muteAlexa == "unmute"){
-                if(muteAlexa == "mute"){
-                    state.pMuteAlexa = true
-                    outputTxt = "Ok, Alexa Feedback Responses have been disabled"       
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                
-                }
-                else { 
-                    state.pMuteAlexa = false
-                    outputTxt = "Ok, Alexa Feedback Responses have been enabled"       
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
-                }
-            } 
-            //Repeat Message
-            if (repeat == true || play == true  || tts == whatsUP) {
-                if (tts == repeat || tts == whatsUP) {
-                    outputTxt = getLastMessage()          
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-                else {
-                    def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
-                    if (numMessages == "3 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
-                    else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
-                    else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
-                    else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
-                    //"Your last recording was, " + state.recording
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-            }  
-            else {
-                //Schedule Reminders
-                if(state.reminderAnsPend >0){
-                    int iLength
-                    def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
-                    def length = tts.findAll( /\d+/ )*.toInteger()
-                    if(length[0] !=null) {
-                        iLength = (int)length.get(0)                    
-                    }
-                    else {
-                        outputTxt = "sorry, I was unable to get the number,  "
-                        state.reminderAnsPend = 0
-                        pTryAgain = true
-                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }	
-                    if(unit !="undefined" && iLength != null){
-                        if (state.reminderAnsPend == 1)	{
-                            ttsR = state.reminder1
-                            scheduler = "reminderHandler1"
-                            outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
-                            if(parent.debug) log.debug "scheduling reminder 1 with outputTxt = ${outputTxt}"
-                        }
-                        else {
-                            if (state.reminderAnsPend == 2)	{
-                                ttsR = state.reminder2
-                                scheduler = "reminderHandler2"
-                                outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
-                                if(parent.debug) log.debug "scheduling reminder 2 with outputTxt = ${outputTxt}"
-                            }
-                            else {
-                                if (state.reminderAnsPend == 3)	{
-                                    tts = state.reminder3
-                                    scheduler = "reminderHandler3"
-                                    outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
-                                    if(parent.debug) log.debug "scheduling reminder 3 with outputTxt = ${outputTxt}"
-                                }
-                            }
-                        }
-                        if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, scheduler)}
-                        else {
-                            if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, scheduler)}
-                                else{
-                                    if(unit == "days"){
-                                        def currDate = new Date(now() + location.timeZone.rawOffset)
-                                        runOnce(currDate + iLength , scheduler)
-                                    }
-                                }
-                        }
-                        state.reminderAnsPend = 0
-                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }
-                    else {
-                        outputTxt = "sorry, I was unable to schedule your reminder, "
-                        state.reminderAnsPend = 0
-                        pTryAgain = true
-                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }
-                }
-                //Cancel Reminders
-                 if (cancelReminder == true || cancelReminderNum != null) {
-                    def String cancelMeText = (String) null
-                    if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
-                                unschedule("reminderHandler2")
-                                cancelMeText = state.reminder2
-                                state.reminder2 = null
-                                state.reminderAnsPend = 0
-                            }
-                     if(cancelMe != "undefined" || cancelReminderNum != null) {
-                        if (cancelMe == "reminder1" || cancelReminderNum == "reminder1") {                        
-                            unschedule("reminderHandler1")
-                            cancelMeText = state.reminder1
-                            state.reminder1 = null
-                            state.reminderAnsPend = 0
-                         }
-                         else {
-                            if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
-                                unschedule("reminderHandler2")
-                                cancelMeText = state.reminder2
-                                state.reminder2 = null
-                                state.reminderAnsPend = 0
-                            }
-                            else {
-                                if (cancelMe == "reminder3" || cancelReminderNum == "reminder3") {
-                                unschedule("reminderHandler3")
-                                cancelMeText = state.reminder3
-                                state.reminder3 = null
-                                state.reminderAnsPend = 0
-                                }
-                            }
-                        }
-                        outputTxt = "Ok, canceling reminder to " + cancelMeText
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }
-                    else {
-                        outputTxt = "sorry, I was unable to cancel your reminder "
-                        state.reminderAnsPend = 0
-                        pTryAgain = true
-                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }
-                }
-                //Record a Message
-                if (recordingNow || reminder || whatReminders == true || whatMessages == true || deleteMessages != null) {  
-                    if (recordingNow) {
-                    def record
-                    record = tts.replace("record a message", "").replace("record message", "").replace("leave a message", "").replace("leave message", "")
-                    if (parent.debug) log.debug "Recording: (record) = '${record}' for (intent) = '${intent}'" 
-                    //state.recording = record
-                    if (state.recording == null || state.recording1 == null || state.recording2 == null) {    
-                            if(state.recording == null || state.recording == "" ) {
-                                state.recording = record
-                                //state.reminderAnsPend = 1
-                            }
-                            else if(state.recording1 == null || state.recording1 == "") {
-                                state.recording1 = record
-                                //state.reminderAnsPend = 2
-                            }  
-                            else if(state.recording2 == null || state.recording2 == "") {
-                                state.recording2 = record
-                                //state.reminderAnsPend = 3
-                            }
-                            outputTxt = "Ok, message recorded. To play it later, just say: play message."
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }
-                        else {
-                            pTryAgain = true
-                            outputTxt = "You have reached the maximum allowed number of recordings. Please delete one or more messages before recording another one, "
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }            
-                    }                        
-					if (whatMessages == true) {
-                        def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
-						if(numMessages == "3 messages") outputTxt = outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
-                    	else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
-                    	else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
-                    	else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    } 
-                    //Delete Messages
-					if (deleteMessages != null) {
-                        def String deleteMeText = (String) null
-                        if (deleteMessages == "recording") {
-							deleteMeText = state.recording
-                            state.recording = null
-                       	}	
-                        else {
-                        	if (deleteMessages == "recording1") {
-                                deleteMeText = state.recording1
-                                state.recording1 = null
-                         	}
-							else {
-                            	if (deleteMessages == "recording2") {
-                                    deleteMeText = state.recording2
-                                    state.recording2 = null
-                                 }
-                                 else if (deleteMessages == "all"){
-									deleteMeText = "all messages"
-                                    state.recording = null
-                                    state.recording1 = null
-                                    state.recording2 = null
-                            	}
-                            }
-                            outputTxt = "Ok, deleted " + deleteMeText
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }
-                    }                    
-                    //Set a reminder        	
-                    if (reminder) {
-                    def remindMe = tts.replace("${reminder}", "")
-                    if (parent.debug) log.debug "Setting Reminder: (remindMe) = '${remindMe}' for (intent) = '${intent}'" 
-                        if (state.reminder1 == null || state.reminder2 == null || state.reminder3 == null) {
-                            if(state.reminder1 == null || state.reminder1 == "" ) {
-                                state.reminder1 = remindMe
-                                state.reminderAnsPend = 1
+        if (intent == childName) {
+            outputTxt = runCommand(tts)
+            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]  
 
-                            }
-                            else if(state.reminder2 == null || state.reminder2 == "") {
-                                state.reminder2 = remindMe
-                                state.reminderAnsPend = 2
-                            }  
-                            else if(state.reminder3 == null || state.reminder3 == "") {
-                                state.reminder3 = remindMe
-                                state.reminderAnsPend = 3
-                            }
-                            outputTxt = "For how long?"
-                            pContCmdsR = "reminder"
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }
-                        else {
-                            pTryAgain = true
-                            outputTxt = "You have reached the maximum allowed numbers of reminders. Please cancel a reminder before scheduling another one."
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }            
-                    }
-                    if (whatReminders == true) {
-                            def numReminders = state.reminder3 != null ? "3 reminders" : state.reminder2 != null ? "2 reminders" : state.reminder1 != null ? "one reminder" : "no reminders" 
-                            outputTxt = "You have " + numReminders + "scheduled, " + state.reminder1 + " , " + state.reminder2 + " , " + state.reminder3
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }    
-                }
-                //EXECUTE PROFILE ACTIONS
-                 if (command == "run" && deviceType == "profile"){    	
-                    outputTxt = "Running '${app.label}'"
-                    ttsActions(tts)
-                    pContCmdsR = "run"
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-                //EXECUTE PROFILE ACTIONS WITH DELAY
-                if (command == "delay" && deviceType == "profile"){ 
-                    state.lastAction = "Running scheduled actions"
-                    state.delayAnsPend = 1
-                    outputTxt = "For how long?"
-                    pContCmdsR = "reminder"
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-                //SCHEDULE ACTIONS WITH DELAY
-                if(state.delayAnsPend >0 ){
-                    int iLength
-                    def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
-                    def length = tts.findAll( /\d+/ )*.toInteger()
-                        if(length[0] !=null) {
-                            iLength = (int)length.get(0)                    
-                        }
-                        else {
-                            outputTxt = "sorry, I was unable to get the number,  "
-                            state.delayAnsPend = 0
-                            pTryAgain = true
-                            return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }	
-                    if(unit !="undefined" && iLength != null){ 
-                        outputTxt = "I have scheduled the actions for " + app.label + " to run in " + tts
-                        if(parent.debug) log.debug "scheduling delay with outputTxt = ${outputTxt}"
-                        if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, "ttsHandler")}
-                        else {
-                            if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, "ttsHandler")}
-                            else{
-                                if(unit == "days"){
-                                    def currDate = new Date(now() + location.timeZone.rawOffset)
-                                    runOnce(currDate + iLength , "ttsHandler")
-                                }
-                            }
-                         }
-                    }
-                    else {
-                        outputTxt = "sorry, I was unable to schedule your reminder, "
-                        state.reminderAnsPend = 0
-                        pTryAgain = true
-                        return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                    }       
-                    state.reminderAnsPend = 0
-                    return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                }
-                /**********************
-                FREE TEXT CONTROL ENGINE 
-                ***********************/
-                //Feedback for devices
-                if (gHues?.size()>0) {
-                	if (feedback == true) {
-                    	}
-                    }    
-                //Colored Lights
-                if (gHues?.size()>0) {
-                    //HUE SCENES
-                    if (read == true || concentrate == true || relax == true || feelLucky == true){
-                        def color = read == true ? "Warm White" : concentrate == true ? "Daylight White" : relax == true ? "Very Warm White" : feelLucky == true ? "random" : "undefined"
-                        if (color != "undefined" && command != "colorloopOn" && command != "colorloopOff" ){
-                            if (color != "random"){
-                                def hueSetVals = getColorName("${color}",level)
-                                gHues?.setColor(hueSetVals)
-                                outputTxt =  "Ok, changing your bulbs to " + color 
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                            else  {
-                                setRandomColorName()
-                                outputTxt =  "Ok, changing your bulbs to random colors"
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                        }
-                    }
-                    // CHANGING COLORS
-					if(hueSet == true || hueChange == true) {
-						def hueSetVals
-						tts = tts.replace("set the color to ", "").replace("set lights color to ", "").replace("set the lights to color ", "").replace("set color to ", "")
-                        tts = tts.replace("change the color to ", "").replace("change the lights to ", "").replace("change color to ", "").replace("change lights to ", "")
-                        tts = tts == "day light" ? "Daylight" : tts == "be light" ? "Daylight" : tts
-                        hueSetVals =  getColorName( tts , level)
-						if (hueSetVals) {
-							gHues?.setColor(hueSetVals)
-                            outputTxt =  "Ok, changing your bulbs to " + tts
-                       	}
-                        else {
-							outputTxt =  "Sorry, I wasn't able to change the color to " +  tts
-                            pTryAgain = true
-                        }
-						return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
-					}	
-					if (command == "colorloopOn" || command == "colorloopOff") {
-                        //def loopOn = command == "colorloopOn" ? true : command == "colorloopOff" ? false : null
-						if(command == "colorloopOn"){ //loopOn == true
-							outputTxt = profileLoop(app.label)
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-						}
-                        else { 
-                            outputTxt =  profileLoopCancel(app.label)
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-						}
-                	}
-                }
-                if (command != null && deviceType != null && command != "undefined" ) {
-                    //LIGHT SWITCHES && CUSTOM GROUPS
-                    if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
-                        dataSet =  ["command": command, "deviceType": deviceType]
-                        outputTxt = advCtrlHandler(dataSet)
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                                  
-                    }
-                    //DISABLE SWITCHES
-                    if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
-                        dataSet =  ["command": command, "deviceType": deviceType]
-                        outputTxt = advCtrlHandler(dataSet)
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                                  
-                    }
-                    //DISABLE SWITCHES
-                    if (deviceType == "disable") {
-                        if (gDisable?.size()>0) {
-                            if (command == "on" || command == "off") {
-                               if (reverseDisable == true) { command = command == "on" ? "off" : command == "off" ? "on" : command } // added 2/19/17 per Jason's request 
-                                gDisable?."${command}"()
-                                if (command == "on") {
-                                    outputTxt = "Ok, turning " + childName + " automation off" 
-                                    }
-                                if (command == "off") {
-                                    outputTxt = "Ok, turning " + childName + " automation on "
-                                    }    
-                                else if (reverseDisable == false) { command = command == "on" ? "on" : command == "off" ? "off" : command  
-                                outputTxt = "Ok, turning " + childName + " automation " + command
-                                }
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                        }
-                    }           
-                    //FANS CONTROL
-                    if (deviceType == "fan"){
-                        if (gFans?.size()>0) {
-                            if (command == "on" || command == "off") {
-                                gFans?."${command}"()
-                                outputTxt = "Ok, turning the fan " + command
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                            else if (command == "decrease" || command == "increase" || command == "high" || command == "medium" || command == "low"){
-                                dataSet =  ["command": command, "deviceType": deviceType]
-                                outputTxt = advCtrlHandler(dataSet)
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                        }     
-                    } 
-                    //PET NOTES CONTROL
-                    if (deviceType == "petNotification") {
-                    if (tts.startsWith("she") || tts.startsWith("he")) {
-                        if (command == "shot" || command == "medicated" || command == "walked" || command == "bathed" || command == "brushed") {
-                            log.info "Pet Notes Control action executed"
-                        def timeDate = new Date().format("hh:mm aa", location.timeZone)
-                        def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
-                            if (tts.contains("was") || tts.contains("has") || tts.contains("got") || tts.contains("given")) {
-                            if (tts.contains("shot") || tts.contains("brushed") || tts.contains("fed") || tts.contains("bathed") || tts.contains("walked") || tts.contains("medicated")) {
-                            outputTxt = "Ok, recording that ${app.label} was last ${command} on " + dateDate + " at " + timeDate    
-                                if(command == "shot" || command == "shop") {state.petShotNotify = "${app.label} was last shot on " + dateDate + " at " + timeDate }
-                                if(command == "brushed") {state.petBrushNotify = "${app.label} was last brushed on " + dateDate + " at " + timeDate }
-                                if(command == "fed") {state.petFedNotify = "${app.label} was last fed on " + dateDate + " at " + timeDate }
-                                if(command == "bathed") {state.petBathNotify = "${app.label} was last bathed on " + dateDate + " at " + timeDate }
-                                if(command == "walked") {state.petWalkNotify = "${app.label} was last walked on " + dateDate + " at " + timeDate }
-                                if(command == "medicated") {state.petMedNotify = "${app.label} was last medicated on " + dateDate + " at " + timeDate }
-                                    if(psendText) { sendtxt(outputTxt) }
-                                    if(pPush) { sendPush outputTxt }
-                                    }
-                                }
-                            }
-                        }
-                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
-                    }
-                    if (deviceType == "petNotification") {
-                        if (tts.contains("litter") || tts.contains("litterbox")) {
-                            if (command == "cleaned" || command == "scooped") {
-                        log.info "Pet Notes Litter Box action executed"
-                        def timeDate = new Date().format("hh:mm aa", location.timeZone)
-                        def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
-                            if (tts.contains("was") || tts.contains("has") || tts.contains("got")) {
-                            outputTxt = "Ok, recording that the litter box was last ${command} on " + dateDate + " at " + timeDate    
-                                if(command == "cleaned") {state.litterBoxCleaned = "The litter box was last cleaned on " + dateDate + " at " + timeDate }
-                                if(command == "scooped") {state.litterBoxScooped = "The litter box was last scooped on " + dateDate + " at " + timeDate }
-                                }
-                        //        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                            }    
-                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
-                            }    
-                    //VENTS AND WINDOWS CONTROL
-                    if (deviceType == "vent" || deviceType == "shade") { 
-                            if (command == "open"  || command == "close") {
-                                if (command == "open") {
-                                    if(deviceType == "vent"){
-                                    gVents.on()
-                                        gVents.setLevel(100)
-                                        outputTxt = "Ok, opening the vents in the ${app.label}"
-                                    }
-                                    else {
-                                        gShades.open()
-                                        outputTxt = "Ok, opening the window coverings in the ${app.label}"
-                                    }
-                                }
-                                else {   
-                                    if(deviceType == "vent"){
-                                        gVents.off()
-                                        outputTxt = "Ok, closing the vents in the ${app.label}"
-                                    }
-                                    else {
-                                        gShades.close()
-                                        outputTxt = "Ok, closing the window coverings in the ${app.label}"
-                                    }
-                               }  
-                               return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                            }
-                    } 
-                    if (deviceType == "tv") {
-                        if(sMedia){
-                            if (command == "startActivity"){
-                                if(state.lastActivity != null){
-                                    def activityId = null
-                                    def activities = sMedia.currentState("activities").value
-                                    def activityList = new groovy.json.JsonSlurper().parseText(activities)
-                                        activityList.each { it ->  
-                                            def activity = it
-                                            if(activity.name == state.lastActivity) {
-                                                activityId = activity.id
-                                            }    	
-                                        }
-                                        log.warn "starting activity id = ${activityId}, command = ${command}, lastActivity ${state.lastActivity}"
-                                        sMedia."${command}"(activityId)
-                                        sMedia.refresh()
-                                        outputTxt = "Ok, starting " + state.lastActivity + " activity "
-                                        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                                }
-                                else { 
-                                    outputTxt = "Sorry for the trouble, but in order for EchoSistant to be able to start where you left off, the last activity must be saved"
-                                    pTryAgain = true
-                                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                                }
-                            }
-                            else {
-                                if (command == "activityoff"){
-                                    def activityId = null
-                                    def currState = sMedia.currentState("currentActivity").value
-                                    def activities = sMedia.currentState("activities").value
-                                    def activityList = new groovy.json.JsonSlurper().parseText(activities)
-                                        if (currState != "--"){
-                                            activityList.each { it ->  
-                                                def activity = it
-                                                if(activity.name == currState) {
-                                                    activityId = activity.id
-                                                }    	
-                                            }
-                                            state.lastActivity = currState
-                                            sMedia."${command}"()
-                                            sMedia.refresh()
-                                            outputTxt = "Ok, turning off " + currState
-                                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                                        }
-                                        else {
-                                            outputTxt = sMedia.label + " is already off"
-                                            pTryAgain = true
-                                            return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                                        }
-                                }
-                            }
-                        }
-                    }
-                    if (deviceType == "volume") {
-                        if(sSpeaker || sSynth){
-                        def deviceD = sSpeaker? sSpeaker : sSynth? sSynth : "undefined"
-                            if (command == "increase" || command == "decrease" || command == "mute" || command == "unmute"){
-                                def currLevel = deviceD.latestValue("level")
-                                def currState = deviceD.latestValue("switch")
-                                def newLevel = parent.cVolLevel*10  
-                                if (command == "mute" || command == "unmute") {
-                                    deviceD."${command}"()
-                                    def volText = command == "mute" ? "muting" : command == "unmute" ? "unmuting" : "adjusting" 
-                                    outputTxt = "Ok, " + volText + " the " + deviceD.label
-                                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                                }
-                                if (command == "increase") {
-                                    newLevel =  currLevel + newLevel
-                                    newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-                                }
-                                if (command == "decrease") {
-                                    newLevel =  currLevel - newLevel
-                                    newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-                                }                        
-                                if (newLevel > 0 && currState == "off") {
-                                    deviceD.on()
-                                    deviceD.setLevel(newLevel)
-                                }
-                                else {                                    
-                                    if (newLevel == 0 && currState == "on") {deviceD.off()}
-                                    else {deviceD.setLevel(newLevel)}
-                                } 
-                                outputTxt = "Ok, setting  " + deviceD.label + " volume to " + newLevel + " percent"
-                                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                                } 
-                            }
-                        }
-                }
-                if (parent.debug) {log.debug "end of control engine, command=${command}, ${deviceType}"}
-                if (sonosDevice || synthDevice || recipients || sms) { //added 2/19/17 Bobby  
-                    state.lastMessage = tts
-                    state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
-                    outputTxt = ttsHandler(tts)
-                    pContCmdsR = "profile"
-                    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-                	}
-            	}
-        	}
-			else {
-		outputTxt = "Sorry, you must first set up your profile before trying to execute it."
-		pTryAgain = true
-        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-		}
+            if (true) { /* COMMENTED OUT FOR NOW AND PUT INTO AN IF STATMENT SO I CAN COLLAPSE THE CODE
+//Voice Activated Commands
+if(muteAll == "mute" || muteAll == "unmute"){
+if(muteAll == "mute"){
+state.pMuteAll = true
+outputTxt = "Ok, audio messages have been disabled"       
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                
+}
+else { 
+state.pMuteAll = false
+outputTxt = "Ok, audio messages have been enabled"       
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+}
+}
+if(muteAlexa == "mute" || muteAlexa == "unmute"){
+if(muteAlexa == "mute"){
+state.pMuteAlexa = true
+outputTxt = "Ok, Alexa Feedback Responses have been disabled"       
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                
+}
+else { 
+state.pMuteAlexa = false
+outputTxt = "Ok, Alexa Feedback Responses have been enabled"       
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+}
+} 
+//Repeat Message
+if (repeat == true || play == true  || tts == whatsUP) {
+if (tts == repeat || tts == whatsUP) {
+outputTxt = getLastMessage()          
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+} else {
+def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
+if (numMessages == "3 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
+else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
+else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
+else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
+//"Your last recording was, " + state.recording
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+} else {
+//Schedule Reminders
+if(state.reminderAnsPend >0){
+int iLength
+def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
+def length = tts.findAll( /\d+/ )*.toInteger()
+if(length[0] !=null) {
+iLength = (int)length.get(0)                    
+}
+else {
+outputTxt = "sorry, I was unable to get the number,  "
+state.reminderAnsPend = 0
+pTryAgain = true
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}	
+if(unit !="undefined" && iLength != null){
+if (state.reminderAnsPend == 1)	{
+ttsR = state.reminder1
+scheduler = "reminderHandler1"
+outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
+if(parent.debug) log.debug "scheduling reminder 1 with outputTxt = ${outputTxt}"
+}
+else {
+if (state.reminderAnsPend == 2)	{
+ttsR = state.reminder2
+scheduler = "reminderHandler2"
+outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
+if(parent.debug) log.debug "scheduling reminder 2 with outputTxt = ${outputTxt}"
+}
+else {
+if (state.reminderAnsPend == 3)	{
+tts = state.reminder3
+scheduler = "reminderHandler3"
+outputTxt = "I have scheduled a reminder " + ttsR + " in " + tts
+if(parent.debug) log.debug "scheduling reminder 3 with outputTxt = ${outputTxt}"
+}
+}
+}
+if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, scheduler)}
+else {
+if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, scheduler)}
+else{
+if(unit == "days"){
+def currDate = new Date(now() + location.timeZone.rawOffset)
+runOnce(currDate + iLength , scheduler)
+}
+}
+}
+state.reminderAnsPend = 0
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else {
+outputTxt = "sorry, I was unable to schedule your reminder, "
+state.reminderAnsPend = 0
+pTryAgain = true
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+//Cancel Reminders
+if (cancelReminder == true || cancelReminderNum != null) {
+def String cancelMeText = (String) null
+if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
+unschedule("reminderHandler2")
+cancelMeText = state.reminder2
+state.reminder2 = null
+state.reminderAnsPend = 0
+}
+if(cancelMe != "undefined" || cancelReminderNum != null) {
+if (cancelMe == "reminder1" || cancelReminderNum == "reminder1") {                        
+unschedule("reminderHandler1")
+cancelMeText = state.reminder1
+state.reminder1 = null
+state.reminderAnsPend = 0
+}
+else {
+if (cancelMe == "reminder2" || cancelReminderNum == "reminder2") {
+unschedule("reminderHandler2")
+cancelMeText = state.reminder2
+state.reminder2 = null
+state.reminderAnsPend = 0
+}
+else {
+if (cancelMe == "reminder3" || cancelReminderNum == "reminder3") {
+unschedule("reminderHandler3")
+cancelMeText = state.reminder3
+state.reminder3 = null
+state.reminderAnsPend = 0
+}
+}
+}
+outputTxt = "Ok, canceling reminder to " + cancelMeText
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else {
+outputTxt = "sorry, I was unable to cancel your reminder "
+state.reminderAnsPend = 0
+pTryAgain = true
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+//Record a Message
+if (recordingNow || reminder || whatReminders == true || whatMessages == true || deleteMessages != null) {  
+if (recordingNow) {
+def record
+record = tts.replace("record a message", "").replace("record message", "").replace("leave a message", "").replace("leave message", "")
+if (parent.debug) log.debug "Recording: (record) = '${record}' for (intent) = '${intent}'" 
+//state.recording = record
+if (state.recording == null || state.recording1 == null || state.recording2 == null) {    
+if(state.recording == null || state.recording == "" ) {
+state.recording = record
+//state.reminderAnsPend = 1
+}
+else if(state.recording1 == null || state.recording1 == "") {
+state.recording1 = record
+//state.reminderAnsPend = 2
+}  
+else if(state.recording2 == null || state.recording2 == "") {
+state.recording2 = record
+//state.reminderAnsPend = 3
+}
+outputTxt = "Ok, message recorded. To play it later, just say: play message."
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else {
+pTryAgain = true
+outputTxt = "You have reached the maximum allowed number of recordings. Please delete one or more messages before recording another one, "
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}            
+}                        
+if (whatMessages == true) {
+def numMessages = state.recording2 != null ? "3 messages" : state.recording1 != null ? "2 messages" : state.recording != null ? "one message" : "no messages" 
+if(numMessages == "3 messages") outputTxt = outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " , " + state.recording2 + " To delete your messages, just say: delete messages"
+else if (numMessages == "2 messages") outputTxt = "You have " + numMessages + " pending, " + state.recording + " , " + state.recording1 + " To delete your messages, just say: delete messages"
+else if (numMessages == "one message") outputTxt = "You have " + numMessages + " pending, " + state.recording + " To delete your message, just say: delete messages"
+else if (numMessages == "no messages") outputTxt = "You have " + numMessages + " pending "
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+} 
+//Delete Messages
+if (deleteMessages != null) {
+def String deleteMeText = (String) null
+if (deleteMessages == "recording") {
+deleteMeText = state.recording
+state.recording = null
+}	
+else {
+if (deleteMessages == "recording1") {
+deleteMeText = state.recording1
+state.recording1 = null
+}
+else {
+if (deleteMessages == "recording2") {
+deleteMeText = state.recording2
+state.recording2 = null
+}
+else if (deleteMessages == "all"){
+deleteMeText = "all messages"
+state.recording = null
+state.recording1 = null
+state.recording2 = null
+}
+}
+outputTxt = "Ok, deleted " + deleteMeText
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}                    
+//Set a reminder        	
+if (reminder) {
+def remindMe = tts.replace("${reminder}", "")
+if (parent.debug) log.debug "Setting Reminder: (remindMe) = '${remindMe}' for (intent) = '${intent}'" 
+if (state.reminder1 == null || state.reminder2 == null || state.reminder3 == null) {
+if(state.reminder1 == null || state.reminder1 == "" ) {
+state.reminder1 = remindMe
+state.reminderAnsPend = 1
+
+}
+else if(state.reminder2 == null || state.reminder2 == "") {
+state.reminder2 = remindMe
+state.reminderAnsPend = 2
+}  
+else if(state.reminder3 == null || state.reminder3 == "") {
+state.reminder3 = remindMe
+state.reminderAnsPend = 3
+}
+outputTxt = "For how long?"
+pContCmdsR = "reminder"
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else {
+pTryAgain = true
+outputTxt = "You have reached the maximum allowed numbers of reminders. Please cancel a reminder before scheduling another one."
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}            
+}
+if (whatReminders == true) {
+def numReminders = state.reminder3 != null ? "3 reminders" : state.reminder2 != null ? "2 reminders" : state.reminder1 != null ? "one reminder" : "no reminders" 
+outputTxt = "You have " + numReminders + "scheduled, " + state.reminder1 + " , " + state.reminder2 + " , " + state.reminder3
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}    
+}
+//EXECUTE PROFILE ACTIONS
+if (command == "run" && deviceType == "profile"){    	
+outputTxt = "Running '${app.label}'"
+ttsActions(tts)
+pContCmdsR = "run"
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+//EXECUTE PROFILE ACTIONS WITH DELAY
+if (command == "delay" && deviceType == "profile"){ 
+state.lastAction = "Running scheduled actions"
+state.delayAnsPend = 1
+outputTxt = "For how long?"
+pContCmdsR = "reminder"
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+//SCHEDULE ACTIONS WITH DELAY
+if(state.delayAnsPend >0 ){
+int iLength
+def unit = tts.endsWith("minutes") ? "minutes" : tts.endsWith("hours") ? "hours" : tts.endsWith("hour") ? "hours" : tts.endsWith("day") ? "days" : tts.endsWith("days") ? "days" : "undefined"
+def length = tts.findAll( /\d+/ )*.toInteger()
+if(length[0] !=null) {
+iLength = (int)length.get(0)                    
+}
+else {
+outputTxt = "sorry, I was unable to get the number,  "
+state.delayAnsPend = 0
+pTryAgain = true
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}	
+if(unit !="undefined" && iLength != null){ 
+outputTxt = "I have scheduled the actions for " + app.label + " to run in " + tts
+if(parent.debug) log.debug "scheduling delay with outputTxt = ${outputTxt}"
+if (unit == "minutes" && iLength>0 ) {runIn(iLength*60, "ttsHandler")}
+else {
+if (unit == "hours" && iLength>0 ) { runIn(iLength*3600, "ttsHandler")}
+else{
+if(unit == "days"){
+def currDate = new Date(now() + location.timeZone.rawOffset)
+runOnce(currDate + iLength , "ttsHandler")
+}
+}
+}
+}
+else {
+outputTxt = "sorry, I was unable to schedule your reminder, "
+state.reminderAnsPend = 0
+pTryAgain = true
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}       
+state.reminderAnsPend = 0
+return  ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+//
+//FREE TEXT CONTROL ENGINE 
+//
+//Feedback for devices
+if (gHues?.size()>0) {
+if (feedback == true) {
+}
+}    
+//Colored Lights
+if (gHues?.size()>0) {
+//HUE SCENES
+if (read == true || concentrate == true || relax == true || feelLucky == true){
+def color = read == true ? "Warm White" : concentrate == true ? "Daylight White" : relax == true ? "Very Warm White" : feelLucky == true ? "random" : "undefined"
+if (color != "undefined" && command != "colorloopOn" && command != "colorloopOff" ){
+if (color != "random"){
+def hueSetVals = getColorName("${color}",level)
+gHues?.setColor(hueSetVals)
+outputTxt =  "Ok, changing your bulbs to " + color 
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else  {
+setRandomColorName()
+outputTxt =  "Ok, changing your bulbs to random colors"
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+}
+// CHANGING COLORS
+if(hueSet == true || hueChange == true) {
+def hueSetVals
+tts = tts.replace("set the color to ", "").replace("set lights color to ", "").replace("set the lights to color ", "").replace("set color to ", "")
+tts = tts.replace("change the color to ", "").replace("change the lights to ", "").replace("change color to ", "").replace("change lights to ", "")
+tts = tts == "day light" ? "Daylight" : tts == "be light" ? "Daylight" : tts
+hueSetVals =  getColorName( tts , level)
+if (hueSetVals) {
+gHues?.setColor(hueSetVals)
+outputTxt =  "Ok, changing your bulbs to " + tts
+}
+else {
+outputTxt =  "Sorry, I wasn't able to change the color to " +  tts
+pTryAgain = true
+}
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
+}	
+if (command == "colorloopOn" || command == "colorloopOff") {
+//def loopOn = command == "colorloopOn" ? true : command == "colorloopOff" ? false : null
+if(command == "colorloopOn"){ //loopOn == true
+outputTxt = profileLoop(app.label)
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else { 
+outputTxt =  profileLoopCancel(app.label)
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+}
+if (command != null && deviceType != null && command != "undefined" ) {
+//LIGHT SWITCHES && CUSTOM GROUPS
+if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
+dataSet =  ["command": command, "deviceType": deviceType]
+outputTxt = advCtrlHandler(dataSet)
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                                  
+}
+//DISABLE SWITCHES
+if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
+dataSet =  ["command": command, "deviceType": deviceType]
+outputTxt = advCtrlHandler(dataSet)
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]                                  
+}
+//DISABLE SWITCHES
+if (deviceType == "disable") {
+if (gDisable?.size()>0) {
+if (command == "on" || command == "off") {
+if (reverseDisable == true) { command = command == "on" ? "off" : command == "off" ? "on" : command } // added 2/19/17 per Jason's request 
+gDisable?."${command}"()
+if (command == "on") {
+outputTxt = "Ok, turning " + childName + " automation off" 
+}
+if (command == "off") {
+outputTxt = "Ok, turning " + childName + " automation on "
+}    
+else if (reverseDisable == false) { command = command == "on" ? "on" : command == "off" ? "off" : command  
+outputTxt = "Ok, turning " + childName + " automation " + command
+}
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+}           
+//FANS CONTROL
+if (deviceType == "fan"){
+if (gFans?.size()>0) {
+if (command == "on" || command == "off") {
+gFans?."${command}"()
+outputTxt = "Ok, turning the fan " + command
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else if (command == "decrease" || command == "increase" || command == "high" || command == "medium" || command == "low"){
+dataSet =  ["command": command, "deviceType": deviceType]
+outputTxt = advCtrlHandler(dataSet)
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}     
+} 
+//PET NOTES CONTROL
+if (deviceType == "petNotification") {
+if (tts.startsWith("she") || tts.startsWith("he")) {
+if (command == "shot" || command == "medicated" || command == "walked" || command == "bathed" || command == "brushed") {
+log.info "Pet Notes Control action executed"
+def timeDate = new Date().format("hh:mm aa", location.timeZone)
+def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
+if (tts.contains("was") || tts.contains("has") || tts.contains("got") || tts.contains("given")) {
+if (tts.contains("shot") || tts.contains("brushed") || tts.contains("fed") || tts.contains("bathed") || tts.contains("walked") || tts.contains("medicated")) {
+outputTxt = "Ok, recording that ${app.label} was last ${command} on " + dateDate + " at " + timeDate    
+if(command == "shot" || command == "shop") {state.petShotNotify = "${app.label} was last shot on " + dateDate + " at " + timeDate }
+if(command == "brushed") {state.petBrushNotify = "${app.label} was last brushed on " + dateDate + " at " + timeDate }
+if(command == "fed") {state.petFedNotify = "${app.label} was last fed on " + dateDate + " at " + timeDate }
+if(command == "bathed") {state.petBathNotify = "${app.label} was last bathed on " + dateDate + " at " + timeDate }
+if(command == "walked") {state.petWalkNotify = "${app.label} was last walked on " + dateDate + " at " + timeDate }
+if(command == "medicated") {state.petMedNotify = "${app.label} was last medicated on " + dateDate + " at " + timeDate }
+if(psendText) { sendtxt(outputTxt) }
+if(pPush) { sendPush outputTxt }
+}
+}
+}
+}
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+}
+if (deviceType == "petNotification") {
+if (tts.contains("litter") || tts.contains("litterbox")) {
+if (command == "cleaned" || command == "scooped") {
+log.info "Pet Notes Litter Box action executed"
+def timeDate = new Date().format("hh:mm aa", location.timeZone)
+def dateDate = new Date().format("EEEE, MMMM d", location.timeZone)
+if (tts.contains("was") || tts.contains("has") || tts.contains("got")) {
+outputTxt = "Ok, recording that the litter box was last ${command} on " + dateDate + " at " + timeDate    
+if(command == "cleaned") {state.litterBoxCleaned = "The litter box was last cleaned on " + dateDate + " at " + timeDate }
+if(command == "scooped") {state.litterBoxScooped = "The litter box was last scooped on " + dateDate + " at " + timeDate }
+}
+//        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}    
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN] 
+}    
+//VENTS AND WINDOWS CONTROL
+if (deviceType == "vent" || deviceType == "shade") { 
+if (command == "open"  || command == "close") {
+if (command == "open") {
+if(deviceType == "vent"){
+gVents.on()
+gVents.setLevel(100)
+outputTxt = "Ok, opening the vents in the ${app.label}"
+}
+else {
+gShades.open()
+outputTxt = "Ok, opening the window coverings in the ${app.label}"
+}
+}
+else {   
+if(deviceType == "vent"){
+gVents.off()
+outputTxt = "Ok, closing the vents in the ${app.label}"
+}
+else {
+gShades.close()
+outputTxt = "Ok, closing the window coverings in the ${app.label}"
+}
+}  
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+} 
+if (deviceType == "tv") {
+if(sMedia){
+if (command == "startActivity"){
+if(state.lastActivity != null){
+def activityId = null
+def activities = sMedia.currentState("activities").value
+def activityList = new groovy.json.JsonSlurper().parseText(activities)
+activityList.each { it ->  
+def activity = it
+if(activity.name == state.lastActivity) {
+activityId = activity.id
+}    	
+}
+log.warn "starting activity id = ${activityId}, command = ${command}, lastActivity ${state.lastActivity}"
+sMedia."${command}"(activityId)
+sMedia.refresh()
+outputTxt = "Ok, starting " + state.lastActivity + " activity "
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else { 
+outputTxt = "Sorry for the trouble, but in order for EchoSistant to be able to start where you left off, the last activity must be saved"
+pTryAgain = true
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+else {
+if (command == "activityoff"){
+def activityId = null
+def currState = sMedia.currentState("currentActivity").value
+def activities = sMedia.currentState("activities").value
+def activityList = new groovy.json.JsonSlurper().parseText(activities)
+if (currState != "--"){
+activityList.each { it ->  
+def activity = it
+if(activity.name == currState) {
+activityId = activity.id
+}    	
+}
+state.lastActivity = currState
+sMedia."${command}"()
+sMedia.refresh()
+outputTxt = "Ok, turning off " + currState
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+else {
+outputTxt = sMedia.label + " is already off"
+pTryAgain = true
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+}
+}
+}
+if (deviceType == "volume") {
+if(sSpeaker || sSynth){
+def deviceD = sSpeaker? sSpeaker : sSynth? sSynth : "undefined"
+if (command == "increase" || command == "decrease" || command == "mute" || command == "unmute"){
+def currLevel = deviceD.latestValue("level")
+def currState = deviceD.latestValue("switch")
+def newLevel = parent.cVolLevel*10  
+if (command == "mute" || command == "unmute") {
+deviceD."${command}"()
+def volText = command == "mute" ? "muting" : command == "unmute" ? "unmuting" : "adjusting" 
+outputTxt = "Ok, " + volText + " the " + deviceD.label
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+if (command == "increase") {
+newLevel =  currLevel + newLevel
+newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+}
+if (command == "decrease") {
+newLevel =  currLevel - newLevel
+newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+}                        
+if (newLevel > 0 && currState == "off") {
+deviceD.on()
+deviceD.setLevel(newLevel)
+}
+else {                                    
+if (newLevel == 0 && currState == "on") {deviceD.off()}
+else {deviceD.setLevel(newLevel)}
+} 
+outputTxt = "Ok, setting  " + deviceD.label + " volume to " + newLevel + " percent"
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+} 
+}
+}
+}
+if (parent.debug) {log.debug "end of control engine, command=${command}, ${deviceType}"}
+if (sonosDevice || synthDevice || recipients || sms) { //added 2/19/17 Bobby  
+state.lastMessage = tts
+state.lastTime = new Date(now()).format("h:mm aa", location.timeZone)
+outputTxt = ttsHandler(tts)
+pContCmdsR = "profile"
+return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+}
+}
+}*/
+            } else { // COMMENTED OUT FOR NOW AND PUT INTO AN IF STATMENT SO I CAN COLLAPSE THE CODE
+                //outputTxt = "Sorry, you must first set up your profile before trying to execute it."
+                //pTryAgain = true
+                //return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+            }
+        }
+    }
+ }   
+def searchRealDevices(String text) {
+    return fSwitches.find({text.contains(it.toString().toLowerCase())}) ?: fFans.find({text.contains(it.toString().toLowerCase())}) ?: fLocks.find({text.contains(it.toString().toLowerCase())}) ?: fDoors.find({text.contains(it.toString().toLowerCase())}) ?: null
+}
+String getCommandEnable() 	{"on,start,enable,engage,open,begin,unlock,unlocked"}
+String getCommandDisable() 	{"off,stop,cancel,disable,disengage,kill,close,silence,lock,locked,quit,end"}
+String getCommandMore()		{"increase,more,too dark,not bright enough,brighten,brighter,turn up"}
+String getCommandLess()		{"darker,too bright,dimmer,dim,decrease,lower,low,softer,less"}
+String getDeviceType()		{"light,lights,switch,switches,fan,fans,lock,locks,door,doors,window,windows,blind,blinds,shade,shades,curtain,curtains,"}
+
+String parseWordReturn(String input, String fromList) {
+	return fromList.split(",").find({input.contains(it)})
+}
+Boolean parseWordFound(String input, String fromList) {
+	return fromList.split(",").find({input.contains(it)}) ? true : false
+}
+String getCommand(text) {
+	return parseWordFound(text, commandMore) ? "increase" : parseWordFound(text, commandLess) ? "decrease" : parseWordFound(text, commandEnable) ? "on" : parseWordFound(text, commandDisable) ? "off" : null 
+}
+String getDeviceType(text) {
+	//TODO: need to always return a plural deviceType
+	return parseWordReturn(text, deviceType) ?: null
+}
+String runCommand(tts) {
+    String command = getCommand(tts) 
+    String deviceType = getDeviceType(tts)
+	def theDevices = []
+
+    if (command) {
+        switch (deviceType) {
+        	case "lights": 
+        		theDevices = fSwitches
+            break
+            case null:
+            	theDevices = searchRealDevices(tts)
+        }
+        
+        switch (command) {
+            case "on":
+            	theDevices*.on()
+            	return "Ok, turning ${theDevices} ${command}"
+            	break
+            case "off":
+            	theDevices*.off()
+            	return "Ok, turning ${theDevices} ${command}"
+            	break
+            /*case "increase": 
+            case "decrease":*/
+        }
     }
 }
+
 /******************************************************************************************************
    ADVANCED CONTROL HANDLER
-******************************************************************************************************/
+******************************************************************************************************
 def advCtrlHandler(data) {
-	def deviceCommand = data.command
-	def deviceType = data.deviceType
+    def deviceCommand = data.command
+    def deviceType = data.deviceType
     def result
     def feedback = data.feedback
+    
 	if (deviceType == "light" || deviceType == "light1" || deviceType == "light2" || deviceType == "light3" || deviceType == "light4" || deviceType == "light5"){
-    deviceType = deviceType == "light" && fSwitches ? fSwitches : deviceType == "light" && gSwitches ? gSwitches : deviceType == "light1" && gCustom1 ? gCustom1 : deviceType == "light2" && gCustom2 ? gCustom2 : deviceType == "light3" && gCustom3 ? gCustom3 : deviceType == "light4" && gCustom4 ? gCustom4 : deviceType == "light5" && gCustom5 ? gCustom5 : null
-		if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "on" || deviceCommand == "off") { 
-                    deviceType.each {s ->
-                   		if (deviceCommand == "on" || deviceCommand == "off") {
-							s?."${deviceCommand}"()
-                            result = "Ok, turning lights " + deviceCommand
-							if (deviceType == gCustom1) {
-                            	result = "Ok, turning " + gCustom1N + deviceCommand
-                            	}
-                            	if (deviceType == gCustom2) {
-                                	result = "Ok, turning " + gCustom2N + deviceCommand
-                                	}
-                                    if (deviceType == gCustom3) {
-                                		result = "Ok, turning " + gCustom3N + deviceCommand
-                                		}
-                                    	if (deviceType == gCustom4) {
-                                			result = "Ok, turning " + gCustom4N + deviceCommand
-                                			}
-                                    		if (deviceType == gCustom5) {
-                                				result = "Ok, turning " + gCustom5N + deviceCommand
-                                				}
-                            				}
-                        				
-                        else {
-                            def	currLevel = s?.latestValue("level")
-                            def currState = s?.latestValue("switch") 
-                            if (currLevel) {
-                            def newLevel = 3*10     
-                                if (deviceCommand == "increase") {
-                                    if (currLevel == null){
-                                        s?.on()
-                                        result = "Ok, turning " + app.label + " lights on"   
-                                    }
-                                    else {
-                                        newLevel =  currLevel + newLevel
-                                        newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-                                    }
-                                }
-                                if (deviceCommand == "decrease") {
-                                    if (currLevel == null) {
-                                        s?.off()
-                                        result = "Ok, turning " + app.label + " lights off"                   
-                                    }
-                                    else {
-                                        newLevel =  currLevel - newLevel
-                                        newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
-                                    }
-                                }            
-                                if (newLevel > 0 && currState == "off") {
-                                    s?.on()
-                                    s?.setLevel(newLevel)
-                                }
-                                else {                                    
-                                    if (newLevel == 0 && currState == "on") {
-                                    s?.off()
-                                    }
-                                    else {
-                                        s?.setLevel(newLevel)
-                                    }
-                                } 
+        deviceType = deviceType == "light" && fSwitches ? fSwitches : deviceType == "light" && gSwitches ? gSwitches : deviceType == "light1" && gCustom1 ? gCustom1 : deviceType == "light2" && gCustom2 ? gCustom2 : deviceType == "light3" && gCustom3 ? gCustom3 : deviceType == "light4" && gCustom4 ? gCustom4 : deviceType == "light5" && gCustom5 ? gCustom5 : null
+        if (deviceCommand == "increase" || deviceCommand == "decrease" || deviceCommand == "on" || deviceCommand == "off") { 
+            deviceType.each {s ->
+                if (deviceCommand == "on" || deviceCommand == "off") {
+                    s?."${deviceCommand}"()
+                    result = "Ok, turning lights " + deviceCommand
+                    if (deviceType == gCustom1) {
+                        result = "Ok, turning " + gCustom1N + deviceCommand
+                    }
+                    if (deviceType == gCustom2) {
+                        result = "Ok, turning " + gCustom2N + deviceCommand
+                    }
+                    if (deviceType == gCustom3) {
+                        result = "Ok, turning " + gCustom3N + deviceCommand
+                    }
+                    if (deviceType == gCustom4) {
+                        result = "Ok, turning " + gCustom4N + deviceCommand
+                    }
+                    if (deviceType == gCustom5) {
+                        result = "Ok, turning " + gCustom5N + deviceCommand
+                    }
+                }
+
+                else {
+                    def	currLevel = s?.latestValue("level")
+                    def currState = s?.latestValue("switch") 
+                    if (currLevel) {
+                        def newLevel = 3*10     
+                        if (deviceCommand == "increase") {
+                            if (currLevel == null){
+                                s?.on()
+                                result = "Ok, turning " + app.label + " lights on"   
                             }
-                            else if  (deviceCommand == "increase" && currState == "off") {s?.on()}
-                            //else if (deviceCommand == "decrease" && currState == "on") {s?.off()} removed as annoying when used in conjunction with dimmable bulbs on ON/OFF switches Bobby 3/14/2017
-                            result = "Ok, adjusting the lights in the  " + app.label 
+                            else {
+                                newLevel =  currLevel + newLevel
+                                newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+                            }
+                        }
+                        if (deviceCommand == "decrease") {
+                            if (currLevel == null) {
+                                s?.off()
+                                result = "Ok, turning " + app.label + " lights off"                   
+                            }
+                            else {
+                                newLevel =  currLevel - newLevel
+                                newLevel = newLevel < 0 ? 0 : newLevel >100 ? 100 : newLevel
+                            }
+                        }            
+                        if (newLevel > 0 && currState == "off") {
+                            s?.on()
+                            s?.setLevel(newLevel)
+                        }
+                        else {                                    
+                            if (newLevel == 0 && currState == "on") {
+                                s?.off()
+                            }
+                            else {
+                                s?.setLevel(newLevel)
+                            }
                         } 
-    				}
-                    return result
-    	}
+                    }
+                    else if  (deviceCommand == "increase" && currState == "off") {s?.on()}
+                    //else if (deviceCommand == "decrease" && currState == "on") {s?.off()} removed as annoying when used in conjunction with dimmable bulbs on ON/OFF switches Bobby 3/14/2017
+                    result = "Ok, adjusting the lights in the  " + app.label 
+                } 
+            }
+            return result
+        }
     }
     
     if (deviceType == "fan"){
@@ -2152,6 +2203,7 @@ def advCtrlHandler(data) {
             return result
 	}
 }
+*/
 /******************************************************************************************************
    SPEECH AND TEXT ALEXA RESPONSE
 ******************************************************************************************************/
@@ -2296,19 +2348,19 @@ private getModeOk() {
 } 
 private getDayOk() {
     def result = true
-if (days) {
-		def df = new java.text.SimpleDateFormat("EEEE")
-		if (location.timeZone) {
-			df.setTimeZone(location.timeZone)
-		}
-		else {
-			df.setTimeZone(TimeZone.getTimeZone("America/New_York"))
-		}
-		def day = df.format(new Date())
-		result = days.contains(day)
-	}
-	if(parent.debug) log.debug "daysOk = $result"
-	result
+    if (days) {
+        def df = new java.text.SimpleDateFormat("EEEE")
+        if (location.timeZone) {
+            df.setTimeZone(location.timeZone)
+        }
+        else {
+            df.setTimeZone(TimeZone.getTimeZone("America/New_York"))
+        }
+        def day = df.format(new Date())
+        result = days.contains(day)
+    }
+    if(parent.debug) log.debug "daysOk = $result"
+    result
 }
 private getTimeOk() {
 	def result = true
@@ -2357,66 +2409,66 @@ private timeIntervalLabel() {
     SMS HANDLER
 ***********************************************************************************************************************/
 private void sendtxt(message) {
-//    if (parent.debug) log.debug "Request to send sms received with message: '${message}'"
+    //    if (parent.debug) log.debug "Request to send sms received with message: '${message}'"
     if (sendContactText) { 
         sendNotificationToContacts(message, recipients)
-            if (parent.debug) log.debug "Sending sms to selected reipients"
+        if (parent.debug) log.debug "Sending sms to selected reipients"
     } 
     else {
-    	if (push || shmNotification) { 
-    		sendPushMessage
-            	if (parent.debug) log.debug "Sending push message to mobile app"
+        if (push || shmNotification) { 
+            sendPushMessage
+            if (parent.debug) log.debug "Sending push message to mobile app"
         }
     } 
     if (notify) {
         sendNotificationEvent(message)
-             	if (parent.debug) log.debug "Sending notification to mobile app"
+        if (parent.debug) log.debug "Sending notification to mobile app"
 
     }
     if (notifyGdoorOpen) {
-    	if (message.contains("open")) {
-        sendTextGarage(message)
+        if (message.contains("open")) {
+            sendTextGarage(message)
         }
     }
     if (notifyGdoorClose) {
-    	if (message.contains("close")) {
-        sendTextGarage(message)
+        if (message.contains("close")) {
+            sendTextGarage(message)
         }
     }
     if (notifyVPArrive) {
-    	if (message.contains("check") && message.contains("in")) {
-        sendTextvp(message)
-        if (vpNotification) {
-        	sendPush(message)
+        if (message.contains("check") && message.contains("in")) {
+            sendTextvp(message)
+            if (vpNotification) {
+                sendPush(message)
             }
         }
     }
     if (notifyVPDepart) {
-    	if (message.contains("check") && message.contains("out")) {
-        sendTextvp(message)
-        if (vpNotification) {
-        	sendPush(message)
+        if (message.contains("check") && message.contains("out")) {
+            sendTextvp(message)
+            if (vpNotification) {
+                sendPush(message)
             }
         }
     }    
     if (notifySHMArm) {
-    	if (message.contains("Stay") || message.contains("Away")) {
-    	sendTextshm(sms, message)
+        if (message.contains("Stay") || message.contains("Away")) {
+            sendTextshm(sms, message)
         }
     }
     if (notifySHMDisarm) {
-    	if (message.contains("Disarm")) {
-        sendTextshm(sms, message)
+        if (message.contains("Disarm")) {
+            sendTextshm(sms, message)
         }
     }    
     if (sms) {
         sendText(sms, message)
         if (parent.debug) log.debug "Processing message for selected phones"
-	}
-        if (psendText) {
-        	processpsms(psms, message)
-            }
-        }
+    }
+    if (psendText) {
+        processpsms(psms, message)
+    }
+}
 private void sendTextvp(message) { 
 		if (vpPhone != null) {
     	def vpPhones = vpPhone.split("\\,")
@@ -2465,19 +2517,19 @@ private void processpsms(psms, message) {
     MISC. - REMINDERS HANDLER
 ***********************************************************************************************************************/
 private reminderHandler1() {
-def text = state.reminder1
-state.reminder1 = null
-ttsActions(text)
+    def text = state.reminder1
+    state.reminder1 = null
+    ttsActions(text)
 }
 private reminderHandler2() {
-def text = state.reminder2
-state.reminder2 = null
-ttsActions(text)
+    def text = state.reminder2
+    state.reminder2 = null
+    ttsActions(text)
 }
 private reminderHandler3() {
-def text = state.reminder3
-state.reminder3 = null
-ttsActions(text)
+    def text = state.reminder3
+    state.reminder3 = null
+    ttsActions(text)
 }
 /************************************************************************************************************
    Switch/Color/Dimmer/Toggle Handlers
@@ -2725,19 +2777,9 @@ private getFeedbackCommand(text) {
     }
     return ["deviceType":deviceType, "command":command ]
 }        
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-String getAllDevices(String text) {
-    def result = null
-    result = fSwitches.find({text.contains(it.toString().toLowerCase())})
-    if (result) return "light"
-    result = fFans.find({text.contains(it.toString().toLowerCase())})
-    if (result) return "fan"
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /******************************************************************************************************
    CUSTOM COMMANDS - CONTROL
-******************************************************************************************************/
+******************************************************************************************************
 private getCommand(text){
     def String command = (String) null
     def String deviceType = (String) null
@@ -2756,23 +2798,10 @@ private getCommand(text){
             command = text.contains("scooped") ? "scooped" : text.contains("cleaned") ? "cleaned" : "undefined"
             deviceType = "petNotification"
         }
-    }  
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Getting real device if possible 
-    deviceType = allDevices(text) /// still needs to be impletmented below 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if (fSwitches || gSwitches || gCustom1N || gCustom2N || gCustom3N || gCustom4N || gCustom5N) {
-        if (fSwitches) {
-            command = text.contains(" on") ? "on" : text.contains(" off") ? "off" : "undefined"
-            if (command == "undefined") {
-                command = text.contains("darker") ? "decrease" : text.contains("too bright")  ? "decrease" : text.contains("dim") ? "decrease" : text.contains("dimmer") ? "decrease" : "undefined"
-            }
-            if (command == "undefined") {
-                command = text.contains("not bright enough") ? "increase" : text.contains("brighter")  ? "increase" : text.contains("too dark") ? "increase" : text.contains("brighten") ? "increase" : "undefined"
-            }
-            //log.debug "command = ${command} deviceType = ${deviceType}"
-            deviceType = "light"
-        }
+    }    
+
+    //LIGHT SWITCHES        
+    if (gSwitches || gCustom1N || gCustom2N || gCustom3N || gCustom4N || gCustom5N){
         if (gSwitches) {
             command = text.contains(" on") ? "on" : text.contains(" off") ? "off" : "undefined"
             if (command == "undefined") {
@@ -2862,7 +2891,7 @@ private getCommand(text){
         deviceType = "profile"
     }
     //Color Loop
-    if (text.contains(" loop") || text.contains(" looping") || text.contains(" color l") || text.contains(" colored l")) {
+    if(text.contains(" loop") || text.contains(" looping") || text.contains(" color l") || text.contains(" colored l")) {
         log.warn "color loop is true"
         deviceType = "color"
         if (text.startsWith ("start") || text.startsWith("play") || text.startsWith ("run")) {
@@ -2917,6 +2946,7 @@ private getCommand(text){
             deviceType = "fan"
         }      
     }
+
     // Vents
     if (text.contains("vent")) {  // Changed "vents" to "vent" to fix bug.  Jason 2/21/2017
         if (text.contains("open")) {
@@ -2947,6 +2977,7 @@ private getCommand(text){
             deviceType = "door"
         }
     }    
+
     // Locks
     if (text.contains("lock")) {
         if (text.contains("unlocked")) {
@@ -2993,7 +3024,7 @@ private getCommand(text){
         }
     } 
     //Volume
-    if (text.contains("mute") || text.contains("be quiet") || text.contains("pause speaker")){
+    if  (text.contains("mute") || text.contains("be quiet") || text.contains("pause speaker")){
         command = "mute"
         deviceType = "volume"
     }
@@ -3001,7 +3032,7 @@ private getCommand(text){
         command = "unmute"
         deviceType = "volume" 
     }
-    else if (text.contains("too loud") || text.startsWith("turn down")) {
+    else if  (text.contains("too loud") || text.startsWith("turn down")) {
         command = "decrease"
         deviceType = "volume" 
     }
@@ -3031,6 +3062,7 @@ private getCommand(text){
     }
     return ["deviceType":deviceType, "command":command ]
 }
+*/
 /************************************************************************************************************
 	CONTROL SUPPORT - CUSTOM CONTROL COMMANDS
 ************************************************************************************************************/ 
@@ -3766,10 +3798,10 @@ private deviceMatchHandler(fDevice) {
                 return ["deviceMatch" : deviceMatch, "deviceType": deviceType, "currState": currState, "tText": timeText.tText, "mainCap": "motion"]
         	}
         } 
-        if (fLock){
-//        deviceMatch =fLock?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
+        if (fLocks){
+//        deviceMatch =fLocks?.find {d -> d.label.toLowerCase() == fDevice?.toLowerCase()}
             if(deviceMatch)	{
-                deviceType = "fLock"
+                deviceType = "fLocks"
                 currState = deviceMatch.currentState("lock").value 
                 stateDate = deviceMatch.currentState("lock").date
                 stateTime = deviceMatch.currentState("lock").date.time
@@ -3882,47 +3914,47 @@ private deviceMatchHandler(fDevice) {
 def settingsFeedback() {
     //LAMBDA
     def fDevice = params.fDevice
-   	def fQuery = params.fQuery
+    def fQuery = params.fQuery
     def fOperand = params.fOperand 
     def fCommand = params.fCommand 
     def String deviceType = (String) null
     def String outputTxt = (String) null
     def String result = (String) null
     def String deviceM = (String) null
-	def currState
+    def currState
     def stateDate
     def stateTime
     def data = [:]
-	fDevice = fDevice?.replaceAll("[^a-zA-Z0-9 ]", "") 
-	state.pTryAgain = false                
-    			def pCmds = state.pContCmds == true ? "enabled" : "disabled"
-                def pCmdsR = state.pContCmdsR //last continuation response
-                def pMute = state.pMuteAlexa == true ? "Alexa voice is disabled" : "Alexa voice is active"
-                //state.scheduledHandler
-                def pin_D = state.usePIN_D 			== true ? "active" : "inactive"
-                def pin_L = state.usePIN_L 			== true ? "active" : "inactive"
-                def pin_T = state.usePIN_T 			== true ? "active" : "inactive"
-                def pin_S = state.usePIN_S 			== true ? "active" : "inactive"
-                def pin_SHM = state.usePIN_SHM 		== true ? "active" : "inactive"
-                def pin_Mode = state.usePIN_Mode 	== true ? "active" : "inactive" 
-                def activePin 	= pin_D 	== "active" ? "doors" : null
-                    activePin  	= pin_L 	== "active" ? activePin + ", locks" : activePin
-                    activePin  	= pin_S 	== "active" ? activePin + ", switches" : activePin
-                    activePin  	= pin_T 	== "active" ? activePin + ", thermostats"  : activePin
-                    activePin  	= pin_SHM 	== "active" ? activePin + ", smart security"  : activePin
-                    activePin  	= pin_Mode 	== "active" ? activePin + ", modes"  : activePin
-                if (activePin == null) { activePin = "no groups"}                
-                def inactivePin = pin_D 	== "inactive" ? "doors" : null
-                    inactivePin  = pin_L 	== "inactive" ? inactivePin + ", locks" : inactivePin
-                    inactivePin  = pin_S 	== "inactive" ? inactivePin + ", switches" : inactivePin
-                    inactivePin  = pin_T 	== "inactive" ? inactivePin + ", thermostats" : inactivePin
-                    inactivePin  = pin_SHM	== "inactive" ? inactivePin + ", smart security" : inactivePin
-                    inactivePin  = pin_Mode	== "inactive" ? inactivePin + ", location modes" : inactivePin
-                if (inactivePin == null) {inactivePin = "no groups"}
-  
-                return outputTxt = pMute + " and the conversational module is " + pCmds + ". The pin number is active for: " +  activePin + " and inactive for: " + inactivePin
-                return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-            }
+    fDevice = fDevice?.replaceAll("[^a-zA-Z0-9 ]", "") 
+    state.pTryAgain = false                
+    def pCmds = state.pContCmds == true ? "enabled" : "disabled"
+    def pCmdsR = state.pContCmdsR //last continuation response
+    def pMute = state.pMuteAlexa == true ? "Alexa voice is disabled" : "Alexa voice is active"
+    //state.scheduledHandler
+    def pin_D = state.usePIN_D 			== true ? "active" : "inactive"
+    def pin_L = state.usePIN_L 			== true ? "active" : "inactive"
+    def pin_T = state.usePIN_T 			== true ? "active" : "inactive"
+    def pin_S = state.usePIN_S 			== true ? "active" : "inactive"
+    def pin_SHM = state.usePIN_SHM 		== true ? "active" : "inactive"
+    def pin_Mode = state.usePIN_Mode 	== true ? "active" : "inactive" 
+    def activePin 	= pin_D 	== "active" ? "doors" : null
+    activePin  	= pin_L 	== "active" ? activePin + ", locks" : activePin
+    activePin  	= pin_S 	== "active" ? activePin + ", switches" : activePin
+    activePin  	= pin_T 	== "active" ? activePin + ", thermostats"  : activePin
+    activePin  	= pin_SHM 	== "active" ? activePin + ", smart security"  : activePin
+    activePin  	= pin_Mode 	== "active" ? activePin + ", modes"  : activePin
+    if (activePin == null) { activePin = "no groups"}                
+    def inactivePin = pin_D 	== "inactive" ? "doors" : null
+    inactivePin  = pin_L 	== "inactive" ? inactivePin + ", locks" : inactivePin
+    inactivePin  = pin_S 	== "inactive" ? inactivePin + ", switches" : inactivePin
+    inactivePin  = pin_T 	== "inactive" ? inactivePin + ", thermostats" : inactivePin
+    inactivePin  = pin_SHM	== "inactive" ? inactivePin + ", smart security" : inactivePin
+    inactivePin  = pin_Mode	== "inactive" ? inactivePin + ", location modes" : inactivePin
+    if (inactivePin == null) {inactivePin = "no groups"}
+
+    return outputTxt = pMute + " and the conversational module is " + pCmds + ". The pin number is active for: " +  activePin + " and inactive for: " + inactivePin
+    return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+}
 
 /******************************************************************************
 	 FEEDBACK SUPPORT - DEVICE CAPABILITIES											
@@ -3934,32 +3966,32 @@ private getCaps(capDevice,capType, capMainCap, capState) {
     def deviceState = capState
     def result
     def attr = [:]
-    	state.pContCmdsR = "caps"
-	def supportedCaps = deviceName.capabilities
+    state.pContCmdsR = "caps"
+    def supportedCaps = deviceName.capabilities
     supportedCaps.each { c ->
-		def capName = c.name
-            c.attributes.each {a ->
-        		def attrName = a.name
-                 def attrValue = deviceName.latestValue(attrName)               
-                 if (a.name != null && a.name !=checkInterval && a.name !=polling  && a.name !=refresh && attrValue != null ) {
-                    if (a.name == "temperature") 		{ result = "The " + attrName + " is " + attrValue + " degrees, " }
-                    if (a.name == "motion") 			{ result = result + attrName + " is " + attrValue +", " }
-                    if (a.name == "contact") 			{ result = result + attrName + " is " + attrValue +", " }                    
-                    if (a.name == "humidity") 			{ result = result + attrName + " is " + attrValue + ", " }
-                    if (a.name == "illuminance") 		{ result = result + "lux level is " + attrValue + ", " }
-                    if (a.name == "water") 				{ result = result + attrName + " is " + attrValue +", " }                    
-                    if (a.name == "switch") 			{ result = result + attrName + " is " + attrValue +", " } 
-					if (a.name == "presence") 			{ result = result + attrName + " is " + attrValue + ", " }                    
-                    if (a.name == "heatingSetpoint") 	{ result = result + "Heating Set Point is " + attrValue + " degrees, " }
-                    if (a.name == "coolingSetpoint") 	{ result = result + "Cooling Set Point is" + attrValue + " degrees, " }
-                    if (a.name == "thermostatMode") 	{ result = result + "The thermostat Mode is " + attrValue + ", " }
-                    if (a.name == "thermostatFanMode") 	{ result = result + "The Fan Mode is " + attrValue + ", " }
-					if (a.name == "battery") 			{ result = result + attrName + " level is " + attrValue + " percent, " }
-                        attr << ["${attrName}": attrValue]
-            	}
-           }
-     }
-	result = result.replace("null", "")
+        def capName = c.name
+        c.attributes.each {a ->
+            def attrName = a.name
+            def attrValue = deviceName.latestValue(attrName)               
+            if (a.name != null && a.name !=checkInterval && a.name !=polling  && a.name !=refresh && attrValue != null ) {
+                if (a.name == "temperature") 		{ result = "The " + attrName + " is " + attrValue + " degrees, " }
+                if (a.name == "motion") 			{ result = result + attrName + " is " + attrValue +", " }
+                if (a.name == "contact") 			{ result = result + attrName + " is " + attrValue +", " }                    
+                if (a.name == "humidity") 			{ result = result + attrName + " is " + attrValue + ", " }
+                if (a.name == "illuminance") 		{ result = result + "lux level is " + attrValue + ", " }
+                if (a.name == "water") 				{ result = result + attrName + " is " + attrValue +", " }                    
+                if (a.name == "switch") 			{ result = result + attrName + " is " + attrValue +", " } 
+                if (a.name == "presence") 			{ result = result + attrName + " is " + attrValue + ", " }                    
+                if (a.name == "heatingSetpoint") 	{ result = result + "Heating Set Point is " + attrValue + " degrees, " }
+                if (a.name == "coolingSetpoint") 	{ result = result + "Cooling Set Point is" + attrValue + " degrees, " }
+                if (a.name == "thermostatMode") 	{ result = result + "The thermostat Mode is " + attrValue + ", " }
+                if (a.name == "thermostatFanMode") 	{ result = result + "The Fan Mode is " + attrValue + ", " }
+                if (a.name == "battery") 			{ result = result + attrName + " level is " + attrValue + " percent, " }
+                attr << ["${attrName}": attrValue]
+            }
+        }
+    }
+    result = result.replace("null", "")
     state.lastAction = result
     state.pContCmdsR = "caps"
     result = attr?.size()
@@ -4544,97 +4576,155 @@ private petNotifyHandler(tts, command) {
     Notifications and Reminders Variables Reset Handlers
 ***********************************************************************************************************************/
 page name: "petBrushReset"
-	def petBrushReset(){dynamicPage(name: "petBrushReset", title: "", uninstall: false) {
-        	section ("${app.label}'s Brushed Note Reset") {paragraph "${app.label}'s brushed note has been reset, please tap Done"
-            state.petBrushNotify = "I'm sorry, I have not been told when ${app.label} was brushed"}}}
+def petBrushReset(){
+    dynamicPage(name: "petBrushReset", title: "", uninstall: false) {
+        section ("${app.label}'s Brushed Note Reset") {
+            paragraph "${app.label}'s brushed note has been reset, please tap Done"
+            state.petBrushNotify = "I'm sorry, I have not been told when ${app.label} was brushed"
+        }
+    }
+}
 page name: "petShotReset"
-	def petShotReset(){dynamicPage(name: "petShotReset", title: "", uninstall: false) {
-        	section ("${app.label}'s Shot Note Reset") {paragraph "${app.label}'s shot note has been reset, please tap Done"
-            state.petShotNotify = "I'm sorry, I have not been told when ${app.label} was shot"}}}
+def petShotReset(){
+    dynamicPage(name: "petShotReset", title: "", uninstall: false) {
+        section ("${app.label}'s Shot Note Reset") {
+            paragraph "${app.label}'s shot note has been reset, please tap Done"
+            state.petShotNotify = "I'm sorry, I have not been told when ${app.label} was shot"
+        }
+    }
+}
 page name: "petFedReset"
-	def petFedReset(){dynamicPage(name: "petFedReset", title: "", uninstall: false) {
-        	section ("${app.label}'s Feeding Note Reset") {paragraph "${app.label}'s feeding note has been reset, please tap Done"
-            state.petFedNotify = "I'm sorry, I have not been told when ${app.label} was fed"}}}
+def petFedReset(){
+    dynamicPage(name: "petFedReset", title: "", uninstall: false) {
+        section ("${app.label}'s Feeding Note Reset") {
+            paragraph "${app.label}'s feeding note has been reset, please tap Done"
+            state.petFedNotify = "I'm sorry, I have not been told when ${app.label} was fed"
+        }
+    }
+}
 page name: "petBathReset"
-	def petBathReset(){dynamicPage(name: "petBathReset", title: "", uninstall: false) {
-        	section ("${app.label}'s Bath Note Reset") {paragraph "${app.label}'s bath note has been reset, please tap Done"
-            state.petBathNotify = "I'm sorry, I have not been told when ${app.label} was bathed"}}}
+def petBathReset(){
+    dynamicPage(name: "petBathReset", title: "", uninstall: false) {
+        section ("${app.label}'s Bath Note Reset") {
+            paragraph "${app.label}'s bath note has been reset, please tap Done"
+            state.petBathNotify = "I'm sorry, I have not been told when ${app.label} was bathed"
+        }
+    }
+}
 page name: "petWalkReset"
-	def petWalkReset(){dynamicPage(name: "petWalkReset", title: "", uninstall: false) {
-        	section ("${app.label}'s Walk Note Reset") {paragraph "${app.label}'s walk note has been reset, please tap Done"
-            state.petWalkNotify = "I'm sorry, I have not been told when ${app.label} was walked"}}}
+def petWalkReset(){
+    dynamicPage(name: "petWalkReset", title: "", uninstall: false) {
+        section ("${app.label}'s Walk Note Reset") {
+            paragraph "${app.label}'s walk note has been reset, please tap Done"
+            state.petWalkNotify = "I'm sorry, I have not been told when ${app.label} was walked"
+        }
+    }
+}
 page name: "petMedReset"
-	def petMedReset(){dynamicPage(name: "petMedReset", title: "", uninstall: false) {
-        	section ("${app.label}'s Medication Note Reset") {paragraph "${app.label}'s medication note has been reset, please tap Done"
-            state.petMedNotify = "I'm sorry, I have not been told when ${app.label} was medicated"}}}
+def petMedReset(){
+    dynamicPage(name: "petMedReset", title: "", uninstall: false) {
+        section ("${app.label}'s Medication Note Reset") {
+            paragraph "${app.label}'s medication note has been reset, please tap Done"
+            state.petMedNotify = "I'm sorry, I have not been told when ${app.label} was medicated"
+        }
+    }
+}
 
 /************************************************************************************************************
    Page status and descriptions 
 ************************************************************************************************************/       
-def pKeypadSettings() {def result = ""
+def pKeypadSettings() {
+    def result = ""
     if (shmConfigure || garageDoors || kpVirPer) {
-    	result = "complete"}
-        result}
-def pKeypadComplete() {def text = "Tap here to Configure" 
+        result = "complete"
+    }
+    result
+}
+def pKeypadComplete() {
+    def text = "Tap here to Configure" 
     if (shmConfigure || garageDoors || kpVirPer) {
-    	text = "Configured"}
-        else text = "Tap here to Configure"
-    	text}
-def pSendSettings() {def result = ""
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}
+def pSendSettings() {
+    def result = ""
     if (synthDevice || sonosDevice || sendContactText || sendText || push) {
-    	result = "complete"}
-        result}
-def pSendComplete() {def text = "Tap here to Configure" 
+        result = "complete"}
+    result
+}
+def pSendComplete() {
+    def text = "Tap here to Configure" 
     if (synthDevice || sonosDevice || sendContactText || sendText || push) {
-    	text = "Configured"}
-        else text = "Tap here to Configure"
-    	text}
-def pConfigSettings() {def result = ""
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}
+def pConfigSettings() {
+    def result = ""
     if (pAlexaCustResp || pAlexaRepeat || pContCmdsProfile || pRunMsg || pPreMsg || pDisableAlexaProfile || pDisableALLProfile || pRunTextMsg || pPreTextMsg) {
-    	result = "complete"}
-        result}
-def pConfigComplete() {def text = "Tap here to Configure" 
+        result = "complete"}
+    result
+}
+def pConfigComplete() {
+    def text = "Tap here to Configure" 
     if (pAlexaCustResp || pAlexaRepeat || pContCmdsProfile || pRunMsg || pPreMsg || pDisableAlexaProfile || pDisableALLProfile || pRunTextMsg || pPreTextMsg) {
-    	text = "Configured"}
-    	else text = "Tap here to Configure"
-		text}
-def pDevicesSettings() {def result = ""
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}
+def pDevicesSettings() {
+    def result = ""
     if (fSwitches || sSwitches || sDimmers || sHues || sFlash) {
-    	result = "complete"}
-    	result}
-def pDevicesComplete() {def text = "Tap here to Configure" 
+        result = "complete"}
+    result
+}
+def pDevicesComplete() {
+    def text = "Tap here to Configure" 
     if (fSwitches || sSwitches || sDimmers || sHues || sFlash) {
-    	text = "Configured"}
-        else text = "Tap here to Configure"
-        text}
-def pActionsSettings(){def result = ""
-	def pDevicesProc = ""
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}
+def pActionsSettings(){
+    def result = ""
+    def pDevicesProc = ""
     if (fSwitches || sSwitches || sDimmers || sHues || sFlash || shmState) {
-    	result = "complete"
+        result = "complete"
         pDevicesProc = "complete"}
-    	result}
-def pActionsComplete() {def text = "Tap here to configure" 
-	def pDevicesComplete = pDevicesComplete()
+    result
+}
+def pActionsComplete() {
+    def text = "Tap here to configure" 
+    def pDevicesComplete = pDevicesComplete()
     if (pDevicesProc || pMode || pRoutine || shmState) {
-    	text = "Configured"}
-        else text = "Tap here to Configure"
-        text}        
-def pRestrictSettings(){ def result = "" 
-	if (modes || runDay || hues ||startingX || endingX) {
-    	result = "complete"}
-        result}
-def pRestrictComplete() {def text = "Tap here to configure" 
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}        
+def pRestrictSettings(){
+    def result = "" 
     if (modes || runDay || hues ||startingX || endingX) {
-    	text = "Configured"}
-    	else text = "Tap here to Configure"
-        text}
-def pGroupSettings() {def result = ""
+        result = "complete"}
+    result
+}
+def pRestrictComplete() {
+    def text = "Tap here to configure" 
+    if (modes || runDay || hues ||startingX || endingX) {
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}
+def pGroupSettings() {
+    def result = ""
     if (gSwitches || gFans || gHues || sVent || sMedia || sSpeaker) {
-    	result = "complete"}
-    	result}
-def pGroupComplete() {def text = "Tap here to Configure" 
+        result = "complete"}
+    result
+}
+def pGroupComplete() {
+    def text = "Tap here to Configure" 
     if (gSwitches || gFans || gHues || sVent || sMedia || sSpeaker) {
-    	text = "Configured"}
-        else text = "Tap here to Configure"
-        text
-        }
+        text = "Configured"}
+    else text = "Tap here to Configure"
+    text
+}
