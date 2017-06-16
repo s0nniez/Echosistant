@@ -2052,7 +2052,7 @@ String getCommandEnable() 	{"on,start,enable,engage,open,begin,unlock,unlocked"}
 String getCommandDisable() 	{"off,stop,cancel,disable,disengage,kill,close,silence,lock,locked,quit,end"}
 String getCommandMore()		{"increase,more,too dark,not bright enough,brighten,brighter,turn up"}
 String getCommandLess()		{"darker,too bright,dimmer,dim,decrease,lower,low,softer,less"}
-String getDeviceType()		{"light,lights,switch,switches,fan,fans,lock,locks,door,doors,window,windows,blind,blinds,shade,shades,curtain,curtains,"}
+String getDeviceType()		{"light,light,switch,switche,fan,fan,lock,lock,door,door,window,window,blind,blind,shade,shade,curtain,curtain"}
 
 String parseWordReturn(String input, String fromList) {
 	return fromList.split(",").find({input.contains(it)})
@@ -2064,17 +2064,17 @@ String getCommand(text) {
 	return parseWordFound(text, commandMore) ? "increase" : parseWordFound(text, commandLess) ? "decrease" : parseWordFound(text, commandEnable) ? "on" : parseWordFound(text, commandDisable) ? "off" : null 
 }
 String getDeviceType(text) {
-	//TODO: need to always return a plural deviceType
 	return parseWordReturn(text, deviceType) ?: null
 }
 String runCommand(tts) {
     String command = getCommand(tts) 
     String deviceType = getDeviceType(tts)
-	def theDevices = []
+	def theDevices
 
+	log.debug "deviceType:${deviceType}"
     if (command) {
         switch (deviceType) {
-        	case "lights": 
+        	case "light": 
         		theDevices = fSwitches
             break
             case null:
