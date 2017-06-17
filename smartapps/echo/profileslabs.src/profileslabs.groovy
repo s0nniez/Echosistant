@@ -48,12 +48,12 @@ def mainProfilePage() {
         section ("Name Your Profile (must match the AWS Intent Name)") {
             label title:"Profile Name", required:true
         } 
-        section("Audio, SMS, Push Messaging and Alexa Responses") {
-            href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
-        }        
         section("Devices, Groups, Feedback, and Keypads") {
             href "feedback", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
-        }        
+        }  
+        section("Audio, SMS, Push Messaging and Alexa Responses") {
+            href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
+        }              
         section ("Echo Mailbox") {
             href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
         }
@@ -120,8 +120,8 @@ page name: "feedback"
 def feedback(){
     dynamicPage(name: "feedback", title: "", uninstall: false){  
         section("") {
-            href "pGroups", title: "Device Groups Control", description: pGroupComplete(), state: pGroupSettings()
-            href "fDevices", title: "Device Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
+            href "fDevices", title: "Main Profile Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
+            href "pGroups", title: "Create Groups within Profile", description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
             href "mDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
             href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
@@ -134,6 +134,9 @@ def feedback(){
 page name: "pGroups"
 def pGroups() {
     dynamicPage(name: "pGroups", title: "",install: false, uninstall: false) {
+    	section ("Name Your Group") {
+            label title:"Group Name", required:true
+        } 
         section ("Group These Switches", hideWhenEmpty: true){
             input "gSwitches", "capability.switch", title: "Dimmers and Switches...", multiple: true, required: false, submitOnChange: true
             if (gSwitches) {
@@ -184,7 +187,7 @@ def pGroups() {
             }
             input "sSpeaker", "capability.musicPlayer", title: "Use This Media Player Device For Volume Control", required: false, multiple: false, submitOnChange: true
             input "sSynth", "capability.speechSynthesis", title: "Use This Speech Synthesis Capable Device", multiple: false, required: false, submitOnChange: true
-        }             
+        }  
     }
 }
 page name: "gCustom"    
@@ -884,21 +887,6 @@ def profileFeedbackEvaluate(params) {
     //Sending event to WebCoRE
     sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")
 
-    /* I belive this is redundant code as it would be caught at line 605 in the parent app....
-if(tts.contains("no ") || tts == "no" || tts == "stop" || tts == "cancel" || tts == "kill it" || tts == "zip it" || tts == "yes" && state.pContCmdsR != "wrongIntent"){
-if(tts == "no" || tts == "stop" || tts == "cancel" || tts == "kill it" || tts == "zip it" || tts.contains("thank")){
-outputTxt = "ok, I am here if you need me, so don't be shy"
-pContCmds = false
-return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-}
-else {
-outputTxt = "ok, please continue, "
-pContCmds = false
-return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-}        
-}
-*/
-
     if (command == "undefined") {
         outputTxt = "Sorry, I didn't get that, "
         state.pTryAgain = false
@@ -1459,7 +1447,7 @@ def profileEvaluate(params) {
     	muteAlexa = tts.contains("enable Alexa") ? "unmute" : tts.contains("start Alexa") ? "unmute" : tts.contains("unmute Alexa") ? "unmute" : muteAll
     */
     if (parent.debug) log.debug "Message received from Parent with: (tts) = '${tts}', (intent) = '${intent}', (childName) = '${childName}', current app version: ${release()}"  
-	//Sending event to WebCoRE
+	
 	
     if (command == "undefined") {
 		outputTxt = "Sorry, I didn't get that, "
@@ -1467,8 +1455,9 @@ def profileEvaluate(params) {
         state.pContCmdsR = "clear"
         state.lastAction = null
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-	}    
+	} 
     
+    //Sending event to WebCoRE
 	sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")    
     if (parent.debug) log.debug "sendNotificationEvent sent to CoRE from ${app.label}"
      
@@ -2048,11 +2037,13 @@ return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCm
 def searchRealDevices(String text) {
     return fSwitches.find({text.contains(it.toString().toLowerCase())}) ?: fFans.find({text.contains(it.toString().toLowerCase())}) ?: fLocks.find({text.contains(it.toString().toLowerCase())}) ?: fDoors.find({text.contains(it.toString().toLowerCase())}) ?: null
 }
+String getFeedBackWords() 	{"give,for,tell,what,how,is,when,which,are,how many,check,who"}
 String getCommandEnable() 	{"on,start,enable,engage,open,begin,unlock,unlocked"}
 String getCommandDisable() 	{"off,stop,cancel,disable,disengage,kill,close,silence,lock,locked,quit,end"}
 String getCommandMore()		{"increase,more,too dark,not bright enough,brighten,brighter,turn up"}
-String getCommandLess()		{"darker,too bright,dimmer,dim,decrease,lower,low,softer,less"}
-String getDeviceType()		{"light,light,switch,switche,fan,fan,lock,lock,door,door,window,window,blind,blind,shade,shade,curtain,curtain"}
+String getCommandLess()		{"darker,too bright,dim,dimmer,decrease,lower,low,softer,less"}
+String getDeviceType()		{"light,switch,fan,lock,door,window,blind,shade,curtain"}
+String getDelayCommand()	{"delay,wait,until,after,around,within,in,about"}
 
 String parseWordReturn(String input, String fromList) {
 	return fromList.split(",").find({input.contains(it)})
@@ -2066,39 +2057,66 @@ String getCommand(text) {
 String getDeviceType(text) {
 	return parseWordReturn(text, deviceType) ?: null
 }
-String runCommand(tts) {
-    String command = getCommand(tts) 
+String runCommand(tts) { 
+	//not sure how to implement status here, need to understand how we can get feedback keywords
+    String feedBack = parseWordFound(tts, feedBackWords) ? "status" : ""
+	String command = getCommand(tts) 
     String deviceType = getDeviceType(tts)
-	def theDevices
+    //if delay keyword, figure out amount... that'll be FUN!
+	//Boolean delayAction = parseWordFound(tts, delayCommand)
 
-	log.debug "deviceType:${deviceType}"
-    if (command) {
+    def theDelay = 0
+    def theDevices
+    def theLevel
+    def theStatus
+
+    log.debug "deviceType:${deviceType}"
+	if (command) {
         switch (deviceType) {
-        	case "light": 
-        		theDevices = fSwitches
+            case "light": 
+            theDevices = fSwitches
+            break
+            case "fan": 
+            theDevices = fFans
             break
             case null:
-            	theDevices = searchRealDevices(tts)
+                theDevices = searchRealDevices(tts)
         }
         
-        switch (command) {
+        switch ("${command}${feedBack}") {
             case "on":
-            	theDevices*.on()
-            	return "Ok, turning ${theDevices} ${command}"
-            	break
+            theDevices*.on([delay: theDelay])
+            return "Ok, turning ${theDevices} ${command}"
+            break
             case "off":
-            	theDevices*.off()
-            	return "Ok, turning ${theDevices} ${command}"
-            	break
-            /*case "increase": 
-            case "decrease":*/
+            theDevices*.off([delay: theDelay])
+            return "Ok, turning ${theDevices} ${command}"
+            break
+            case "increase":
+            //check device(s) for capabilities and adjust accodrinly (theDevices*.capabilities)
+            theDevices*.on([delay: theDelay])
+            return "Ok, increasing ${theDevices} ${command}"
+            break
+            case "decrease":
+            //check device(s) for capabilities and adjust accodrinly (theDevices*.capabilities)
+            theDevices*.off([delay: theDelay])
+            return "Ok, lowering ${theDevices} ${command}"
+            break
+            case "onstatus":
+            theStatus = theDevices*.latestValue("switch")
+            return "${theDevices} is currently ${theStatus}"
+            break
+            case "offstatus":
+            theStatus = theDevices*.latestValue("switch")
+            return "${theDevices} is currently ${theStatus}"
+            break
         }
     }
 }
 
 /******************************************************************************************************
    ADVANCED CONTROL HANDLER
-******************************************************************************************************
+******************************************************************************************************/
 def advCtrlHandler(data) {
     def deviceCommand = data.command
     def deviceType = data.deviceType
@@ -2203,7 +2221,6 @@ def advCtrlHandler(data) {
             return result
 	}
 }
-*/
 /******************************************************************************************************
    SPEECH AND TEXT ALEXA RESPONSE
 ******************************************************************************************************/
@@ -2512,7 +2529,6 @@ private void processpsms(psms, message) {
         }
     }
 }
-
 /***********************************************************************************************************************
     MISC. - REMINDERS HANDLER
 ***********************************************************************************************************************/
@@ -2779,8 +2795,8 @@ private getFeedbackCommand(text) {
 }        
 /******************************************************************************************************
    CUSTOM COMMANDS - CONTROL
-******************************************************************************************************
-private getCommand(text){
+*******************************************************************************************************/
+private OLDgetCommand(text){
     def String command = (String) null
     def String deviceType = (String) null
     text = text.toLowerCase()
@@ -3062,7 +3078,6 @@ private getCommand(text){
     }
     return ["deviceType":deviceType, "command":command ]
 }
-*/
 /************************************************************************************************************
 	CONTROL SUPPORT - CUSTOM CONTROL COMMANDS
 ************************************************************************************************************/ 
@@ -3214,8 +3229,6 @@ private getCustomCmd(command, unit, group, num) {
            }      
 		}
 	}
-
-
 /************************************************************************************************************
    Custom Color Filter
 ************************************************************************************************************/       
@@ -3245,8 +3258,6 @@ private startLoop() {
 	gHues.setColor(randomColor)
     runIn(60, "continueLoop")
 }
-
-
 private continueLoop() {
     int hueLevel = !level ? 100 : level
 	int hueHue = Math.random() *100 as Integer

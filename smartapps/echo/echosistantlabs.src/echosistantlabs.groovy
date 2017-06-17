@@ -436,7 +436,7 @@ def processBegin(){
     def String outputTxt = (String) null 
     state.pTryAgain = false
     if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^" 
-    //if (debug) log.debug "Launch Data: (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
+    if (debug) log.debug "Launch Data: (event) = '${event}', (Lambda version) = '${versionTxt}', (Lambda release) = '${releaseTxt}', (ST Main App release) = '${releaseSTtxt}'"
     //try {
     if (event == "noAction") {//event == "AMAZON.NoIntent" removed 1/20/17
         state.pinTry = null
@@ -592,7 +592,7 @@ def processTts() {
     def pTryAgain = false
     def pPIN = false
     def dataSet = [:]
-    if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}'"
+    if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}' state.pContCmdsR = ${state.pContCmdsR}"
 
     pContCmdsR = "profile"
     def tProcess = true
@@ -604,18 +604,18 @@ def processTts() {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Might need some tweaking here...
+    //This needs to be fixed... 
     if(parseWordFound(ptts, stopWords) && state.pContCmdsR != "wrongIntent"){
-        if(ptts.contains("thank")){
+//        if(ptts.contains("thank")){
             outputTxt = "ok, I am here if you need me"
             pContCmds = false
             return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        }
-        else {
-            outputTxt = "ok, please continue, "
-            pContCmds = false
-            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-        }        
+//       }
+//        else {
+//            outputTxt = "ok, please continue, "
+//            pContCmds = false
+//            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
+//        }        
     } else {
         childApps.each {child ->
             if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
@@ -630,22 +630,14 @@ def processTts() {
                 log.warn "childRelease = $childRelease"
                 if (parseWordFound(ptts, weatherWords)) {
                     def pResponse = child.profileFeedbackEvaluate(dataSet)
-                    log.info "child.profileWeatherEvaluate executed from the main at line 3680"
-                    outputTxt = pResponse.outputTxt
-                    pContCmds = pResponse.pContCmds
-                    pContCmdsR = pResponse.pContCmdsR
-                    pTryAgain = pResponse.pTryAgain
-                }
-                if (parseWordFound(ptts, feedBackWords)) {
-                    def pResponse = child.profileFeedbackEvaluate(dataSet)
-                    log.info "child.profileFeedbackEvaluate executed from the main at line 624"
+                    log.info "child.profileWeatherEvaluate executed from the main at line 633"
                     outputTxt = pResponse.outputTxt
                     pContCmds = pResponse.pContCmds
                     pContCmdsR = pResponse.pContCmdsR
                     pTryAgain = pResponse.pTryAgain
                 } else {
                     def pResponse = child.profileEvaluate(dataSet)
-                    log.info "child.profileMessagingEvaluate executed from the main at line 632"
+                    log.info "child.profileMessagingEvaluate executed from the main at line 640"
                     outputTxt = pResponse.outputTxt
                     pContCmds = pResponse.pContCmds
                     pContCmdsR = pResponse.pContCmdsR
