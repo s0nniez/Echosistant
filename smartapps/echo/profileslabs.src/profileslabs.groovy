@@ -35,6 +35,7 @@ private release() {
 preferences {
     page name: "mainProfilePage"
     page name: "pActions"
+    page name: "pGroup"
     page name: "pGroups"
     page name: "pRestrict"
   	page name: "pDeviceControl"
@@ -44,6 +45,7 @@ preferences {
 
 //dynamic page methods
 def mainProfilePage() {	
+	rebuildGroups()
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
         section ("Name Your Profile (must match the AWS Intent Name)") {
             label title:"Profile Name", required:true
@@ -120,8 +122,8 @@ page name: "feedback"
 def feedback(){
     dynamicPage(name: "feedback", title: "", uninstall: false){  
         section("") {
-            href "fDevices", title: "Main Profile Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
-            href "pGroups", title: "Create Groups within Profile", description: pGroupComplete(), state: pGroupSettings()
+            href "pDevices", title: "Main Profile Control and Feedback", params: [type: "f"]//, description: pRestrictComplete(), state: pRestrictSettings()
+            href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
             href "mDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
             href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
@@ -131,6 +133,68 @@ def feedback(){
 //////////////////////////////////////////////////////////////////////////////
 /////////// DEVICE GROUPS CONTROL
 //////////////////////////////////////////////////////////////////////////////
+def pGroups() {
+	rebuildGroups()
+	dynamicPage(name: "pGroups", title: "Groups", install: false, uninstall: false) {
+		log.debug "state.groups = ${state.groups}"
+        def groups = state.groups
+		section("") {
+			href "pGroup", title: "Add a new Group", required: false, params: [groupId: 0]
+		}
+		if (groups.size()) {
+			section("Groups") {
+				for (group in groups) {
+					href "pGroup", title: group.name, required: false, params: [groupId: group.groupId]
+				}
+			}
+		}
+	}
+}
+
+def pGroup(params) {
+	log.debug "params = ${params}"
+	def groupId = (int) (params?.groupId != null ? params.groupId : state.groupId)
+	if (!groupId) {
+		//generate new group id
+		groupId = 1
+		def existingGroups = settings.findAll{ it.key.startsWith("groupId") }
+		for (group in existingGroups) {
+			def id = tap.key.replace("groupId", "")
+			if (id.isInteger()) {
+				id = groupId.toInteger()
+				if (id >= groupId) groupId = (int) (id + 1)
+			}
+		}
+	}
+	state.groupId = groupId
+	dynamicPage(name: "pGroup", title: "Group", install: false, uninstall: false) {
+		section("") {
+        	input "groupId${groupId}", "string", title: "Name", description: "Enter a name for this Group", required: false, defaultValue: "Group #${groupId}"
+			href "pDevices", title: "Groups Control and Feedback", params: [type: "g"]	
+		}
+	}
+}
+
+private rebuildGroups() {
+	def groups = settings.findAll{it.key.startsWith("groupId")}
+	state.groups = []
+	for(group in groups) {
+		def groupId = group.key.replace("groupId", "")
+		if (groupId.isInteger()) {
+			if (group.value != null) {
+				def name = group.value
+				if (name) {
+					def t = [
+						groupId: groupId.toInteger(),
+						name: name,
+					]
+					state.groups.push t
+				}
+			}
+		}
+	}
+}
+/*
 page name: "pGroups"
 def pGroups() {
     dynamicPage(name: "pGroups", title: "",install: false, uninstall: false) {
@@ -223,52 +287,53 @@ def gCustom(){
         }
     }
 }
+*/
 //////////////////////////////////////////////////////////////////////////////
 /////////// INDIVIDUAL DEVICE CONTROL AND FEEDBACK 
 //////////////////////////////////////////////////////////////////////////////
-page name: "fDevices"
-def fDevices(){
-    dynamicPage(name: "fDevices", title: "", uninstall: false){
+page name: "pDevices"
+def pDevices(params){
+    dynamicPage(name: "pDevices", title: "", uninstall: false){
         section("Light Switches and Bulbs") {
-            input "fSwitches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
         }
         section("Misc Switches") {
-            input "fMiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
+            input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
         }
         section("Doors") {
-            input "fDoors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
         }
         section("Windows") {
-            input "fWindows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Windows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
         }
         section("Locks") {
-            input "fLocks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
         }
         section("Fans") {
-            input "fFans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
         }
         section("Garage Doors") {
-            input "fGarage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false, submitOnChange: true
         }
         section("Smart Vents") {
-            input "fVents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Vents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
         }
         section("Window Coverings") {
-            input "fShades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Shades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false, submitOnChange: true
         }
         section("Presence") {
-            input "fPresence", "capability.presenceSensor", title: "Allow These Presence Sensors...", required: false, multiple: true
+            input "${params.type}Presence", "capability.presenceSensor", title: "Allow These Presence Sensors...", required: false, multiple: true
         }
         section("Batteries") {
-            input "fBattery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
+            input "${params.type}Battery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
         }
         section("Motion Sensors") {
-            input "fMotion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
+            input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
         }
         section ("Climate Control", hideWhenEmpty: true) { 
-            input "fTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
-            input "fIndoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
-            input "fOutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
+            input "${params.type}Tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
+            input "${params.type}Indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
+            input "${params.type}OutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
         } 
     }
 }   
@@ -528,7 +593,6 @@ def pPersonCreate(){
         virtualPerson()
     }
 }
-
 def virtualPerson() {
     log.trace "Creating EchoSistant Virtual Person Device"
     def deviceId = "${app.label}" 
@@ -541,7 +605,6 @@ def virtualPerson() {
         log.trace "NOTICE!!! Found that the EVPD ${d.displayName} already exists. Only one device per profile permitted"
     }
 }  
-
 //// DELETE VIRTUAL PRESENCE
 page name: "pPersonDelete"
 def pPersonDelete(){
@@ -2035,7 +2098,8 @@ return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCm
     }
  }   
 def searchRealDevices(String text) {
-    return fSwitches.find({text.contains(it.toString().toLowerCase())}) ?: fFans.find({text.contains(it.toString().toLowerCase())}) ?: fLocks.find({text.contains(it.toString().toLowerCase())}) ?: fDoors.find({text.contains(it.toString().toLowerCase())}) ?: null
+			////															Added for groups device search...
+    return fSwitches.find({text.contains(it.toString().toLowerCase())}) ?: gSwitches.find({text.contains(it.toString().toLowerCase())}) ?: fFans.find({text.contains(it.toString().toLowerCase())}) ?: fLocks.find({text.contains(it.toString().toLowerCase())}) ?: fDoors.find({text.contains(it.toString().toLowerCase())}) ?: null
 }
 String getFeedBackWords() 	{"give,for,tell,what,how,is,when,which,are,how many,check,who"}
 String getCommandEnable() 	{"on,start,enable,engage,open,begin,unlock,unlocked"}
