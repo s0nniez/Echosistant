@@ -295,11 +295,6 @@ def gCustom(){
 page name: "pDevices"
 def pDevices(params){
     dynamicPage(name: "pDevices", title: "", uninstall: false){
-        section("Light Switches and Bulbs") { //, hideWhenEmpty: true
-            input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
-            input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
-            input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
-        }
         section("Locks") { //, hideWhenEmpty: true
             input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
         }
@@ -326,6 +321,11 @@ def pDevices(params){
 	     	input "${params.type}Synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
 			input "${params.type}Media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
     	}
+        section("Light Switches and Bulbs") { //, hideWhenEmpty: true
+            input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
+            input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
+        }
         section("Feedback Only Devices") { //, hideWhenEmpty: true
 			input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
             input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
