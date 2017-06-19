@@ -34,9 +34,12 @@ private release() {
 /**********************************************************************************************************************************************/
 preferences {
     page name: "mainProfilePage"
+    "feedback"
+    
     page name: "pActions"
     page name: "pGroup"
     page name: "pGroups"
+    page name: "pSecurity"    
     page name: "pRestrict"
   	page name: "pDeviceControl"
     page name: "pPerson"
@@ -47,27 +50,26 @@ preferences {
 def mainProfilePage() {	
 	rebuildGroups()
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
-        section ("Name Your Profile (must match the AWS Intent Name)") {
+        section ("Name Your Profile") {
             label title:"Profile Name", required:true
         } 
         section("Devices, Groups, Feedback, and Keypads") {
             href "feedback", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
         }  
-        section("Audio, SMS, Push Messaging and Alexa Responses") {
+        section("Message Output and Alexa Responses") {
             href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
         }              
-        section ("Echo Mailbox") {
+        section ("Echo Mailbox, Quick Notes, Reminders") {
             href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
         }
-        section ("Quick Notes") {
-            href "mQuickNotes", title: "Quick Notes to Alexa", description: pSendComplete(), state: pSendSettings() 
-        }
-        section ("Restrictions") {
+        section ("Settings" , hideable: true, hidden: true ) {
             href "pRestrict", title: "General Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
-        }         
+            href "pSecurity", title: "PIN Settings", description: pRestrictComplete(), state: pRestrictSettings()
+			href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
+            href "pWeatherConfig", title: "Weather Settings", description: "", state: complete
+        }        
     }
 }
-
 //////////////////////////////////////////////////////////////////////////////
 /////////// OUTGOING MESSAGING   
 //////////////////////////////////////////////////////////////////////////////
@@ -126,7 +128,6 @@ def feedback(){
             href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
             href "mDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
-            href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
         }        
     }
 }
@@ -294,48 +295,49 @@ def gCustom(){
 page name: "pDevices"
 def pDevices(params){
     dynamicPage(name: "pDevices", title: "", uninstall: false){
-        section("Light Switches and Bulbs") {
+        section("Light Switches and Bulbs") { //, hideWhenEmpty: true
             input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
-        }
-        section("Misc Switches") {
             input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
-        }
-        section("Doors") {
-            input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
-        }
-        section("Windows") {
-            input "${params.type}Windows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
-        }
-        section("Locks") {
-            input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
-        }
-        section("Fans") {
             input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
         }
-        section("Garage Doors") {
+        section("Locks") { //, hideWhenEmpty: true
+            input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
+        }
+        section("Garage Doors") { //, hideWhenEmpty: true
             input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false, submitOnChange: true
+        	input "${params.type}Relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
+				if (fRelay) input "cContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false 
         }
-        section("Smart Vents") {
-            input "${params.type}Vents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
-        }
-        section("Window Coverings") {
+        section("Window Coverings") { //, hideWhenEmpty: true
             input "${params.type}Shades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false, submitOnChange: true
         }
-        section("Presence") {
-            input "${params.type}Presence", "capability.presenceSensor", title: "Allow These Presence Sensors...", required: false, multiple: true
-        }
-        section("Batteries") {
-            input "${params.type}Battery", "capability.battery", title: "Allow These Device(s) with Batteries...", required: false, multiple: true
-        }
-        section("Motion Sensors") {
-            input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-        }
-        section ("Climate Control", hideWhenEmpty: true) { 
+        section ("Climate Control") { //, hideWhenEmpty: true
             input "${params.type}Tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
             input "${params.type}Indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
             input "${params.type}OutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-        } 
-    }
+            input "${params.type}Vents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
+        }
+		section ("Water") { //, hideWhenEmpty: true
+			input "${params.type}Valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true, submitOnChange: true
+			input "${params.type}Water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true, submitOnChange: true
+		}
+		section ("Media"){ //, hideWhenEmpty: true
+			input "${params.type}Speaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
+	     	input "${params.type}Synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
+			input "${params.type}Media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
+    	}
+        section("Feedback Only Devices") { //, hideWhenEmpty: true
+			input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
+            input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Windows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
+            input "${params.type}Battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
+			input "${params.type}CO2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
+			input "${params.type}CO", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
+			input "${params.type}Humidity", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
+			input "${params.type}Sound", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
+        }
+	}
 }   
 //////////////////////////////////////////////////////////////////////////////
 /////////// KEYPADS, SHM, GARAGE DOORS, AND VIRTUAL PERSON ACTIONS 
@@ -470,6 +472,7 @@ def mDefaults(){
             input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
             input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
         }
+        /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////
         section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {
             input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
             input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
@@ -486,9 +489,7 @@ def mDefaults(){
                 input "push", "bool", title: "Send Push Notification too?", required: false, defaultValue: false
             }
         }
-        section ("Weather Settings") {
-            href "mWeatherConfig", title: "Tap here to configure the Weather defaults", description: "", state: complete
-        }                     
+        ****************************************************************************************************************/
     }
 }            	
 //////////////////////////////////////////////////////////////////////////////
@@ -519,6 +520,18 @@ def pActions() {
     }
 }
 //////////////////////////////////////////////////////////////////////////////
+/////////// WEATHER SETTINGS  
+//////////////////////////////////////////////////////////////////////////////
+page name: "pWeatherConfig"
+def pWeatherConfig() {
+	dynamicPage(name: "pWeatherConfig") {
+		section () {
+    		input "wMetric", "bool", title: "Report Weather In Metric Units\n(°C / km/h)", required: false
+            input "wZipCode", "text", title: "Zip Code (If Location Not Set)", required: false
+		}
+	}
+}  
+//////////////////////////////////////////////////////////////////////////////
 /////////// ECHOSISTANT MAILBOX  
 //////////////////////////////////////////////////////////////////////////////
 page name: "mailbox"
@@ -526,16 +539,6 @@ def mailbox(){
     dynamicPage(name: "mailbox", title: "", uninstall: false){  
         section("") {
             paragraph "This space will be filled at a later time"
-        }        
-    }
-}
-//////////////////////////////////////////////////////////////////////////////
-/////////// QUICK NOTES MAIN PAGE 
-//////////////////////////////////////////////////////////////////////////////
-page name: "mQuickNotes"
-def mQuickNotes(){
-    dynamicPage(name: "mQuickNotes", title: "", uninstall: false){  
-        section("") {
             href "mPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
             href "mFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
         }        
@@ -772,6 +775,35 @@ def pDeviceControl() {
 //////////////////////////////////////////////////////////////////////////////
 /////////// PROFILE RESTRICTIONS
 //////////////////////////////////////////////////////////////////////////////
+page name: "pSecurity"
+            def pSecurity(){
+                dynamicPage(name: "pSecurity", title: "",install: false, uninstall: false) {
+                section ("Set PIN Number to Unlock Security Features") {
+                    input "cPIN", "password", title: "Use this PIN for ALL Alexa Controlled Controls", default: false, required: false, submitOnChange: true
+                    //input "cTempPIN", "password", title: "Guest PIN (expires in 24 hours)", default: false, required: false, submitOnChange: true
+                }
+
+                    section ("Configure Security Options for Alexa") {
+                    	def routines = location.helloHome?.getPhrases()*.label.sort()
+                        input "cMiscDev", "capability.switch", title: "Allow these Switches to be PIN Protected...", multiple: true, required: false, submitOnChange: true
+                        input "cRoutines", "enum", title: "Allow these Routines to be PIN Protected...", options: routines, multiple: true, required: false
+                        input "uPIN_SHM", "bool", title: "Enable PIN for Smart Home Monitor?", default: false, submitOnChange: true
+                            if(uPIN_SHM == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Security"} 
+                        input "uPIN_Mode", "bool", title: "Enable PIN for Location Modes?", default: false, submitOnChange: true
+                            if(uPIN_Mode == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Location Modes"} 
+							if (cMiscDev) 			{input "uPIN_S", "bool", title: "Enable PIN for Switch(es)?", default: false, submitOnChange: true}
+                            	if(uPIN_S == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Switches"} 
+                            if (cTstat) 			{input "uPIN_T", "bool", title: "Enable PIN for Thermostats?", default: false, submitOnChange: true}
+                            	if(uPIN_T == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Thermostats"}                             
+                            if (cDoor || cRelay) 	{input "uPIN_D", "bool", title: "Enable PIN for Doors?", default: false, submitOnChange: true}
+                            	if(uPIN_D == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Doors"}                             
+                            if (cLock) 				{input "uPIN_L", "bool", title: "Enable PIN for Locks?", default: false, submitOnChange: true}
+                            	if(uPIN_L == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Locks"}                             
+                    }
+                }
+                }
+
+
 page name: "pRestrict"
 def pRestrict(){
     dynamicPage(name: "pRestrict", title: "", uninstall: false) {
