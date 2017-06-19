@@ -34,19 +34,38 @@ private release() {
 /**********************************************************************************************************************************************/
 preferences {
     page name: "mainProfilePage"
-    "feedback"
-    
-    page name: "pActions"
-    page name: "pGroup"
-    page name: "pGroups"
-    page name: "pSecurity"    
-    page name: "pRestrict"
-  	page name: "pDeviceControl"
-    page name: "pPerson"
-    page name: "pVirPerAction"
-}
+    //"Devices, Groups, Feedback, and Keypads"//
+    	page name: "devices"
+			page name: "pDevices"
+			page name: "pGroups"
+            	page name: "pGroup"
+            page name: "pKeypads"
+                page name: "pPerson"
+                	page name: "pPersonCreate"
+                    page name: "pPersonDelete"
+                page name: "pVPNotifyPage"
+                page name: "pShmNotifyPage"
+                page name: "pGarageDoorNotify"            
+            page name: "pDefaults"      
+    //"Message Output and Alexa Responses"//	
+        page name: "messaging"
+    //"Echo Mailbox, Quick Notes, Reminders"//    
+    	page name: "mailbox"
+            page name: "pPetNotes"
+            page name: "pFamilyNotes"
+    //SETTINGS//
+        page name: "pRestrict"
+    		page name: "certainTime"    
+    	page name: "pSecurity"    
+    	page name: "pActions"
+        	page name: "pDeviceControl"
+    	page name: "pWeatherConfig"
+    	page name: "pSkillConfig"
 
-//dynamic page methods
+}
+//////////////////////////////////////////////////////////////////////////////
+/////////// MAIN PAGE
+//////////////////////////////////////////////////////////////////////////////
 def mainProfilePage() {	
 	rebuildGroups()
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
@@ -54,7 +73,7 @@ def mainProfilePage() {
             label title:"Profile Name", required:true
         } 
         section("Devices, Groups, Feedback, and Keypads") {
-            href "feedback", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
+            href "devices", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
         }  
         section("Message Output and Alexa Responses") {
             href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
@@ -66,229 +85,26 @@ def mainProfilePage() {
             href "pRestrict", title: "General Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
             href "pSecurity", title: "PIN Settings", description: pRestrictComplete(), state: pRestrictSettings()
 			href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
-            href "pWeatherConfig", title: "Weather Settings", description: "", state: complete
+            href "pWeatherConfig", title: "Weather Settings", description: pRestrictComplete(), state: pRestrictSettings()   
+			href "pSkillConfig", title: "Install AWS Skill", description: pRestrictComplete(), state: pRestrictSettings()   
+
         }        
     }
 }
 //////////////////////////////////////////////////////////////////////////////
-/////////// OUTGOING MESSAGING   
+/////////// "Devices, Groups, Feedback, and Keypads"
 //////////////////////////////////////////////////////////////////////////////
-page name: "messaging"
-def messaging(){
-    dynamicPage(name: "messaging", title: "", uninstall: false){    
-        section ("Audio Messages", hideWhenEmpty: true){
-            input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false, submitOnChange: true 
-            input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
-            if (sonosDevice) {
-                input "volume", "number", title: "Temporarily change volume", description: "0-100% (default value = 30%)", required: false
-            }  
-            if (synthDevice || sonosDevice) {
-                input "pRunMsg", "Text", title: "Play this predetermined message when this profile executes...", required: false
-                input "pPreMsg", "text", title: "Play this message before your spoken message...", defaultValue: none, submitOnChange: true, required: false 
-                input "pDisableALLProfile", "bool", title: "Disable Audio Output on the Remote Speaker(s)?", required: false
-            }
-        }    
-        section ("SMS Messages" ) {
-            input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
-            if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-            input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
-            if (sendText){      
-                paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
-                input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
-                input "pRunTextMsg", "Text", title: "Send this predetermined text when this profile executes...", required: false
-                input "pPreTextMsg", "text", title: "Append this text before the text message...", defaultValue: none, required: false 
-            }
-        }    
-        section ("Push Messages") {
-            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false
-            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false
-        }        
-        section ("Alexa Responses") {
-            input "pAlexaCustResp", "text", title: "Custom Response from Alexa...", required: false, defaultValue: none
-            input "pAlexaRepeat", "bool", title: "Alexa repeats the sent message to the sender as the response...", defaultValue: false, submitOnChange: true
-            if (pAlexaRepeat) {			
-                if (pAlexaRepeat && pAlexaCustResp){
-                    paragraph 	"NOTE: only one custom Alexa response can"+
-                        " be delivered at once. Please only enable Custom Response OR Repeat Message"
-                }				
-            }
-            input "pContCmdsProfile", "bool", title: "Disable Conversation? (Alexa no longer prompts for additional commands, after a message is sent to a remote speaker, except for 'try again' if an error ocurs)", defaultValue: false
-            input "pDisableAlexaProfile", "bool", title: "Disable Alexa Feedback Responses (silence Alexa - overrides all other Alexa Options)?", defaultValue: false
-        }                 
-    }
-}
-//////////////////////////////////////////////////////////////////////////////
-/////////// CONTROL AND FEEDBACK 
-//////////////////////////////////////////////////////////////////////////////
-page name: "feedback"
-def feedback(){
-    dynamicPage(name: "feedback", title: "", uninstall: false){  
+page name: "devices"
+def devices(){
+    dynamicPage(name: "devices", title: "", uninstall: false){  
         section("") {
             href "pDevices", title: "Main Profile Control and Feedback", params: [type: "f"]//, description: pRestrictComplete(), state: pRestrictSettings()
             href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
-            href "mDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
+            href "pDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
         }        
     }
 }
-//////////////////////////////////////////////////////////////////////////////
-/////////// DEVICE GROUPS CONTROL
-//////////////////////////////////////////////////////////////////////////////
-def pGroups() {
-	rebuildGroups()
-	dynamicPage(name: "pGroups", title: "Groups", install: false, uninstall: false) {
-		log.debug "state.groups = ${state.groups}"
-        def groups = state.groups
-		section("") {
-			href "pGroup", title: "Add a new Group", required: false, params: [groupId: 0]
-		}
-		if (groups.size()) {
-			section("Groups") {
-				for (group in groups) {
-					href "pGroup", title: group.name, required: false, params: [groupId: group.groupId]
-				}
-			}
-		}
-	}
-}
-
-def pGroup(params) {
-	log.debug "params = ${params}"
-	def groupId = (int) (params?.groupId != null ? params.groupId : state.groupId)
-	if (!groupId) {
-		//generate new group id
-		groupId = 1
-		def existingGroups = settings.findAll{ it.key.startsWith("groupId") }
-		for (group in existingGroups) {
-			def id = tap.key.replace("groupId", "")
-			if (id.isInteger()) {
-				id = groupId.toInteger()
-				if (id >= groupId) groupId = (int) (id + 1)
-			}
-		}
-	}
-	state.groupId = groupId
-	dynamicPage(name: "pGroup", title: "Group", install: false, uninstall: false) {
-		section("") {
-        	input "groupId${groupId}", "string", title: "Name", description: "Enter a name for this Group", required: false, defaultValue: "Group #${groupId}"
-			href "pDevices", title: "Groups Control and Feedback", params: [type: "g"]	
-		}
-	}
-}
-
-private rebuildGroups() {
-	def groups = settings.findAll{it.key.startsWith("groupId")}
-	state.groups = []
-	for(group in groups) {
-		def groupId = group.key.replace("groupId", "")
-		if (groupId.isInteger()) {
-			if (group.value != null) {
-				def name = group.value
-				if (name) {
-					def t = [
-						groupId: groupId.toInteger(),
-						name: name,
-					]
-					state.groups.push t
-				}
-			}
-		}
-	}
-}
-/*
-page name: "pGroups"
-def pGroups() {
-    dynamicPage(name: "pGroups", title: "",install: false, uninstall: false) {
-    	section ("Name Your Group") {
-            label title:"Group Name", required:true
-        } 
-        section ("Group These Switches", hideWhenEmpty: true){
-            input "gSwitches", "capability.switch", title: "Dimmers and Switches...", multiple: true, required: false, submitOnChange: true
-            if (gSwitches) {
-                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa, turn on/off the lights in the " + app.label
-            }
-            input "gDisable", "capability.switch", title: "Disable Automation Switches (disable = off, enable = on)", multiple: true, required: false, submitOnChange: true
-            if (gDisable) {
-                input "reverseDisable", "bool", title: "Reverse Disable Command (disable = on, enable = off)", required: false, defaultValue: false
-                paragraph "You can now use this group by speaking commands to Alexa:  \n" +
-                    " E.G: Disable Automation in the " + app.label
-            }
-            input "gFans", "capability.switch", title: "Ceiling Fans...", multiple: true, required: false, submitOnChange: true
-            if (gFans) {
-                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa turn on/off the fan in the " + app.label
-            }
-            input "gHues", "capability.colorControl", title: "Colored Lights...", multiple: true, required: false, submitOnChange: true
-            if (gHues) {
-                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa set the color to red in the " + app.label
-            }
-        }
-        section ("Vents and Window Coverings", hideWhenEmpty: true){ 
-            input "gVents", "capability.switchLevel", title: "Smart Vent(s)...", multiple: true, required: false, submitOnChange: true
-            if (sVent) {
-                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa open/close the vents in the " + app.label
-            }
-            input "gShades",  "capability.windowShade", title: "Window Covering Devices...", multiple: true, required: false   
-            if (gShades) {
-                paragraph "You can now control this group by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa open/close the blinds/curtains/window coverings in the " + app.label
-            }
-        }                
-        section ("Custom Groups", hideWhenEmpty: true){
-            href "gCustom", title: "Create Custom Groups", description: "Tap to set"
-        }
-        section ("Media - Playing Music" , hideWhenEmpty: true){
-            input "sMedia", "capability.mediaController", title: "Use This Media Controller", multiple: false, required: false, submitOnChange: true
-            if (sMedia) {
-                paragraph "You can now control this device by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa start < Harmony Activity Name > in the " + app.label
-            }
-            if (sSpeaker || sSynth) {
-                paragraph "You can now control this device by speaking commands to Alexa:  \n" +
-                    " E.G: Alexa mute/unmute < Media Device Name > in the " + app.label
-            }
-            input "sSpeaker", "capability.musicPlayer", title: "Use This Media Player Device For Volume Control", required: false, multiple: false, submitOnChange: true
-            input "sSynth", "capability.speechSynthesis", title: "Use This Speech Synthesis Capable Device", multiple: false, required: false, submitOnChange: true
-        }  
-    }
-}
-page name: "gCustom"    
-def gCustom(){
-    dynamicPage(name: "gCustom", title: "",install: false, uninstall: false) {
-        section ("Create a Group", hideWhenEmpty: true){
-            input "gCustom1", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-            input "gCustom1N", "text", title: "Name this Group...", multiple: false, required: false
-        }
-        if (gCustom1) {
-            section ("+ Create another Group", hideWhenEmpty: true){
-                input "gCustom2", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                input "gCustom2N", "text", title: "Name this Group...", multiple: false, required: false
-            }
-        }
-        if (gCustom2) {
-            section ("+ Create another Group", hideWhenEmpty: true){
-                input "gCustom3", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                input "gCustom3N", "text", title: "Name this Group...", multiple: false, required: false
-            }
-        }
-        if (gCustom3) {    
-            section ("+ Create another Group", hideWhenEmpty: true){
-                input "gCustom4", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                input "gCustom4N", "text", title: "Name this Group...", multiple: false, required: false
-            }
-        }
-        if (gCustom4) {    
-            section ("+ Create another Group", hideWhenEmpty: true){
-                input "gCustom5", "capability.switch", title: "Select Switches...", multiple: true, required: false, submitOnChange: true
-                input "gCustom5N", "text", title: "Name this Group...", multiple: false, required: false
-            }
-        }
-    }
-}
-*/
 //////////////////////////////////////////////////////////////////////////////
 /////////// INDIVIDUAL DEVICE CONTROL AND FEEDBACK 
 //////////////////////////////////////////////////////////////////////////////
@@ -339,6 +155,68 @@ def pDevices(params){
         }
 	}
 }   
+//////////////////////////////////////////////////////////////////////////////
+/////////// GROUP CONTROL AND FEEDBACK
+//////////////////////////////////////////////////////////////////////////////
+def pGroups() {
+	rebuildGroups()
+	dynamicPage(name: "pGroups", title: "Groups", install: false, uninstall: false) {
+		log.debug "state.groups = ${state.groups}"
+        def groups = state.groups
+		section("") {
+			href "pGroup", title: "Add a new Group", required: false, params: [groupId: 0]
+		}
+		if (groups.size()) {
+			section("Groups") {
+				for (group in groups) {
+					href "pGroup", title: group.name, required: false, params: [groupId: group.groupId]
+				}
+			}
+		}
+	}
+}
+def pGroup(params) {
+	log.debug "params = ${params}"
+	def groupId = (int) (params?.groupId != null ? params.groupId : state.groupId)
+	if (!groupId) {
+		//generate new group id
+		groupId = 1
+		def existingGroups = settings.findAll{ it.key.startsWith("groupId") }
+		for (group in existingGroups) {
+			def id = tap.key.replace("groupId", "")
+			if (id.isInteger()) {
+				id = groupId.toInteger()
+				if (id >= groupId) groupId = (int) (id + 1)
+			}
+		}
+	}
+	state.groupId = groupId
+	dynamicPage(name: "pGroup", title: "Group", install: false, uninstall: false) {
+		section("") {
+        	input "groupId${groupId}", "string", title: "Name", description: "Enter a name for this Group", required: false, defaultValue: "Group #${groupId}"
+			href "pDevices", title: "Groups Control and Feedback", params: [type: "g"]	
+		}
+	}
+}
+private rebuildGroups() {
+	def groups = settings.findAll{it.key.startsWith("groupId")}
+	state.groups = []
+	for(group in groups) {
+		def groupId = group.key.replace("groupId", "")
+		if (groupId.isInteger()) {
+			if (group.value != null) {
+				def name = group.value
+				if (name) {
+					def t = [
+						groupId: groupId.toInteger(),
+						name: name,
+					]
+					state.groups.push t
+				}
+			}
+		}
+	}
+}
 //////////////////////////////////////////////////////////////////////////////
 /////////// KEYPADS, SHM, GARAGE DOORS, AND VIRTUAL PERSON ACTIONS 
 //////////////////////////////////////////////////////////////////////////////
@@ -445,136 +323,9 @@ def pGarageDoorNotify() {
             }
         }
     }
-}   
-//////////////////////////////////////////////////////////////////////////////
-/////////// PROFILE DEFAULTS 
-//////////////////////////////////////////////////////////////////////////////
-page name: "mDefaults"
-def mDefaults(){
-    dynamicPage(name: "mDefaults", title: "", uninstall: false){
-        section ("General Control") {            
-            input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
-            input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
-            input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false						
-        }
-        section ("Fan Control") {            
-            input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
-            input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
-            input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
-            input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
-        }
-        section ("Activity Defaults") {            
-            input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
-            input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
-        }
-        section ("Alexa Voice Settings") {            
-            input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
-            input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
-            input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
-        }
-        /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        section ("HVAC Filters Replacement Reminders", hideWhenEmpty: true, hideable: true, hidden: false) {
-            input "cFilterReplacement", "number", title: "Alexa Automatically Schedules HVAC Filter Replacement in this number of days (default is 90 days)", defaultValue: 90, required: false                        
-            input "cFilterSynthDevice", "capability.speechSynthesis", title: "Send Audio Notification when due, to this Speech Synthesis Type Device(s)", multiple: true, required: false
-            input "cFilterSonosDevice", "capability.musicPlayer", title: "Send Audio Notification when due, to this Sonos Type Device(s)", required: false, multiple: true   
-            if (cFilterSonosDevice) {
-                input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
-            }
-            if (location.contactBookEnabled){
-                input "recipients", "contact", title: "Send Text Notification when due, to this recipient(s) ", multiple: true, required: false
-            }
-            else {      
-                input name: "sms", title: "Send Text Notification when due, to this phone(s) ", type: "phone", required: false
-                paragraph "You may enter multiple phone numbers separated by comma (E.G. 8045551122,8046663344)"
-                input "push", "bool", title: "Send Push Notification too?", required: false, defaultValue: false
-            }
-        }
-        ****************************************************************************************************************/
-    }
-}            	
-//////////////////////////////////////////////////////////////////////////////
-/////////// PROFILE ACTIONS - TRIGGERED WHEN PROFILE EXECUTES 
-//////////////////////////////////////////////////////////////////////////////
-page name: "pActions"
-def pActions() {
-    dynamicPage(name: "pActions", uninstall: false) {
-        def routines = location.helloHome?.getPhrases()*.label 
-        if (routines) {routines.sort()}
-        section ("Trigger these lights and/or execute these routines when the Profile runs...") {
-            href "pDeviceControl", title: "Select Devices...", description: pDevicesComplete() , state: pDevicesSettings()
-            input "pMode", "enum", title: "Choose Mode to change to...", options: location.modes.name.sort(), multiple: false, required: false 
-            def actions = location.helloHome?.getPhrases()*.label 
-            if (actions) {
-                actions.sort()
-                input "pRoutine", "enum", title: "Select a Routine to execute", required: false, options: actions, multiple: false, submitOnChange: true
-                if (pRoutine) {
-                    input "pRoutine2", "enum", title: "Select a Second Routine to execute", required: false, options: actions, multiple: false
-                }
-            }
-            input "shmState", "enum", title: "Set Smart Home Monitor to...", options:["stay":"Armed Stay","away":"Armed Away","off":"Disarmed"], multiple: false, required: false, submitOnChange: true
-            if (shmState) {
-                input "shmStateKeypads", "capability.lockCodes",  title: "Send status change to these keypads...", multiple: true, required: false, submitOnChange: true
-            }
-            input "pVirPer", "bool", title: "Toggle the Virtual Person State Automatically when this Profile Runs", default: false, submitOnChange: true, required: false
-        }
-    }
 }
 //////////////////////////////////////////////////////////////////////////////
-/////////// WEATHER SETTINGS  
-//////////////////////////////////////////////////////////////////////////////
-page name: "pWeatherConfig"
-def pWeatherConfig() {
-	dynamicPage(name: "pWeatherConfig") {
-		section () {
-    		input "wMetric", "bool", title: "Report Weather In Metric Units\n(°C / km/h)", required: false
-            input "wZipCode", "text", title: "Zip Code (If Location Not Set)", required: false
-		}
-	}
-}  
-//////////////////////////////////////////////////////////////////////////////
-/////////// ECHOSISTANT MAILBOX  
-//////////////////////////////////////////////////////////////////////////////
-page name: "mailbox"
-def mailbox(){
-    dynamicPage(name: "mailbox", title: "", uninstall: false){  
-        section("") {
-            paragraph "This space will be filled at a later time"
-            href "mPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
-            href "mFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
-        }        
-    }
-}
-//////////////////////////////////////////////////////////////////////////////
-/////////// PET NOTES            
-//////////////////////////////////////////////////////////////////////////////
-page name: "mPetNotes" 
-def mPetNotes(){
-    dynamicPage(name: "mPetNotes", title: "", install: false, uninstall: false) {
-        section ("Family Pets Notes") {
-            input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
-            if (petNoteAct) {
-                input "litterBoxAct", "bool", title: "Does ${app.label} use a litter box?", required: false, default: false, submitOnChange: true
-                paragraph "Your Family Pet's notes are now active for ${app.label}."
-                paragraph "The following notes have been set for ${app.label}:"
-                paragraph "${state.petShotNotify}"
-                paragraph "${state.litterBoxCleaned}"
-            }
-            input "pSMS", "bool", title: "Configure Notifications for ${app.label}", required: false, defaultValue: false, submitOnChange: true
-            if (pSMS) {
-                input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
-                if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
-                input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true 
-                if (psendText){      
-                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
-                    input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
-                }
-                input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
-            }
-        }    
-    }	    
-}                	
-//////////////////////////////////////////////////////////////////////////////
-/////////// VIRTUAL PRESENCE HANDLERS           
+/////////// VIRTUAL PRESENCE           
 //////////////////////////////////////////////////////////////////////////////
 page name: "pPerson"
 def pPerson(){
@@ -607,7 +358,7 @@ def virtualPerson() {
     else {
         log.trace "NOTICE!!! Found that the EVPD ${d.displayName} already exists. Only one device per profile permitted"
     }
-}  
+} 
 //// DELETE VIRTUAL PRESENCE
 page name: "pPersonDelete"
 def pPersonDelete(){
@@ -619,75 +370,252 @@ def pPersonDelete(){
         removeChildDevices(getAllChildDevices())
     }
 }
-
 private removeChildDevices(delete) {
     log.debug "The Virtual Person Device '${app.label}' has been deleted from your SmartThings environment"
     delete.each {
         deleteChildDevice(it.deviceNetworkId)
     }
 }  
-
-//// TOGGLE VP STATUS WHEN PROFILE EXECUTES
-private pVirToggle() {
-    def vp = getChildDevice("${app.label}")
-    if(vp) {
-        if (vp?.currentValue('presence').contains('not')) {
-            message = "${app.label} has arrived"
-            vp.arrived()
+//////////////////////////////////////////////////////////////////////////////
+/////////// PROFILE DEFAULTS 
+//////////////////////////////////////////////////////////////////////////////
+page name: "pDefaults"
+def pDefaults(){
+    dynamicPage(name: "pDefaults", title: "", uninstall: false){
+        section ("General Control") {            
+            input "cLevel", "number", title: "Alexa Adjusts Light Levels by using a scale of 1-10 (default is +/-3)", defaultValue: 3, required: false
+            input "cVolLevel", "number", title: "Alexa Adjusts the Volume Level by using a scale of 1-10 (default is +/-2)", defaultValue: 2, required: false
+            input "cTemperature", "number", title: "Alexa Automatically Adjusts temperature by using a scale of 1-10 (default is +/-1)", defaultValue: 1, required: false						
         }
-        else if (vp?.currentValue('presence').contains('present')) {
-            message = "${app.label} has departed"
-            vp.departed()
+        section ("Fan Control") {            
+            input "cHigh", "number", title: "Alexa Adjusts High Level to 99% by default", defaultValue: 99, required: false
+            input "cMedium", "number", title: "Alexa Adjusts Medium Level to 66% by default", defaultValue: 66, required: false
+            input "cLow", "number", title: "Alexa Adjusts Low Level to 33% by default", defaultValue: 33, required: false
+            input "cFanLevel", "number", title: "Alexa Automatically Adjusts Ceiling Fans by using a scale of 1-100 (default is +/-33%)", defaultValue: 33, required: false
+        }
+        section ("Activity Defaults") {            
+            input "cLowBattery", "number", title: "Alexa Provides Low Battery Feedback when the Bettery Level falls below... (default is 25%)", defaultValue: 25, required: false
+            input "cInactiveDev", "number", title: "Alexa Provides Inactive Device Feedback when No Activity was detected for... (default is 24 hours) ", defaultValue: 24, required: false
+        }
+        section ("Alexa Voice Settings") {            
+            input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
+            input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
+            input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
         }
     }
-}
-/************************************************************************************************************
-		Smart Home Monitor Status Change when Profile Executes
-************************************************************************************************************/    
-def shmStateChange() {
-    if (shmState == "stay") {
-        sendArmStayCommand()
+} 
+//////////////////////////////////////////////////////////////////////////////
+/////////// OUTGOING MESSAGING   
+//////////////////////////////////////////////////////////////////////////////
+page name: "messaging"
+def messaging(){
+    dynamicPage(name: "messaging", title: "", uninstall: false){    
+        section ("Audio Messages", hideWhenEmpty: true){
+            input "synthDevice", "capability.speechSynthesis", title: "On this Speech Synthesis Type Devices", multiple: true, required: false, submitOnChange: true 
+            input "sonosDevice", "capability.musicPlayer", title: "On this Sonos Type Devices", required: false, multiple: true, submitOnChange: true    
+            if (sonosDevice) {
+                input "volume", "number", title: "Temporarily change volume", description: "0-100% (default value = 30%)", required: false
+            }  
+            if (synthDevice || sonosDevice) {
+                input "pRunMsg", "Text", title: "Play this predetermined message when this profile executes...", required: false
+                input "pPreMsg", "text", title: "Play this message before your spoken message...", defaultValue: none, submitOnChange: true, required: false 
+                input "pDisableALLProfile", "bool", title: "Disable Audio Output on the Remote Speaker(s)?", required: false
+            }
+        }    
+        section ("SMS Messages" ) {
+            input "sendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true   
+            if (sendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+            input "sendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true     
+            if (sendText){      
+                paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                input name: "sms", title: "Send text notification to (optional):", type: "phone", required: false
+                input "pRunTextMsg", "Text", title: "Send this predetermined text when this profile executes...", required: false
+                input "pPreTextMsg", "text", title: "Append this text before the text message...", defaultValue: none, required: false 
+            }
+        }    
+        section ("Push Messages") {
+            input "push", "bool", title: "Send Push Notification (optional)", required: false, defaultValue: false
+            input "notify", "bool", title: "Send message to Mobile App Notifications Tab (optional)", required: false, defaultValue: false
+        }        
+        section ("Alexa Responses") {
+            input "pAlexaCustResp", "text", title: "Custom Response from Alexa...", required: false, defaultValue: none
+            input "pAlexaRepeat", "bool", title: "Alexa repeats the sent message to the sender as the response...", defaultValue: false, submitOnChange: true
+            if (pAlexaRepeat) {			
+                if (pAlexaRepeat && pAlexaCustResp){
+                    paragraph 	"NOTE: only one custom Alexa response can"+
+                        " be delivered at once. Please only enable Custom Response OR Repeat Message"
+                }				
+            }
+            input "pContCmdsProfile", "bool", title: "Disable Conversation? (Alexa no longer prompts for additional commands, after a message is sent to a remote speaker, except for 'try again' if an error ocurs)", defaultValue: false
+            input "pDisableAlexaProfile", "bool", title: "Disable Alexa Feedback Responses (silence Alexa - overrides all other Alexa Options)?", defaultValue: false
+        }                 
     }
-    if (shmState == "away") {
-        sendArmAwayCommand()
-    }
-    if (shmState == "off") {
-        sendDisarmedCommand()
-    }
-}    
-
-def sendArmAwayCommand() {
-    if (shmStateKeypads) {
-        shmStateKeypads?.each() { it.acknowledgeArmRequest(3) }
-    }
-    sendSHMEvent("away")
-}
-    
-def sendDisarmedCommand() {
-    if (shmStateKeypads) {
-        shmStateKeypads?.each() { it.acknowledgeArmRequest(0) }
-    }
-    sendSHMEvent("off")
-}
-    
-def sendArmStayCommand() {
-    if (shmStateKeypads) {
-        shmStateKeypads?.each() { it.acknowledgeArmRequest(1) }
-    }
-    sendSHMEvent("stay")
-}
-
-private sendSHMEvent1(String shmState) {
-    def event = [
-        name:"alarmSystemStatus",
-        value: shmState,
-        displayed: true,
-        description: "System Status is ${shmState}"
-    ]
-    sendLocationEvent(event)
 }
 //////////////////////////////////////////////////////////////////////////////
-/////////// PROFILE DEVICE ACTIONS - TRIGGERED WHEN PROFILE EXECUTES 
+/////////// ECHOSISTANT MAILBOX  
+//////////////////////////////////////////////////////////////////////////////
+page name: "mailbox"
+def mailbox(){
+    dynamicPage(name: "mailbox", title: "", uninstall: false){  
+        section("") {
+            paragraph "This space will be filled at a later time"
+            href "pPetNotes", title: "Configure the Pets Notes"//, description: mPetNotesD(), state: mPetNotesS()
+            href "pFamilyNotes", title: "Configure the Family Notes"//, description: mKidNotesD(), state: mKidNotesS()
+        }        
+    }
+}
+//////////////////////////////////////////////////////////////////////////////
+/////////// QUICK NOTES            
+//////////////////////////////////////////////////////////////////////////////
+page name: "pPetNotes" 
+def pPetNotes(){
+    dynamicPage(name: "pPetNotes", title: "", install: false, uninstall: false) {
+        section ("Family Pets Notes") {
+            input "petNoteAct", "bool", title: "Activate your Pets Notes", required: false, default: false, submitOnChange: true
+            if (petNoteAct) {
+                input "litterBoxAct", "bool", title: "Does ${app.label} use a litter box?", required: false, default: false, submitOnChange: true
+                paragraph "Your Family Pet's notes are now active for ${app.label}."
+                paragraph "The following notes have been set for ${app.label}:"
+                paragraph "${state.petShotNotify}"
+                paragraph "${state.litterBoxCleaned}"
+            }
+            input "pSMS", "bool", title: "Configure Notifications for ${app.label}", required: false, defaultValue: false, submitOnChange: true
+            if (pSMS) {
+                input "psendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
+                if (psendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+                input "psendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true 
+                if (psendText){      
+                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                    input name: "psms", title: "Send text notification to (optional):", type: "phone", required: false
+                }
+                input "pPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
+            }
+        }    
+    }	    
+}                	
+page name: "pFamilyNotes" 
+def pFamilyNotes(){
+    dynamicPage(name: "pFamilyNotes", title: "", install: false, uninstall: false) {
+        section ("Family Notes") {
+            input "famNoteAct", "bool", title: "Activate your Family Notes", required: false, default: false, submitOnChange: true
+            if (famNoteAct) {
+                input "litterBoxAct", "bool", title: "Does ${app.label} use a litter box?", required: false, default: false, submitOnChange: true
+                paragraph "Your Family notes are now active for ${app.label}."
+                paragraph "The following notes have been set for ${app.label}:"
+                paragraph "${state.petShotNotify}"
+                paragraph "${state.litterBoxCleaned}"
+            }
+            input "fSMS", "bool", title: "Configure Notifications for ${app.label}", required: false, defaultValue: false, submitOnChange: true
+            if (fSMS) {
+                input "fSendContactText", "bool", title: "Enable Text Notifications to Contact Book (if available)", required: false, submitOnChange: true
+                if (fSendContactText) input "recipients", "contact", title: "Send text notifications to (optional)", multiple: true, required: false
+                input "fSendText", "bool", title: "Enable Text Notifications to non-contact book phone(s)", required: false, submitOnChange: true 
+                if (fSendText){      
+                    paragraph "You may enter multiple phone numbers separated by comma to deliver the Alexa message as a text and a push notification. E.g. 8045551122,8046663344"
+                    input name: "fsms", title: "Send text notification to (optional):", type: "phone", required: false
+                }
+                input "fPush", "bool", title: "Do you want to send a Push message when notes are made?", required: false, defaultValue: false, submitOnChange: true
+            }
+        }    
+    }	    
+}   
+//////////////////////////////////////////////////////////////////////////////
+/////////// PROFILE RESTRICTIONS
+//////////////////////////////////////////////////////////////////////////////
+page name: "pRestrict"
+def pRestrict(){
+    dynamicPage(name: "pRestrict", title: "", uninstall: false) {
+        section ("Mode Restrictions") {
+            input "modes", "mode", title: "Only when mode is", multiple: true, required: false
+        }        
+        section ("Days - Audio only on these days"){	
+            input "days", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
+                "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        }
+        section ("Time - Audio only during these times"){
+            href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
+        }   
+    }
+}
+page name: "certainTime"
+def certainTime() {
+    dynamicPage(name:"certainTime",title: "Only during a certain time", uninstall: false) {
+        section("Beginning at....") {
+            input "startingX", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
+            if(startingX in [null, "A specific time"]) input "starting", "time", title: "Start time", required: false, submitOnChange: true
+            else {
+                if(startingX == "Sunrise") input "startSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                else if(startingX == "Sunset") input "startSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                    }
+        }
+        section("Ending at....") {
+            input "endingX", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
+            if(endingX in [null, "A specific time"]) input "ending", "time", title: "End time", required: false, submitOnChange: true
+            else {
+                if(endingX == "Sunrise") input "endSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                else if(endingX == "Sunset") input "endSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
+                    }
+        }
+    }
+}
+//////////////////////////////////////////////////////////////////////////////
+/////////// SECURITY - PIN SETTINGS 
+//////////////////////////////////////////////////////////////////////////////
+page name: "pSecurity"
+	def pSecurity(){
+		dynamicPage(name: "pSecurity", title: "",install: false, uninstall: false) {
+			section ("Set PIN Number to Unlock Security Features") {
+            	input "cPIN", "password", title: "Use this PIN for ALL Alexa Controlled Controls", default: false, required: false, submitOnChange: true
+                	//input "cTempPIN", "password", title: "Guest PIN (expires in 24 hours)", default: false, required: false, submitOnChange: true
+        	}
+            section ("Configure Security Options for Alexa") {
+				def routines = location.helloHome?.getPhrases()*.label.sort()
+                input "cMiscDev", "capability.switch", title: "Allow these Switches to be PIN Protected...", multiple: true, required: false, submitOnChange: true
+                input "cRoutines", "enum", title: "Allow these Routines to be PIN Protected...", options: routines, multiple: true, required: false
+                input "uPIN_SHM", "bool", title: "Enable PIN for Smart Home Monitor?", default: false, submitOnChange: true
+                if(uPIN_SHM == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Security"} 
+                	input "uPIN_Mode", "bool", title: "Enable PIN for Location Modes?", default: false, submitOnChange: true
+                if(uPIN_Mode == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Location Modes"} 
+				if (cMiscDev) 			{input "uPIN_S", "bool", title: "Enable PIN for Switch(es)?", default: false, submitOnChange: true}
+               	if(uPIN_S == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Switches"} 
+               	if (cTstat) 			{input "uPIN_T", "bool", title: "Enable PIN for Thermostats?", default: false, submitOnChange: true}
+				if(uPIN_T == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Thermostats"}                             
+				if (cDoor || cRelay) 	{input "uPIN_D", "bool", title: "Enable PIN for Doors?", default: false, submitOnChange: true}
+				if(uPIN_D == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Doors"}                             
+				if (cLock) 				{input "uPIN_L", "bool", title: "Enable PIN for Locks?", default: false, submitOnChange: true}
+				if(uPIN_L == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Locks"}                             
+         	}
+		}
+	}
+//////////////////////////////////////////////////////////////////////////////
+/////////// PROFILE ACTIONS - TRIGGERED WHEN PROFILE EXECUTES 
+//////////////////////////////////////////////////////////////////////////////
+page name: "pActions"
+def pActions() {
+    dynamicPage(name: "pActions", uninstall: false) {
+        def routines = location.helloHome?.getPhrases()*.label 
+        if (routines) {routines.sort()}
+        section ("Trigger these lights and/or execute these routines when the Profile runs...") {
+            href "pDeviceControl", title: "Select Devices...", description: pDevicesComplete() , state: pDevicesSettings()
+            input "pMode", "enum", title: "Choose Mode to change to...", options: location.modes.name.sort(), multiple: false, required: false 
+            def actions = location.helloHome?.getPhrases()*.label 
+            if (actions) {
+                actions.sort()
+                input "pRoutine", "enum", title: "Select a Routine to execute", required: false, options: actions, multiple: false, submitOnChange: true
+                if (pRoutine) {
+                    input "pRoutine2", "enum", title: "Select a Second Routine to execute", required: false, options: actions, multiple: false
+                }
+            }
+            input "shmState", "enum", title: "Set Smart Home Monitor to...", options:["stay":"Armed Stay","away":"Armed Away","off":"Disarmed"], multiple: false, required: false, submitOnChange: true
+            if (shmState) {
+                input "shmStateKeypads", "capability.lockCodes",  title: "Send status change to these keypads...", multiple: true, required: false, submitOnChange: true
+            }
+            input "pVirPer", "bool", title: "Toggle the Virtual Person State Automatically when this Profile Runs", default: false, submitOnChange: true, required: false
+        }
+    }
+}
+//////////////////////////////////////////////////////////////////////////////
+/////////// DEVICE ACTIONS CONTROL 
 //////////////////////////////////////////////////////////////////////////////
 page name: "pDeviceControl"
 def pDeviceControl() {
@@ -771,77 +699,54 @@ def pDeviceControl() {
             }
         }
     }
-} 	   
+} 
 //////////////////////////////////////////////////////////////////////////////
-/////////// PROFILE RESTRICTIONS
+/////////// WEATHER SETTINGS  
 //////////////////////////////////////////////////////////////////////////////
-page name: "pSecurity"
-            def pSecurity(){
-                dynamicPage(name: "pSecurity", title: "",install: false, uninstall: false) {
-                section ("Set PIN Number to Unlock Security Features") {
-                    input "cPIN", "password", title: "Use this PIN for ALL Alexa Controlled Controls", default: false, required: false, submitOnChange: true
-                    //input "cTempPIN", "password", title: "Guest PIN (expires in 24 hours)", default: false, required: false, submitOnChange: true
-                }
-
-                    section ("Configure Security Options for Alexa") {
-                    	def routines = location.helloHome?.getPhrases()*.label.sort()
-                        input "cMiscDev", "capability.switch", title: "Allow these Switches to be PIN Protected...", multiple: true, required: false, submitOnChange: true
-                        input "cRoutines", "enum", title: "Allow these Routines to be PIN Protected...", options: routines, multiple: true, required: false
-                        input "uPIN_SHM", "bool", title: "Enable PIN for Smart Home Monitor?", default: false, submitOnChange: true
-                            if(uPIN_SHM == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Security"} 
-                        input "uPIN_Mode", "bool", title: "Enable PIN for Location Modes?", default: false, submitOnChange: true
-                            if(uPIN_Mode == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Location Modes"} 
-							if (cMiscDev) 			{input "uPIN_S", "bool", title: "Enable PIN for Switch(es)?", default: false, submitOnChange: true}
-                            	if(uPIN_S == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Switches"} 
-                            if (cTstat) 			{input "uPIN_T", "bool", title: "Enable PIN for Thermostats?", default: false, submitOnChange: true}
-                            	if(uPIN_T == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Thermostats"}                             
-                            if (cDoor || cRelay) 	{input "uPIN_D", "bool", title: "Enable PIN for Doors?", default: false, submitOnChange: true}
-                            	if(uPIN_D == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Doors"}                             
-                            if (cLock) 				{input "uPIN_L", "bool", title: "Enable PIN for Locks?", default: false, submitOnChange: true}
-                            	if(uPIN_L == true)  {paragraph "You can also say: Alexa enable/disable the pin number for Locks"}                             
-                    }
-                }
-                }
-
-
-page name: "pRestrict"
-def pRestrict(){
-    dynamicPage(name: "pRestrict", title: "", uninstall: false) {
-        section ("Mode Restrictions") {
-            input "modes", "mode", title: "Only when mode is", multiple: true, required: false
-        }        
-        section ("Days - Audio only on these days"){	
-            input "days", title: "Only on certain days of the week", multiple: true, required: false, submitOnChange: true,
-                "enum", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        }
-        section ("Time - Audio only during these times"){
-            href "certainTime", title: "Only during a certain time", description: timeIntervalLabel ?: "Tap to set", state: timeIntervalLabel ? "complete" : null
-        }   
-    }
+page name: "pWeatherConfig"
+def pWeatherConfig() {
+	dynamicPage(name: "pWeatherConfig") {
+		section () {
+    		input "wMetric", "bool", title: "Report Weather In Metric Units\n(°C / km/h)", required: false
+            input "wZipCode", "text", title: "Zip Code (If Location Not Set)", required: false
+		}
+	}
 }
-page name: "certainTime"
-def certainTime() {
-    dynamicPage(name:"certainTime",title: "Only during a certain time", uninstall: false) {
-        section("Beginning at....") {
-            input "startingX", "enum", title: "Starting at...", options: ["A specific time", "Sunrise", "Sunset"], required: false , submitOnChange: true
-            if(startingX in [null, "A specific time"]) input "starting", "time", title: "Start time", required: false, submitOnChange: true
-            else {
-                if(startingX == "Sunrise") input "startSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                else if(startingX == "Sunset") input "startSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                    }
-        }
-        section("Ending at....") {
-            input "endingX", "enum", title: "Ending at...", options: ["A specific time", "Sunrise", "Sunset"], required: false, submitOnChange: true
-            if(endingX in [null, "A specific time"]) input "ending", "time", title: "End time", required: false, submitOnChange: true
-            else {
-                if(endingX == "Sunrise") input "endSunriseOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                else if(endingX == "Sunset") input "endSunsetOffset", "number", range: "*..*", title: "Offset in minutes (+/-)", required: false, submitOnChange: true
-                    }
-        }
-    }
+//////////////////////////////////////////////////////////////////////////////
+/////////// SKILL CONFIGURATION  
+//////////////////////////////////////////////////////////////////////////////
+page name: "pSkillConfig"
+def pSkillConfig() {
+	dynamicPage(name: "pSkillConfig") {
+		section () {
+        def url = "${getApiServerUrl()}/api/smartapps/installations/${app.id}/skillConfig?access_token=${state.accessToken}"
+		paragraph ("Grab skill details from here")
+        href "", title: "Open Skill Settings in a Browser", style: "external", url: url, required: false, description: "Click here" 
+		}
+	}
 }
-
-
+/*************************************************************************************************************
+   DATA MAPPING
+************************************************************************************************************/
+mappings {
+	path("/skill") {action: [GET: "skillConfig"]}	
+}
+/*************************************************************************************************************
+   SKILL CONFIGURATION HANDLER
+************************************************************************************************************/
+def skillConfig() {
+	def html = """
+			<!DOCTYPE HTML>
+				<html>
+					<head><title>Intent Schema</title></head>
+						<body>	<p>"json formatted text goes here"  </p></body>
+                        		<p>"json formatted text goes here"  </p>
+					<head><title>Sample Utterances</title></head>
+						<body>	<p>" more json formatted text goes here" </p></body>                        
+                </html>
+		"""
+	render contentType: "text/html", data: html                             
+}
 /************************************************************************************************************
 		Base Process
 ************************************************************************************************************/    
@@ -2438,8 +2343,23 @@ def ttsActions(tts) {
         else if (push) {
         	sendPushMessage(tts)
             }
-}
-        
+}      
+/***********************************************************************************************************************
+	TOGGLE VP STATUS WHEN PROFILE EXECUTES
+***********************************************************************************************************************/
+private pVirToggle() {
+    def vp = getChildDevice("${app.label}")
+    if(vp) {
+        if (vp?.currentValue('presence').contains('not')) {
+            message = "${app.label} has arrived"
+            vp.arrived()
+        }
+        else if (vp?.currentValue('presence').contains('present')) {
+            message = "${app.label} has departed"
+            vp.departed()
+        }
+    }
+}    
 /***********************************************************************************************************************
     LAST MESSAGE HANDLER
 ***********************************************************************************************************************/
@@ -2448,6 +2368,54 @@ def getLastMessage() {
 	return  cOutputTxt 
 	if (parent.debug) log.debug "Sending last message to parent '${cOutputTxt}' "
 }
+
+/************************************************************************************************************
+		Smart Home Monitor Status Change when Profile Executes
+************************************************************************************************************/    
+def shmStateChange() {
+    if (shmState == "stay") {
+        sendArmStayCommand()
+    }
+    if (shmState == "away") {
+        sendArmAwayCommand()
+    }
+    if (shmState == "off") {
+        sendDisarmedCommand()
+    }
+}    
+def sendArmAwayCommand() {
+    if (shmStateKeypads) {
+        shmStateKeypads?.each() { it.acknowledgeArmRequest(3) }
+    }
+    sendSHMEvent("away")
+}
+    
+def sendDisarmedCommand() {
+    if (shmStateKeypads) {
+        shmStateKeypads?.each() { it.acknowledgeArmRequest(0) }
+    }
+    sendSHMEvent("off")
+}
+    
+def sendArmStayCommand() {
+    if (shmStateKeypads) {
+        shmStateKeypads?.each() { it.acknowledgeArmRequest(1) }
+    }
+    sendSHMEvent("stay")
+}
+
+private sendSHMEvent1(String shmState) {
+    def event = [
+        name:"alarmSystemStatus",
+        value: shmState,
+        displayed: true,
+        description: "System Status is ${shmState}"
+    ]
+    sendLocationEvent(event)
+}
+
+
+
 /***********************************************************************************************************************
     RESTRICTIONS HANDLER
 ***********************************************************************************************************************/
