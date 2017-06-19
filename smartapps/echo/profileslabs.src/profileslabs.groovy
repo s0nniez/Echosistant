@@ -35,32 +35,32 @@ private release() {
 preferences {
     page name: "mainProfilePage"
     //"Devices, Groups, Feedback, and Keypads"//
-    	page name: "devices"
-			page name: "pDevices"
-			page name: "pGroups"
-            	page name: "pGroup"
-            page name: "pKeypads"
-                page name: "pPerson"
-                	page name: "pPersonCreate"
-                    page name: "pPersonDelete"
-                page name: "pVPNotifyPage"
-                page name: "pShmNotifyPage"
-                page name: "pGarageDoorNotify"            
-            page name: "pDefaults"      
+    page name: "devices"
+    page name: "pDevices"
+    page name: "pGroups"
+    page name: "pGroup"
+    page name: "pKeypads"
+    page name: "pPerson"
+    page name: "pPersonCreate"
+    page name: "pPersonDelete"
+    page name: "pVPNotifyPage"
+    page name: "pShmNotifyPage"
+    page name: "pGarageDoorNotify"            
+    page name: "pDefaults"      
     //"Message Output and Alexa Responses"//	
-        page name: "messaging"
+    page name: "messaging"
     //"Echo Mailbox, Quick Notes, Reminders"//    
-    	page name: "mailbox"
-            page name: "pPetNotes"
-            page name: "pFamilyNotes"
+    page name: "mailbox"
+    page name: "pPetNotes"
+    page name: "pFamilyNotes"
     //SETTINGS//
-        page name: "pRestrict"
-    		page name: "certainTime"    
-    	page name: "pSecurity"    
-    	page name: "pActions"
-        	page name: "pDeviceControl"
-    	page name: "pWeatherConfig"
-    	page name: "pSkillConfig"
+    page name: "pRestrict"
+    page name: "certainTime"    
+    page name: "pSecurity"    
+    page name: "pActions"
+    page name: "pDeviceControl"
+    page name: "pWeatherConfig"
+    page name: "pSkillConfig"
 }
 //////////////////////////////////////////////////////////////////////////////
 /////////// MAIN PAGE
@@ -68,19 +68,19 @@ preferences {
 def mainProfilePage() {	
 	rebuildGroups()
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
-        section ("Name Your Profile") {
+        section("Name Your Profile") {
             label title:"Profile Name", required:true
         } 
         section("Devices, Groups, Feedback, and Keypads") {
-            href "devices", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()   
+            href "devices", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()  
         }  
         section("Message Output and Alexa Responses") {
             href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
         }              
-        section ("Echo Mailbox, Quick Notes, Reminders") {
+        section("Echo Mailbox, Quick Notes, Reminders") {
             href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
         }
-        section ("Settings" , hideable: true, hidden: true ) {
+        section("Settings" , hideable: true, hidden: true ) {
             href "pRestrict", title: "General Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
             href "pSecurity", title: "PIN Settings", description: pRestrictComplete(), state: pRestrictSettings()
 			href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
@@ -97,7 +97,7 @@ page name: "devices"
 def devices(){
     dynamicPage(name: "devices", title: "", uninstall: false){  
         section("") {
-            href "pDevices", title: "Main Profile Control and Feedback", params: [type: "f"]//, description: pRestrictComplete(), state: pRestrictSettings()
+            href "pDevices", title: "Main Profile Control and Feedback", params: [type: "p"]//, description: pRestrictComplete(), state: pRestrictSettings()
             href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
             href "pDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
@@ -111,40 +111,42 @@ page name: "pDevices"
 def pDevices(params){
     dynamicPage(name: "pDevices", title: "", uninstall: false){
         section("Locks") { //, hideWhenEmpty: true
-            input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
         section("Garage Doors") { //, hideWhenEmpty: true
-            input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false, submitOnChange: true
-        	input "${params.type}Relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
-				if (fRelay) input "cContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false 
+            input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
+        	input "${params.type}Relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false//, submitOnChange: true
+			if (fRelay) {
+            	input "${params.type}ContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
+        	}
         }
         section("Window Coverings") { //, hideWhenEmpty: true
-            input "${params.type}Shades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Shades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
         }
-        section ("Climate Control") { //, hideWhenEmpty: true
+        section("Climate Control") { //, hideWhenEmpty: true
             input "${params.type}Tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
             input "${params.type}Indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
             input "${params.type}OutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-            input "${params.type}Vents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Vents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
         }
-		section ("Water") { //, hideWhenEmpty: true
-			input "${params.type}Valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true, submitOnChange: true
-			input "${params.type}Water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true, submitOnChange: true
+		section("Water") { //, hideWhenEmpty: true
+			input "${params.type}Valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
+			input "${params.type}Water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
 		}
-		section ("Media"){ //, hideWhenEmpty: true
+		section("Media"){ //, hideWhenEmpty: true
 			input "${params.type}Speaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
 	     	input "${params.type}Synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
 			input "${params.type}Media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
     	}
         section("Switches, Dimmers") { //, hideWhenEmpty: true
-            input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false, submitOnChange: true
-            input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false, submitOnChange: true
-            input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
         }
         section("Feedback Only Devices") { //, hideWhenEmpty: true
 			input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-            input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false, submitOnChange: true
-            input "${params.type}Windows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false, submitOnChange: true
+            input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Windows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
             input "${params.type}Presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
             input "${params.type}Battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
 			input "${params.type}CO2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
@@ -182,7 +184,7 @@ def pGroup(params) {
 		groupId = 1
 		def existingGroups = settings.findAll{ it.key.startsWith("groupId") }
 		for (group in existingGroups) {
-			def id = tap.key.replace("groupId", "")
+			def id = group.key.replace("groupId", "")
 			if (id.isInteger()) {
 				id = groupId.toInteger()
 				if (id >= groupId) groupId = (int) (id + 1)
@@ -193,7 +195,7 @@ def pGroup(params) {
 	dynamicPage(name: "pGroup", title: "Group", install: false, uninstall: false) {
 		section("") {
         	input "groupId${groupId}", "string", title: "Name", description: "Enter a name for this Group", required: false, defaultValue: "Group #${groupId}"
-			href "pDevices", title: "Groups Control and Feedback", params: [type: "g"]	
+			href "pDevices", title: "Groups Control and Feedback", params: [type: "g${groupId}"]	
 		}
 	}
 }
@@ -206,11 +208,11 @@ private rebuildGroups() {
 			if (group.value != null) {
 				def name = group.value
 				if (name) {
-					def t = [
+					def g = [
 						groupId: groupId.toInteger(),
-						name: name,
+						name: name
 					]
-					state.groups.push t
+					state.groups.push g
 				}
 			}
 		}
@@ -2055,6 +2057,7 @@ String getCommand(text) {
 	return parseWordFound(text, commandMore) ? "increase" : parseWordFound(text, commandLess) ? "decrease" : parseWordFound(text, commandEnable) ? "on" : parseWordFound(text, commandDisable) ? "off" : null 
 }
 String getDeviceType(text) {
+	
 	return parseWordReturn(text, deviceType) ?: null
 }
 String runCommand(tts) { 
@@ -3515,7 +3518,6 @@ def fillColorSettings() {
 		[ name: "Yellow Green",				rgb: "#9ACD32",		h: 80,		s: 61,		l: 50,	],
 	]
 }
- 
 /************************************************************************************************************
    Keypads and Locks actions handler 
 ************************************************************************************************************/       
@@ -3555,102 +3557,102 @@ private execRoutine(armMode) {
   		}
 	}
 def codeEntryHandler(evt) {
-  	def codeEntered = evt.value as String
-  	def data = evt.data as String
-  	def armMode = ''
-  	def changedMode = 0
-  		if (codeEntered == "${shmCode}") {
-  			shmCodeEnteredHandler(evt)
-            }
-        if (codeEntered == "${doorCode1}" || codeEntered == "${doorCode2}" || codeEntered == "${doorCode3}") {
-        	garageCodeEnteredhandler(evt)
-            }
-        if (codeEntered == "${vpCode}") {
-        	virtualPersonControlHandler(evt)
-            }
-        }
+    def codeEntered = evt.value as String
+    def data = evt.data as String
+    def armMode = ''
+    def changedMode = 0
+    if (codeEntered == "${shmCode}") {
+        shmCodeEnteredHandler(evt)
+    }
+    if (codeEntered == "${doorCode1}" || codeEntered == "${doorCode2}" || codeEntered == "${doorCode3}") {
+        garageCodeEnteredhandler(evt)
+    }
+    if (codeEntered == "${vpCode}") {
+        virtualPersonControlHandler(evt)
+    }
+}
 def virtualPersonControlHandler(evt) {
-	def vp = getChildDevice("${app.label}")
-	def codeEntered = evt.value as String
-	def data = evt.data as String
-	def armMode = ''
-	def changedMode = 0
-  	def message = " "
+    def vp = getChildDevice("${app.label}")
+    def codeEntered = evt.value as String
+    def data = evt.data as String
+    def armMode = ''
+    def changedMode = 0
+    def message = " "
     def stamp = state.lastTime = new Date(now()).format("h:mm aa, dd-MMMM-yyyy", location.timeZone) 
     if(vp != null) {
-		if (codeEntered == "${vpCode}" && data == "3") {
-    		message = "${vp} checked in to the home using the ${evt.displayName} at ${stamp}"
-			vp.arrived()
+        if (codeEntered == "${vpCode}" && data == "3") {
+            message = "${vp} checked in to the home using the ${evt.displayName} at ${stamp}"
+            vp.arrived()
             if (notifyVPArrive) {
-            	sendtxt(message)
-                }
-                if (vpActions) {
-                ttsActions(tts)
-                }
+                sendtxt(message)
             }
-		if (codeEntered == "${vpCode}" && data == "0") {
+            if (vpActions) {
+                ttsActions(tts)
+            }
+        }
+        if (codeEntered == "${vpCode}" && data == "0") {
             message = "${vp} checked out of the home using the ${evt.displayName} at ${stamp}"
             vp.departed()
             if (notifyVPDepart) {
-            	sendtxt(message)
-                }
+                sendtxt(message)
             }
-		}
-        log.info "'${message}'"
-	}
+        }
+    }
+    log.info "'${message}'"
+}
 def garageCodeEnteredhandler(evt) {
-	def codeEntered = evt.value as String
-	def data = evt.data as String
-	def armMode = ''
-	def changedMode = 0
-  	def message = " "
+    def codeEntered = evt.value as String
+    def data = evt.data as String
+    def armMode = ''
+    def changedMode = 0
+    def message = " "
     def stamp = state.lastTime = new Date(now()).format("h:mm aa, dd-MMMM-yyyy", location.timeZone) 
     if (codeEntered == "${doorCode1}" && data == "0") {
         message = "${app.label} used the ${evt.displayName} to close the ${sDoor1} at ${stamp}"
         sDoor1?.close() 
         log.info "${message}"
-        }
-        else if (codeEntered == "${doorCode2}" && data == "0") {
-        	message = "The ${sDoor2} was closed by ${app.label} using the ${evt.displayName} at ${stamp}"
-            sDoor2?.close()
-            log.info "${message}"
-        	}
-            else if (codeEntered == "${doorCode3}" && data == "0") {
-            	message = "The ${sDoor3} was closed by ${app.label} using the ${evt.displayName} at ${stamp}"
-                sDoor3?.close()
-                log.info "${message}"
-                }
+    }
+    else if (codeEntered == "${doorCode2}" && data == "0") {
+        message = "The ${sDoor2} was closed by ${app.label} using the ${evt.displayName} at ${stamp}"
+        sDoor2?.close()
+        log.info "${message}"
+    }
+    else if (codeEntered == "${doorCode3}" && data == "0") {
+        message = "The ${sDoor3} was closed by ${app.label} using the ${evt.displayName} at ${stamp}"
+        sDoor3?.close()
+        log.info "${message}"
+    }
     else if (codeEntered == "${doorCode1}" && data == "3") {
         message = "The ${sDoor1} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
-    		sDoor1?.open()
-            if (gd1Actionss) {
-            	ttsActions(tts)
-                }
-            log.info "${message}"
-        	}
-        	else if (codeEntered == "${doorCode2}" && data == "3") {
-        		message = "The ${sDoor2} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
-            		sDoor2?.open()
-                    if (gd2Actions) {
-                    	ttsActions(tts) 
-                        }
-                    log.info "${message}"
-        			}
-            		else if (codeEntered == "${doorCode3}" && data == "3") {
-            			message = "The ${sDoor3} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
-							sDoor3?.open()
-                            if (gd3Actions) {
-                            	ttsActions(tts)
-                                }
-                            log.info "${message}"
-                			}
-                        if (garagePush) {
-                        	sendPush(message)
-                            }
-                		if (notifyGdoorOpen || notifyGdoorClose) {
-                			sendtxt(message)
-                    		}
-                        }                    
+        sDoor1?.open()
+        if (gd1Actionss) {
+            ttsActions(tts)
+        }
+        log.info "${message}"
+    }
+    else if (codeEntered == "${doorCode2}" && data == "3") {
+        message = "The ${sDoor2} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
+        sDoor2?.open()
+        if (gd2Actions) {
+            ttsActions(tts) 
+        }
+        log.info "${message}"
+    }
+    else if (codeEntered == "${doorCode3}" && data == "3") {
+        message = "The ${sDoor3} was opened by ${app.label} using the ${evt.displayName} at ${stamp}"
+        sDoor3?.open()
+        if (gd3Actions) {
+            ttsActions(tts)
+        }
+        log.info "${message}"
+    }
+    if (garagePush) {
+        sendPush(message)
+    }
+    if (notifyGdoorOpen || notifyGdoorClose) {
+        sendtxt(message)
+    }
+}                    
 def shmCodeEnteredHandler(evt) {
 	def codeEntered = evt.value as String
 	def data = evt.data as String
