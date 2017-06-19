@@ -61,7 +61,6 @@ preferences {
         	page name: "pDeviceControl"
     	page name: "pWeatherConfig"
     	page name: "pSkillConfig"
-
 }
 //////////////////////////////////////////////////////////////////////////////
 /////////// MAIN PAGE
@@ -719,7 +718,7 @@ page name: "pSkillConfig"
 def pSkillConfig() {
 	dynamicPage(name: "pSkillConfig") {
 		section () {
-        def url = "${getApiServerUrl()}/api/smartapps/installations/${app.id}/skillConfig?access_token=${state.accessToken}"
+        def url = "${getApiServerUrl()}/api/smartapps/installations/${app.id}/skill?access_token=${state.accessToken}"
 		paragraph ("Grab skill details from here")
         href "", title: "Open Skill Settings in a Browser", style: "external", url: url, required: false, description: "Click here" 
 		}
