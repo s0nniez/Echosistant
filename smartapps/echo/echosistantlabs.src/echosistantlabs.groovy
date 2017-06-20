@@ -298,8 +298,11 @@ def updated() {
     initialize()
 }
 def initialize() {
-	webCoRE_init()
-	subscriptions()
+	//webCoRE
+    webCoRE_init()
+	sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
+	state.esProfiles = state.esProfiles ? state.esProfiles : []
+    subscriptions()
     //GENERATE TOKEN
     if (!state.accessToken) {
         if (debug) log.error "Access token not defined. Attempting to refresh. Ensure OAuth is enabled in the SmartThings IDE."
@@ -346,6 +349,19 @@ private webCoRE_poll(){sendLocationEvent([name: webCoRE_handle(),value:'poll',is
 public  webCoRE_execute(pistonIdOrName,Map data=[:]){def i=(state.webCoRE?.pistons?:[]).find{(it.name==pistonIdOrName)||(it.id==pistonIdOrName)}?.id;if(i){sendLocationEvent([name:i,value:app.label,isStateChange:true,displayed:false,data:data])}}
 public  webCoRE_list(mode){def p=state.webCoRE?.pistons;if(p)p.collect{mode=='id'?it.id:(mode=='name'?it.name:[id:it.id,name:it.name])}}
 public  webCoRE_handler(evt){switch(evt.value){case 'pistonList':List p=state.webCoRE?.pistons?:[];Map d=evt.jsonData?:[:];if(d.id&&d.pistons&&(d.pistons instanceof List)){p.removeAll{it.iid==d.id};p+=d.pistons.collect{[iid:d.id]+it}.sort{it.name};state.webCoRE = [updated:now(),pistons:p];};break;case 'pistonExecuted':def cbk=state.webCoRE?.cbk;if(cbk&&evt.jsonData)"$cbk"(evt.jsonData);break;}}                       
+
+def getProfileList(){
+		def cList = getChildApps()*.label
+        log.info "cList = $cList"
+		state.esProfiles = state.esProfiles ? state.esProfiles + cList :  cList 
+        //return getChildApps()*.label
+		if (debug) log.debug "Refreshing Profiles for CoRE, $state.esProfiles" //${getChildApps()*.label}"
+        return state.esProfiles
+}
+def childUninstalled() {
+	if (debug) log.debug "Profile has been deleted, refreshing Profiles for CoRE, ${getChildApps()*.label}"
+    sendLocationEvent(name: "echoSistant", value: "refresh", data: [profiles: getProfileList()] , isStateChange: true, descriptionText: "echoSistant Profile list refresh")
+} 
 /************************************************************************************************************
 	RemindR Events
 ************************************************************************************************************/
@@ -354,7 +370,7 @@ def remindrHandler(evt) {
     log.warn "received event from RemindR with data: $evt.data"
     switch (evt.value) {
         case "refresh":
-        state.esProfiles = evt.jsonData && evt.jsonData?.profiles ? evt.jsonData.profiles : []
+        state.esProfiles = evt.jsonData && evt.jsonData?.profiles ? state.esProfiles + evt.jsonData.profiles : state.esProfiles ? state.esProfiles : []
         break
     }
 }
