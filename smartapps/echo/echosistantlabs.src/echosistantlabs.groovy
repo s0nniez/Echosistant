@@ -31,7 +31,7 @@ private def textVersion() {
     def text = "5.0"
 }
 private release() {
-    def text = "R.5.0.1c"
+    def text = "R.5.0.1d"
 }
 /**********************************************************************************************************************************************/
 preferences {   
@@ -52,15 +52,12 @@ page name: "mainParentPage"
 def mainParentPage() {	
     dynamicPage(name: "mainParentPage", title:"", install: true, uninstall:false) {
         section ("") { 
-
             href "mProfiles", title: "Configure Profiles", description: mRoomsD(), state: mRoomsS(),
                 image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_msg.png"
             href "mSettings", title: "General Settings", description: mSettingsD(), state: mSettingsS(),
                 image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"                               
-        }    
-
-        if (activateDashboard) {  
-            section ("Echo Dashboard") { 
+        }     
+		section ("Echo Dashboard", hideable: true, hidden: false) { 
                 //href "mBonus", title: 
                 def shmLocation = location.currentState("alarmSystemStatus")?.value
                 def shmStatus = shmLocation == "off" ? "Disarmed" : shmLocation == "away" ? "Armed (Away)" : shmLocation == "stay" ? "Armed (Stay)" : null
@@ -111,13 +108,11 @@ def mainParentPage() {
                 paragraph "The temperature of the ${tempSens4} is ${Sens4temp}°."
                 if (tempSens5)
                 paragraph "The temperature of the ${tempSens5} is ${Sens5temp}°."
-
                 href "scheduled", title: "Echo Mailbox", description: "Tap here to check your mailbox", state: complete
-
+                href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
             }
         }
     }
-}
 page name: "mProfiles"    
 def mProfiles() {
     dynamicPage (name: "mProfiles", title: "", install: true, uninstall: false) {
@@ -141,7 +136,15 @@ def mSettings(){
             href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
                 image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/wiki.png"
         } 
-        //Dashboard on main page
+		section ("Alexa Voice Settings") {            
+			input "mDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
+			input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
+			input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
+			input "mContCmds", "enum", title: "Continuation Commands", required: false, defaultValue: "Default" , submitOnChange: true, 
+           		options: ["Default","Short Answers","None"]
+        }
+        /*
+        //Dashboard moved on main page
         section ("") {
             input "activateDashboard", "bool", title: "Show Echo: DashBoard", required: false, default: false, submitOnChange: true
         }
@@ -150,6 +153,7 @@ def mSettings(){
                 href "mDashConfig", title: "Tap here to configure Dashboard", description: "", state: complete
             }
         }
+        */
         section("Debugging") {
             input "debug", "bool", title: "Enable Debug Logging", default: true, submitOnChange: true 
         }
@@ -313,6 +317,7 @@ def updated() {
     initialize()
 }
 def initialize() {
+	subscribe(app, appHandler)
     //WEATHER UPDATES
     state.todayWeather = state.todayWeather ?: mGetWeather()
     state.activeAlert = state.activeAlert ?: mGetWeatherAlerts()
@@ -343,21 +348,6 @@ def initialize() {
 }  
 /*************************************************************************/
 /* webCoRE Connector v0.2                                                */
-/*************************************************************************/
-/*  Copyright 2016 Adrian Caramaliu <ady624(at)gmail.com>                */
-/*                                                                       */
-/*  This program is free software: you can redistribute it and/or modify */
-/*  it under the terms of the GNU General Public License as published by */
-/*  the Free Software Foundation, either version 3 of the License, or    */
-/*  (at your option) any later version.                                  */
-/*                                                                       */
-/*  This program is distributed in the hope that it will be useful,      */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of       */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         */
-/*  GNU General Public License for more details.                         */
-/*                                                                       */
-/*  You should have received a copy of the GNU General Public License    */
-/*  along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 /*************************************************************************/
 /*  Initialize the connector in your initialize() method using           */
 /*     webCoRE_init()                                                    */
@@ -417,6 +407,21 @@ def remindrHandler(evt) {
         break
     }
 }
+/************************************************************************************************************
+	App Touch and Alexa Responses
+************************************************************************************************************/
+def appHandler(evt) {
+    toggleContCommands()
+    log.debug "app event ${evt.name}:${evt.value} received"
+}
+def toggleContCommands() {
+def result
+}
+/*          
+input "pDisableContCmds", "bool", title: "Disable Conversation (Alexa no longer prompts for additional commands except for 'try again' if an error ocurs)?", required: false, defaultValue: false
+input "pEnableMuteAlexa", "bool", title: "Disable Feedback (Silence Alexa - it no longer provides any responses)?", required: false, defaultValue: false
+input "pUseShort", "bool", title: "Use Short Alexa Answers (Alexa provides quick answers)?", required: false, defaultValue: false
+*/
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
