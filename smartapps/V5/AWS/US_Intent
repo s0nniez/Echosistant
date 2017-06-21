@@ -1,0 +1,49 @@
+{
+  "intents": [
+    {
+      "slots": [
+        {
+          "name": "ttstext",
+          "type": "AMAZON.LITERAL"
+        }
+      ],
+      "intent": "message"
+    },
+    {
+      "slots": [
+        {
+          "name": "startingD",
+          "type": "AMAZON.DATE"
+        },
+        {
+          "name": "startingT",
+          "type": "AMAZON.TIME"
+        },
+        {
+          "name": "endingD",
+          "type": "AMAZON.DATE"
+        },
+        {
+          "name": "duration",
+          "type": "AMAZON.NUMBER"
+        }
+      ],
+      "intent": "mDetails"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.NoIntent"
+    },
+    {
+      "intent": "AMAZON.YesIntent"
+    }
+  ]
+}
