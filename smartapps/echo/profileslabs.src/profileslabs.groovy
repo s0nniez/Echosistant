@@ -111,23 +111,23 @@ page name: "pDevices"
 def pDevices(params){
     dynamicPage(name: "pDevices", title: "", uninstall: false){
         section("Locks") { //, hideWhenEmpty: true
-            input "${params.type}Locks", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
         section("Garage Doors") { //, hideWhenEmpty: true
-            input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Garag", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
         	input "${params.type}Relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false//, submitOnChange: true
 			if (fRelay) {
             	input "${params.type}ContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
         	}
         }
         section("Window Coverings") { //, hideWhenEmpty: true
-            input "${params.type}Shades", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Shade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
         }
         section("Climate Control") { //, hideWhenEmpty: true
             input "${params.type}Tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
             input "${params.type}Indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
             input "${params.type}OutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-            input "${params.type}Vents", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Vent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
         }
 		section("Water") { //, hideWhenEmpty: true
 			input "${params.type}Valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
@@ -139,14 +139,14 @@ def pDevices(params){
 			input "${params.type}Media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
     	}
         section("Switches, Dimmers") { //, hideWhenEmpty: true
-            input "${params.type}Switches", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}MiscSwitches", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}Fans", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Light", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Switch", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Fan", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
         }
         section("Feedback Only Devices") { //, hideWhenEmpty: true
 			input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-            input "${params.type}Doors", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}Windows", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Door", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Window", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
             input "${params.type}Presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
             input "${params.type}Battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
 			input "${params.type}CO2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
@@ -177,7 +177,6 @@ def pGroups() {
 	}
 }
 def pGroup(params) {
-	log.debug "params = ${params}"
 	def groupId = (int) (params?.groupId != null ? params.groupId : state.groupId)
 	if (!groupId) {
 		//generate new group id
@@ -1449,7 +1448,7 @@ def profileEvaluate(params) {
     */
     if (parent.debug) log.debug "Message received from Parent with: (tts) = '${tts}', (intent) = '${intent}', (childName) = '${childName}', current app version: ${release()}"  
 	
-	
+
     if (command == "undefined") {
 		outputTxt = "Sorry, I didn't get that, "
         state.pTryAgain = true
@@ -1462,7 +1461,7 @@ def profileEvaluate(params) {
 	sendLocationEvent(name: "echoSistantProfile", value: app.label, data: data, displayed: true, isStateChange: true, descriptionText: "EchoSistant activated '${app.label}' profile.")    
     if (parent.debug) log.debug "sendNotificationEvent sent to CoRE from ${app.label}"
      
-    if (pSendSettings() == "complete" || pGroupSettings() == "complete" || pDevicesSettings() == "complete"){
+    //if (pSendSettings() == "complete" || pGroupSettings() == "complete" || pDevicesSettings() == "complete"){
         if (intent == childName) {
             outputTxt = runCommand(tts)
             return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]  
@@ -2033,59 +2032,87 @@ return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCm
                 //return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
             }
         }
-    }
+    //}
  }   
-def searchRealDevices(String text) {
-			////															Added for groups device search...
-    return fSwitches.find({text.contains(it.toString().toLowerCase())}) ?: gSwitches.find({text.contains(it.toString().toLowerCase())}) ?: fFans.find({text.contains(it.toString().toLowerCase())}) ?: fLocks.find({text.contains(it.toString().toLowerCase())}) ?: fDoors.find({text.contains(it.toString().toLowerCase())}) ?: null
+def searchRealDevices(String input) {
+	//When we add a Group, this picks it up now, so we need to filter them out....
+    return settings.collect{k, devices -> devices}.flatten().unique().find{input.find{~/(?i)\b${it.toString()}\b/}}
 }
-String getFeedBackWords() 	{"give,for,tell,what,how,is,when,which,are,how many,check,who"}
-String getCommandEnable() 	{"on,start,enable,engage,open,begin,unlock,unlocked"}
-String getCommandDisable() 	{"off,stop,cancel,disable,disengage,kill,close,silence,lock,locked,quit,end"}
-String getCommandMore()		{"increase,more,too dark,not bright enough,brighten,brighter,turn up"}
-String getCommandLess()		{"darker,too bright,dim,dimmer,decrease,lower,low,softer,less"}
-String getDeviceType()		{"light,switch,fan,lock,door,window,blind,shade,curtain"}
-String getDelayCommand()	{"delay,wait,until,after,around,within,in,about"}
+def searchDeviceTypes(String input) {
+	return settings.collect{k, devices -> k}.find{it == "p" + getDeviceType(input)}
+}
+/*Map searchGroupDevices(String input, ArrayList fromList) {
+	Map allDevices = [:]		////															Added for groups device search...
+	for (device in fromList) {
+    	allDevices << settings.findAll{it.key.toLowerCase().endsWith(device)}
+	}
+    return allDevices
+}*/
+ArrayList getFeedBackWords() 	{["give","for","tell","what","how","is","when","which","are","how many","check","who"]}
+ArrayList getCommandEnable() 	{["on","start","enable","engage","open","begin","unlock","unlocked"]}
+ArrayList getCommandDisable() 	{["off","stop","cancel","disable","disengage","kill","close","silence","lock","locked","quit","end"]}
+ArrayList getCommandMore()		{["increase","more","too dark","not bright enough","brighten","brighter","turn up"]}
+ArrayList getCommandLess()		{["darker","too bright","dim","dimmer","decrease","lower","low","softer","less"]}
+ArrayList getDeviceTypes()		{["light","switch","fan","lock","garage","door","window","shade","curtain","blind","tstat","indoor","outdoor","vent","valve","water","speaker","synth","media","relay"]}
+ArrayList getDelayCommand()		{["delay","wait","until","after","around","within","in","about"]}
 
-String parseWordReturn(String input, String fromList) {
-	return fromList.split(",").find({input.contains(it)})
+String parseWordReturn(String input, ArrayList fromList) {
+	for (item in fromList) {
+    	if (input.contains(item)) {
+        	return item
+        }
+    }
 }
-Boolean parseWordFound(String input, String fromList) {
-	return fromList.split(",").find({input.contains(it)}) ? true : false
+Boolean parseWordFound(String input, ArrayList fromList) {
+	for (item in fromList) {
+    	if (input.contains(item)) {
+        	return true
+        }
+    }
 }
 String getCommand(text) {
 	return parseWordFound(text, commandMore) ? "increase" : parseWordFound(text, commandLess) ? "decrease" : parseWordFound(text, commandEnable) ? "on" : parseWordFound(text, commandDisable) ? "off" : null 
 }
-String getDeviceType(text) {
-	
-	return parseWordReturn(text, deviceType) ?: null
+def getDeviceType(text) {
+	return parseWordReturn(text, deviceTypes) ?: null
 }
 String runCommand(tts) { 
 	//not sure how to implement status here, need to understand how we can get feedback keywords
     String feedBack = parseWordFound(tts, feedBackWords) ? "status" : ""
 	String command = getCommand(tts) 
-    String deviceType = getDeviceType(tts)
+    String deviceType = null
+    Boolean foundRealDevice = false
+    Boolean foundGroup = false
+    def theDevices = null
+    
+    /*String groupDevice = settings.findAll{it.key.startsWith("groupId")}.find{tts.contains(it.value.toLowerCase())}.key.replace("groupId", "g")
+	if (groupDevices) {
+    	log.debug "groupFound: ${groupDevices}"
+        foundGroup = true
+    	//Loop through groups groupDevice + deviceTypes = g1Light << g1Switch << g1Fan... etc...
+    }
+    */
+    
+	def realDevice = searchRealDevices(tts) //Search for real devive in Profile first... 
+    if (realDevice) {
+        theDevices = realDevice
+        foundRealDevice = true
+        // Need to go through and replace Group names like Office/Kitchen/etc... they conflict with real device names, if they really meant a group.
+    } 
     //if delay keyword, figure out amount... that'll be FUN!
 	//Boolean delayAction = parseWordFound(tts, delayCommand)
 
     def theDelay = 0
-    def theDevices
     def theLevel
     def theStatus
+	
+    //if (!foundGroup && !foundRealDevice) {
+	//	theDevices = searchDeviceTypes(tts)
+    //}
+    
+    log.debug "deviceType:${deviceType}, theDevices:${theDevices}, command:${command}, feedBack${feedBack}"
 
-    log.debug "deviceType:${deviceType}"
-	if (command) {
-        switch (deviceType) {
-            case "light": 
-            theDevices = fSwitches
-            break
-            case "fan": 
-            theDevices = fFans
-            break
-            case null:
-                theDevices = searchRealDevices(tts)
-        }
-        
+    if (command) {
         switch ("${command}${feedBack}") {
             case "on":
             theDevices*.on([delay: theDelay])
