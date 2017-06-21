@@ -71,20 +71,20 @@ def mainProfilePage() {
             label title:"Profile Name", required:true
         } 
         section("Devices, Groups, Feedback, and Keypads") {
-            href "devices", title: "Control and Feedback", description: pSendComplete(), state: pSendSettings()  
+            href "devices", title: "Control and Feedback"//, description: pSendComplete(), state: pSendSettings()  
         }  
         section("Message Output and Alexa Responses") {
-            href "messaging", title: "Outgoing Messages", description: pSendComplete(), state: pSendSettings()   
+            href "messaging", title: "Outgoing Messages"//, description: pSendComplete(), state: pSendSettings()   
         }              
         section("Echo Mailbox, Quick Notes, Reminders") {
-            href "mailbox", title: "Incoming Messages", description: pSendComplete(), state: pSendSettings()    
+            href "mailbox", title: "Incoming Messages"//, description: pSendComplete(), state: pSendSettings()    
         }
         section("Settings" , hideable: true, hidden: true ) {
-            href "pRestrict", title: "General Restrictions", description: pRestrictComplete(), state: pRestrictSettings()   
-            href "pSecurity", title: "PIN Settings", description: pRestrictComplete(), state: pRestrictSettings()
-			href "pActions", title: "Profile Actions (to execute when Profile runs)", description: pActionsComplete(), state: pActionsSettings()
-            href "pWeatherConfig", title: "Weather Settings", description: pRestrictComplete(), state: pRestrictSettings()   
-			href "pSkillConfig", title: "Install AWS Skill", description: pRestrictComplete(), state: pRestrictSettings()   
+            href "pRestrict", title: "General Restrictions"//, description: pRestrictComplete(), state: pRestrictSettings()   
+            href "pSecurity", title: "PIN Settings"//, description: pRestrictComplete(), state: pRestrictSettings()
+			href "pActions", title: "Profile Actions (to execute when Profile runs)"//, description: pActionsComplete(), state: pActionsSettings()
+            href "pWeatherConfig", title: "Weather Settings"//, description: pRestrictComplete(), state: pRestrictSettings()   
+			href "pSkillConfig", title: "Install AWS Skill"//, description: pRestrictComplete(), state: pRestrictSettings()   
 
         }        
     }
@@ -98,7 +98,7 @@ def devices(){
         section("") {
             href "pDevices", title: "Main Profile Control and Feedback", params: [type: "p"]//, description: pRestrictComplete(), state: pRestrictSettings()
             href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
-            href "pKeypads", title: "Keypads and Associated Actions", description: pSendComplete(), state: pSendSettings()
+            href "pKeypads", title: "Keypads and Associated Actions"//, description: pSendComplete(), state: pSendSettings()
             href "pDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
         }        
     }
