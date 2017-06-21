@@ -385,6 +385,13 @@ def toggleContCommands() {
 	if(state.pFeedback) state.pFeedback = false
     else state.pFeedback = true
 }
+
+def checkToken() {
+	def parentToken = [:]
+    parentToken.appId = app.id
+    parentToken.token = state.accessToken
+    return parentToken
+}
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
@@ -443,7 +450,7 @@ Boolean parseWordFound(String input, String fromList) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /************************************************************************************************************
-   TEXT TO SPEECH PROCESS - Lambda via page t
+   TEXT TO SPEECH PROCESS PARENT - Lambda via page t
 ************************************************************************************************************/
 def processTts() {
     //LAMBDA VARIABLES
@@ -457,29 +464,19 @@ def processTts() {
     def pPIN = false
     def dataSet = [:]
     if (debug) log.debug "Messaging Profile Data: (ptts) = '${ptts}', (pintentName) = '${pintentName}' state.pContCmdsR = ${state.pContCmdsR}"
-
     pContCmdsR = "profile"
     def tProcess = true
     //try {
-
     if (ptts == "this is a test"){
         outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
         return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
     }
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //This needs to be fixed... 
     if(parseWordFound(ptts, stopWords) && state.pContCmdsR != "wrongIntent"){
-//        if(ptts.contains("thank")){
             outputTxt = "ok, I am here if you need me"
             pContCmds = false
-            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-//       }
-//        else {
-//            outputTxt = "ok, please continue, "
-//            pContCmds = false
-//            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]
-//        }        
+            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]      
     } else {
         childApps.each {child ->
             if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
@@ -492,47 +489,25 @@ def processTts() {
                 dataSet = [ptts:ptts, pintentName:pintentName] 
                 def childRelease = child.checkRelease()
                 log.warn "childRelease = $childRelease"
-                if (parseWordFound(ptts, weatherWords)) {
-                    def pResponse = child.profileFeedbackEvaluate(dataSet)
-                    log.info "child.profileWeatherEvaluate executed from the main at line 633"
-                    outputTxt = pResponse.outputTxt
-                    pContCmds = pResponse.pContCmds
-                    pContCmdsR = pResponse.pContCmdsR
-                    pTryAgain = pResponse.pTryAgain
-                } else {
-                    def pResponse = child.profileEvaluate(dataSet)
-                    log.info "child.profileMessagingEvaluate executed from the main at line 640"
-                    outputTxt = pResponse.outputTxt
-                    pContCmds = pResponse.pContCmds
-                    pContCmdsR = pResponse.pContCmdsR
-                    pTryAgain = pResponse.pTryAgain
-                }
-            }
+				def pResponse = child.processText(dataSet)
+				log.info "child.profileMessagingEvaluate executed from the main at line 503"
+				outputTxt = pResponse.outputTxt
+                pContCmds = pResponse.pContCmds
+                pContCmdsR = pResponse.pContCmdsR
+                pTryAgain = pResponse.pTryAgain
+			}
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
-        if (outputTxt?.size()>0){
-            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
-        }
-        else {
-            if (state.pShort != true){
-                outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + pintentName + " or the command may not be supported"
-            }
-            else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "} 
-            pTryAgain = true
-            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
-        }
-
-        def hText = "run a messaging and control profile"
-        if (state.pShort != true){ 
-            outputTxt = "Sorry, I heard that you were looking to " + hText + " but Echosistant wasn't able to take any actions "
-            return outputTxt
-        }
-        else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "
-              return outputTxt
-             }         
-        pTryAgain = true
-        return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]              
-    }
+	}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+	if (outputTxt){
+		return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+  	}
+	else {
+		if (state.pShort != true){outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + pintentName + " or the command may not be supported"}
+        else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "} 
+  	pTryAgain = true
+    return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
+ 	}
 } 
 /*catch (Throwable t) {
 log.error t
@@ -631,100 +606,6 @@ log.error t
 return result
 }
 }*/
-/*****************************************************************
-Facebook Messenger
-*****************************************************************/
-def fbMessageEvent(fbResponseTxt){
-    def fbMessage = "${fbResponseTxt}"
-    log.info "This is what was sent to this method: '${fbMessage}'"
-    if (fbMessage.startsWith("what")){
-        /*  	def fbMessageChildName
-childApps.each {child ->
-def ch = child.label
-ch = ch.replaceAll("[^a-zA-Z0-9 ]", "")
-if (ch.toLowerCase() == fbMessage?.toLowerCase()) { 
-if (debug) log.debug "Found a profile"
-fbMessageChildName = child.label
-def dataSet = [ptts:ptts, pintentName:pintentName] 
-def childRelease = child?.checkRelease()
-log.warn "childRelease = $childRelease"
-outputTxt = child.runProfile(fbMessageChildName)
-}
-}*/
-        def data = [fbResponseTxt:fbResponseTxt] 
-        //       return data
-        feedbackHandler(fbResponseTxt)
-        //      }
-        //          	childApps?.each {child ->
-        //           if (child?.label.toLowerCase() == fbMessage?.toLowerCase()) 
-        //          		fbMessageChild = child?.checkState()  
-        //        }
-        //        log.info "The child app is " + "${outputTxt}"
-        //   	}
-        log.info "This worked"
-    }
-    else {
-        log.info "This was a failure"
-    }
-}  
-//if Alexa is muted from the child, then mute the parent too / MOVED HERE ON 2/9/17
-//        pContinue = pContinue == true ? true : state.pMuteAlexa == true ? true : pContinue
-//		return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	     
-//	}
-
-def messengerGetHandler(){
-    if (params.hub.mode == 'subscribe' && params.hub.verify_token == settings.verifyToken) {
-        log.debug "Validating webhook"
-        render contentType: "text/html", data: params.hub.challenge, status: 200
-    } else {
-        log.debug "Failed validation. Make sure the Verify Tokens match."
-        render contentType: "text/html", data: params.hub.challenge, status: 403        
-    }
-}
-
-def messengerPostHandler(){
-    def fbJSON = request.JSON
-    def fbResponseTxt = "${fbJSON.entry.messaging.message.text[0][0]}" //"Sorry I don't know you."
-    def fbMessage = "${fbJSON.entry.messaging.message.text[0][0]}"
-    log.info "${fbMessage}"
-    if (debug) log.debug "FB MESSENGER POST EVENT - MESSAGE:  ${fbJSON.entry.messaging.message.text[0][0]}"
-    if (debug) log.debug "FB MESSENGER POST EVENT - SENDER_ID:  ${fbJSON.entry.messaging.sender.id[0][0]}"
-    if(fbAllowedUsers != null && fbAllowedUsers.indexOf("${fbJSON.entry.messaging.sender.id[0][0]}") >= 0){ 
-        fbResponseTxt = "${fbJSON.entry.messaging.message.text[0][0]}" as String
-        // The above is my code so wont work for you you will need to set response Txt whatever value you want to return in the FB chat in response to a message
-    }
-
-    fbMessageEvent(fbResponseTxt)
-    //    fbSendMessage(fbJSON.entry.messaging.sender.id[0][0], responseTxt)
-}
-
-def fbSendMessage(userid, message){
-    // Send a message to FB
-    def params = [
-        uri: "https://graph.facebook.com/v2.6/me/messages?access_token=$fbAccessToken",
-        body: [recipient: [id: userid], message: [text: message] ]
-    ]
-    try { httpPostJson(params) { resp ->
-        resp.headers.each { log.debug "${it.name} : ${it.value}" }
-        if (debug) log.debug "response contentType: ${resp.contentType}"
-    } } catch (e) { if (debug) log.debug "something went wrong: $e" }
-}
-
-/*
-		// This is used for linking to FB messenger and setting valid users
-		section ("Facebook Messenger Settings") { 
-            input "verifyToken", "password", title: "Verify Token", description:"", required: false
-            input "fbAccessToken", "password", title: "FB Page Access Token", description:"", required: false
-            input "fbAllowedUsers", "text", title: "Allowed User IDs", description:"", required: false
-            paragraph "Verify Token: Used to setup link to FB bot (You make up this value)\nAccess Token: To allow ST to send messages via FB Messenger (From developers.facebook.com)\nAllowed Users: These are the Facebook user IDs, seperated by commas (You can get this in the debug logging)"
-        }
-        
-        // This you should put in the same method you use for returning the app ID and OAuth 
-        log.trace "URL FOR USE AT DEVELOPERS.FACEBOOK.COM:\n${getApiServerUrl()}/api/smartapps/installations/${app.id}/m?access_token=${state.accessToken}"
-*/
-
-
-
 /*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 X 																											X
 X                       					UI FUNCTIONS													X
