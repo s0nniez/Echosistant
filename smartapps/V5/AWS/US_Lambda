@@ -102,7 +102,7 @@ var url= 'https://graph.api.smartthings.com:443/api/smartapps/installations/' + 
                 else if (intentName.startsWith("AMAZON") && intentName.endsWith("Intent")) { 
                     alexaResp (intentName, context, "Amazon Intent", areWeDone, short); 
                 }
-                else if (intentName == "message"){           
+                else if (intentName != "mDetails"){           
                     var ttstext = event.request.intent.slots.ttstext.value;
                     url += 't?ttstext=' + ttstext  + '&intentName=' + intentName;
                     process = true;
