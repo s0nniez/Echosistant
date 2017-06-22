@@ -13,6 +13,8 @@
  *  for the specific language governing permissions and limitations under the License.
  *
 /**********************************************************************************************************************************************/
+import groovy.json.JsonSlurper
+
 definition(
 	name			: "ProfilesLabs",
     namespace		: "Echo",
@@ -65,7 +67,6 @@ preferences {
 /////////// MAIN PAGE
 //////////////////////////////////////////////////////////////////////////////
 def mainProfilePage() {	
-	rebuildGroups()
     dynamicPage(name: "mainProfilePage", title:"", install: true, uninstall: installed) {
         section("Name Your Profile") {
             label title:"Profile Name", required:true
@@ -108,7 +109,7 @@ def devices(){
 //////////////////////////////////////////////////////////////////////////////
 page name: "pDevices"
 def pDevices(params){
-    dynamicPage(name: "pDevices", title: "", uninstall: false){
+    dynamicPage(name: "pDevices", title: "", uninstall: false, nextPage: params.nextPage){
         section("Locks") { //, hideWhenEmpty: true
             input "${params.type}Lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
@@ -159,61 +160,39 @@ def pDevices(params){
 /////////// GROUP CONTROL AND FEEDBACK
 //////////////////////////////////////////////////////////////////////////////
 def pGroups() {
-	rebuildGroups()
-	dynamicPage(name: "pGroups", title: "Groups", install: false, uninstall: false) {
-		log.debug "state.groups = ${state.groups}"
-        def groups = state.groups
-		section("") {
-			href "pGroup", title: "Add a new Group", required: false, params: [groupId: 0]
-		}
-		if (groups.size()) {
-			section("Groups") {
-				for (group in groups) {
-					href "pGroup", title: group.name, required: false, params: [groupId: group.groupId]
-				}
-			}
-		}
-	}
+    dynamicPage(name: "pGroups", title: "", install: false, uninstall: false) {
+        def existingGroups = settings.collect{k, devices -> k}.findAll{it.startsWith("g")}//.flatten().findAll{~/(?!g).*(?=~)/}.unique()
+        def numberOfGroups = 0
+        if (existingGroups) {
+            section("Current Groups") {
+                def allGroups = []
+                for (group in existingGroups) {
+                    def matcher = group =~ /(?!g).*(?=~)/
+                    allGroups << matcher[0]
+                }
+                for (group in allGroups.unique()) {
+                    href "pDevices", title: group, required: false, params: [type: "g${group}~"]
+                    numberOfGroups += 1
+                }
+            }
+        }
+        section("Create New") {
+        	href "pGroup", title: "Create a New Group", required: false
+        }
+    }
 }
-def pGroup(params) {
-	def groupId = (int) (params?.groupId != null ? params.groupId : state.groupId)
-	if (!groupId) {
-		//generate new group id
-		groupId = 1
-		def existingGroups = settings.findAll{ it.key.startsWith("groupId") }
-		for (group in existingGroups) {
-			def id = group.key.replace("groupId", "")
-			if (id.isInteger()) {
-				id = groupId.toInteger()
-				if (id >= groupId) groupId = (int) (id + 1)
-			}
-		}
-	}
-	state.groupId = groupId
-	dynamicPage(name: "pGroup", title: "Group", install: false, uninstall: false) {
-		section("") {
-        	input "groupId${groupId}", "string", title: "Name", description: "Enter a name for this Group", required: false, defaultValue: "Group #${groupId}"
-			href "pDevices", title: "Groups Control and Feedback", params: [type: "g${groupId}"]	
-		}
-	}
-}
-private rebuildGroups() {
-	def groups = settings.findAll{it.key.startsWith("groupId")}
-	state.groups = []
-	for(group in groups) {
-		def groupId = group.key.replace("groupId", "")
-		if (groupId.isInteger()) {
-			if (group.value != null) {
-				def name = group.value
-				if (name) {
-					def g = [
-						groupId: groupId.toInteger(),
-						name: name
-					]
-					state.groups.push g
-				}
-			}
-		}
+def pGroup() {
+	dynamicPage(name: "pGroup", title: "", install: false, uninstall: false) {
+        // TODO: Need to figure out how to remove the past pGroup value so it doesn't keep the same group name from last time.
+        section {
+            input name: "pGroup", title: "New Group", description: "Group Name", required: true, submitOnChange: true, defaultvalue: ""
+        }
+
+        section {
+            if (pGroup != "pGroup") { 
+            	href "pDevices", title: "Groups Control and Feedback", params: [type: "g${pGroup}~", nextPage: "pGroups"]
+            }
+        }
 	}
 }
 //////////////////////////////////////////////////////////////////////////////
