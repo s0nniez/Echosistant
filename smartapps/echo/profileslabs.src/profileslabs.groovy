@@ -788,8 +788,7 @@ def processText(params) {
    	}
 }   
 def searchRealDevices(String input) {
-	//When we add a Group, this picks it up now, so we need to filter them out....
-    return settings.collect{k, devices -> devices}.flatten().unique().find{input.find{~/(?i)\b${it.toString()}\b/}}
+    return settings.collect{k, devices -> devices}.flatten().unique().find{input.find(~/(?i)\b${it.toString()}\b/)}
 }
 def searchDeviceTypes(String input) {
 	return settings.collect{k, devices -> k}.find{it == "p" + getDeviceType(input)}
