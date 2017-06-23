@@ -61,7 +61,9 @@ def mainParentPage() {
                 def shmStatus = shmLocation == "off" ? "Disarmed" : shmLocation == "away" ? "Armed (Away)" : shmLocation == "stay" ? "Armed (Stay)" : null
                 def cont = sFeedback == "Disable" ?  "Alexa feedback is disabled" : sFeedback == "None" ? "Alexa is set to keep the session open, but does not provide audio feedback" : "Alexa is set to provide ${sFeedback?.toLowerCase()}"
                 if (mSettings) {
-                        paragraph "Settings:\n\t${cont}"
+                        paragraph "Settings:\n\t${cont}" 
+						if(sConversation == false) {paragraph "\tConversation mode is enabled"
+						}else {paragraph "\tConversation mode is disabled"}
                 }
                 if (mLocation) paragraph 	"Location:\n\tCurrent Mode: ${location.currentMode} \n"  +
                     						"\tSmart Home Monitor: ${shmStatus}"
