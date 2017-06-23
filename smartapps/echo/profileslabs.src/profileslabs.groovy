@@ -99,6 +99,7 @@ def devices(){
         section("") {
             href "pDevices", title: "Main Profile Control and Feedback", params: [type: "p"]//, description: pRestrictComplete(), state: pRestrictSettings()
             href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
+            href "pShortcuts", title: "Create Shortcuts within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions"//, description: pSendComplete(), state: pSendSettings()
             href "pDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
         }        
@@ -109,12 +110,12 @@ def devices(){
 //////////////////////////////////////////////////////////////////////////////
 page name: "pDevices"
 def pDevices(params){
-    dynamicPage(name: "pDevices", title: "", uninstall: false, nextPage: params.nextPage){
+    dynamicPage(name: "pDevices", title: "", uninstall: false){
         section("Locks") { //, hideWhenEmpty: true
             input "${params.type}Lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
         section("Garage Doors") { //, hideWhenEmpty: true
-            input "${params.type}Garag", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
+            input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
         	input "${params.type}Relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false//, submitOnChange: true
 			if (fRelay) {
             	input "${params.type}ContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
@@ -159,42 +160,41 @@ def pDevices(params){
 //////////////////////////////////////////////////////////////////////////////
 /////////// GROUP CONTROL AND FEEDBACK
 //////////////////////////////////////////////////////////////////////////////
-def pGroups() {
-    dynamicPage(name: "pGroups", title: "", install: false, uninstall: false) {
-        def existingGroups = settings.collect{k, devices -> k}.findAll{it.startsWith("g")}//.flatten().findAll{~/(?!g).*(?=~)/}.unique()
-        def numberOfGroups = 0
-        if (existingGroups) {
-            section("Current Groups") {
-                def allGroups = []
-                for (group in existingGroups) {
-                    def matcher = group =~ /(?!g).*(?=~)/
-                    allGroups << matcher[0]
-                }
-                for (group in allGroups.unique()) {
-                    href "pDevices", title: group, required: false, params: [type: "g${group}~"]
-                    numberOfGroups += 1
-                }
+page name: "pGroups"    
+    def pGroups() {
+        dynamicPage (name: "pGroups", title: ""){//, install: true, uninstall: false) {
+            if (childApps.size()) {  
+            	section("Group",  uninstall: false){
+                	app(name: "group", appName: "Groups", namespace: "Echo", title: "Create a new group for this Profile", multiple: true,  uninstall: false)
+            	}
             }
-        }
-        section("Create New") {
-        	href "pGroup", title: "Create a New Group", required: false
-        }
-    }
-}
-def pGroup() {
-	dynamicPage(name: "pGroup", title: "", install: false, uninstall: false) {
-        // TODO: Need to figure out how to remove the past pGroup value so it doesn't keep the same group name from last time.
-        section {
-            input name: "pGroup", title: "New Group", description: "Group Name", required: true, submitOnChange: true, defaultvalue: ""
-        }
-
-        section {
-            if (pGroup != "pGroup") { 
-            	href "pDevices", title: "Groups Control and Feedback", params: [type: "g${pGroup}~", nextPage: "pGroups"]
+            else {
+            	section("Group",  uninstall: false){
+            		paragraph "NOTE: Looks like you have no Groups yet, please make sure you have installed the Groups Smart App Add-on before creating a new Group!"
+            		app(name: "group", appName: "Groups", namespace: "Echo", title: "Create a new group for this Profile", multiple: true,  uninstall: false)
+        		}
             }
-        }
+		}
 	}
-}
+//////////////////////////////////////////////////////////////////////////////
+/////////// SHORTCUTS
+//////////////////////////////////////////////////////////////////////////////
+page name: "pShortcuts"    
+    def pShortcuts() {
+        dynamicPage (name: "pShortcuts", title: "", install: true, uninstall: false) {
+            if (childApps.size()) {  
+            	section("Shortcuts",  uninstall: false){
+                	app(name: "shortcut", appName: "Shortcuts", namespace: "Echo", title: "Create a new Shortcut", multiple: true,  uninstall: false)
+            	}
+            }
+            else {
+            	section("Shortcuts",  uninstall: false){
+            		paragraph "NOTE: Looks like you have no Shortcut yet, please make sure you have installed the Shortcut Smart App Add-on before creating a new Shortcut!"
+            		app(name: "shortcut", appName: "Shortcuts", namespace: "Echo", title: "Create a new Shortcut", multiple: true,  uninstall: false)
+        		}
+            }
+		}
+	}
 //////////////////////////////////////////////////////////////////////////////
 /////////// KEYPADS, SHM, GARAGE DOORS, AND VIRTUAL PERSON ACTIONS 
 //////////////////////////////////////////////////////////////////////////////
