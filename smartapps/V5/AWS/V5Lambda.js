@@ -1,6 +1,7 @@
 /**
  *  EchoSistant - Lambda Code
  *
+ *  Version 5.0.01a - 6/27/17 Proof of concept for Environment variables
  *  Version 5.0.01 - 6/14/2017 Alpha
  * 
  *  Special thanks for Michael Struck @MichaelS (Developer of AskAlexa) for allowing me
@@ -26,18 +27,16 @@
 'use strict';
 exports.handler = function( event, context ) {
     var https = require( 'https' );
-    // Paste app code here between the breaks------------------------------------------------
-    var STappID = 'xxxxxx-ecc1-4077-8b95-xxxxxx'; 
-    var STtoken = 'xxxxxx-7c5f-4955-a3d2-xxxxxx';
-    var url= 'https://graph.api.smartthings.com:443/api/smartapps/installations/' + STappID + '/' ;
         //---------------------------------------------------------------------------------------
-        var cardName ="";
-        var areWeDone = true;
+        var STtoken = process.env.STtoken;
+        var url = process.env.STurl
+        var cardName = "";
+        var areWeDone = process.env.areWeDone;
 //-------- Validation process and begining interaction with SmartThings app-------------------- 
         var versionTxt = '5.0';
-        var versionDate= '6/1/2017';
+        var versionDate = '6/1/2017';
         var releaseTxt = "5.2.00";
-        var intentResp = "noAction";
+        var intentResp = process.env.intentResp;
         if (event.request.type == "IntentRequest"){
             intentResp = event.request.intent.name;
         }
@@ -45,11 +44,11 @@ exports.handler = function( event, context ) {
         https.get( beginURL, function( response ) {
         response.on( 'data', function( data ) {
             var startJSON = JSON.parse(data);
+            var verST = startJSON.versionSTtxt;
+            var text = startJSON.outputTxt;
             var pMuteAlexa = startJSON.pContinue; //setting global variable if Alexa feedback is allowed
             var short = startJSON.pShort; //setting global variable for short answers
-            var verST = startJSON.versionSTtxt;
             var pPendingAns = startJSON.pPendingAns;
-            var text = startJSON.outputTxt;
 //-------- Error trapping--------------------------------------------------------------------
             if (startJSON.error) { 
                 output("There was an error. If this continues to happen, please reach out for help", context, "Lambda Error", areWeDone); 
@@ -211,6 +210,8 @@ exports.handler = function( event, context ) {
     } );
 };
 function alexaResp(type, context, cardName, areWeDone, short){
+    process.env.areWeDone = areWeDone;
+    process.env.pShort = short;
     if (type == "AMAZON.YesIntent") { 
         areWeDone=false;
         output("Please continue, ", context, "EchoSistant Continue", areWeDone);
@@ -249,6 +250,8 @@ function alexaResp(type, context, cardName, areWeDone, short){
     }     
 }
 function alexaContResp(type, text , context, areWeDone, short){
+    process.env.areWeDone = areWeDone;
+    process.env.pShort = short;
     var speechText = text;
     if (type == "Try Again" && short !== true ) { 
         speechText = speechText + ',  would you like to try again? '; 
@@ -282,6 +285,7 @@ function alexaContResp(type, text , context, areWeDone, short){
     }
 }
 function output( text, context, cardName, areWeDone) {
+        process.env.areWeDone = areWeDone;
         var response = {
              outputSpeech: {
              type: "PlainText",
