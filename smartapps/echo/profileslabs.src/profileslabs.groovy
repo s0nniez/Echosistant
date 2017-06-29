@@ -97,7 +97,7 @@ page name: "devices"
 def devices(){
     dynamicPage(name: "devices", title: "", uninstall: false){  
         section("") {
-            href "pDevices", title: "Main Profile Control and Feedback", params: [type: "p"]//, description: pRestrictComplete(), state: pRestrictSettings()
+            href "pDevices", title: "Main Profile Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
             href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pShortcuts", title: "Create Shortcuts within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
             href "pKeypads", title: "Keypads and Associated Actions"//, description: pSendComplete(), state: pSendSettings()
@@ -109,51 +109,51 @@ def devices(){
 /////////// INDIVIDUAL DEVICE CONTROL AND FEEDBACK 
 //////////////////////////////////////////////////////////////////////////////
 page name: "pDevices"
-def pDevices(params){
+def pDevices(){
     dynamicPage(name: "pDevices", title: "", uninstall: false){
         section("Locks") { //, hideWhenEmpty: true
-            input "${params.type}Lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
+            input "lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
         section("Garage Doors") { //, hideWhenEmpty: true
-            input "${params.type}Garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
-        	input "${params.type}Relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false//, submitOnChange: true
+            input "garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
+        	input "relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false//, submitOnChange: true
 			if (fRelay) {
-            	input "${params.type}ContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
+            	input "contactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
         	}
         }
         section("Window Coverings") { //, hideWhenEmpty: true
-            input "${params.type}Shade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
+            input "shade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
         }
         section("Climate Control") { //, hideWhenEmpty: true
-            input "${params.type}Tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
-            input "${params.type}Indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
-            input "${params.type}OutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-            input "${params.type}Vent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
+            input "tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
+            input "indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
+            input "outdoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
+            input "vent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
         }
 		section("Water") { //, hideWhenEmpty: true
-			input "${params.type}Valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
-			input "${params.type}Water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
+			input "valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
+			input "water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
 		}
 		section("Media"){ //, hideWhenEmpty: true
-			input "${params.type}Speaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
-	     	input "${params.type}Synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
-			input "${params.type}Media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
+			input "speaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
+	     	input "synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
+			input "media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
     	}
         section("Switches, Dimmers") { //, hideWhenEmpty: true
-            input "${params.type}Light", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}Switch", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}Fan", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
+            input "light", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
+            input "switch", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
+            input "fan", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
         }
         section("Feedback Only Devices") { //, hideWhenEmpty: true
-			input "${params.type}Motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-            input "${params.type}Door", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}Window", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
-            input "${params.type}Presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
-            input "${params.type}Battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
-			input "${params.type}CO2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
-			input "${params.type}CO", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
-			input "${params.type}Humidity", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
-			input "${params.type}Sound", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
+			input "motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
+            input "door", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
+            input "window", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
+            input "presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
+            input "battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
+			input "co2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
+			input "co", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
+			input "humidity", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
+			input "sound", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
         }
 	}
 }   
@@ -750,6 +750,7 @@ def initialize() {
     //Sound Cancellation    
     state.pMuteAlexa = settings.pDisableAlexaProfile ?: false
     state.pMuteAll = settings.pDisableALLProfile ?: false 
+    log.debug "Init with settings: ${settings}, current app version: ${release()}"
 }
 /******************************************************************************************************
    PARENT STATUS CHECKS
@@ -759,6 +760,25 @@ def checkState() {
 }
 def checkRelease() {
     return state.ProfileRelease
+}
+def getProfileData() {
+//	NEED THIS TO RETURN JSON DATA FROM THE CURRENT PROFILE, AND THE GROUPS.
+/*	def groupData = new groovy.json.JsonBuilder()
+	def root = builder {
+              name "Devin"
+              data {
+                 type "Test"
+                 note "Dummy"
+              }
+              addUrn(delegate, "gender", "male")
+              addUrn(delegate, "zip", "43230")
+           }
+	def groupData = 
+    def groups = getChildApps()
+	for(group in groups) {
+        groupData += "'group':'${group.label}'" + group.getGroupData()
+    }*/
+    return new groovy.json.JsonBuilder(settings) //+ groupData
 }
 /******************************************************************************************************
    TEXT TO SPEECH PROCESS PROFILE

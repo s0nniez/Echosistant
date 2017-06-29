@@ -320,8 +320,9 @@ def initialize() {
     state.pFeedback = sFeedback
     state.pContCmdsR = "init"       
     //Other Settings
-    state.pendingConfirmation = false     
-} 
+    state.pendingConfirmation = false
+}
+
 def subscriptions(){
 	subscribe(app, appHandler)
     subscribe(location, locationHandler)
@@ -393,6 +394,18 @@ def checkToken() {
     parentToken.token = state.accessToken
     return parentToken
 }
+
+def getProfileData() {
+	def json = new groovy.json.JsonBuilder()
+    //def profiles = getChildApps()
+    def root = json(getChildApps()){it ->
+		profile: it.label {
+        	it.getProfileData()
+        }
+    }
+    return json.toString()
+}
+
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
@@ -408,7 +421,7 @@ def processBegin(){
     def releaseSTtxt = release()
     def pPendingAns = false 
     def pContinue = state.pFeedback
-    def pShort = state.pShort
+    def pShort = false //state.pShort
     def String outputTxt = (String) null 
     state.pTryAgain = false
     if (debug) log.debug "^^^^____LAUNCH REQUEST___^^^^" 
@@ -426,7 +439,10 @@ def processBegin(){
             "; data sent: pContinue = '${pContinue}', pShort = '${pShort}',  pPendingAns = '${pPendingAns}', versionSTtxt = '${versionSTtxt}', releaseSTtxt = '${releaseSTtxt}' outputTxt = '${outputTxt}' ; "+
             "other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
     }
-    return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt]	 
+    
+    def pProfileData = "{\"Profile\":{\"Dear\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"},\"groups\" :{\"Basement\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}],\"Master\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}]}}],\"Home\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"},\"groups\" :{\"Living Room\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}],\"Office\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}]}}]}}"
+
+    return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt, "pProfileData": pProfileData]	 
 
 } 
 /*catch (Throwable t) {
@@ -455,6 +471,7 @@ Boolean parseWordFound(String input, String fromList) {
 ************************************************************************************************************/
 def processTts() {
     //LAMBDA VARIABLES
+    def pShort = false
     def ptts = params.ttstext 
     def pintentName = params.intentName
     //OTHER VARIABLES
@@ -470,14 +487,14 @@ def processTts() {
     //try {
     if (ptts == "this is a test"){
         outputTxt = "Congratulations! Your EchoSistant is now setup properly" 
-        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":state.pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
+        return ["outputTxt":outputTxt, "pContCmds":state.pContCmds, "pShort":pShort, "pContCmdsR":state.pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]       
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //This needs to be fixed... 
     if(parseWordFound(ptts, stopWords) && state.pContCmdsR != "wrongIntent"){
             outputTxt = "ok, I am here if you need me"
             pContCmds = false
-            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]      
+            return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":pShort, "pContCmdsR":pContCmdsR, "pTryAgain":state.pTryAgain, "pPIN":pPIN]      
     } else {
         childApps.each {child ->
             if (child.label.toLowerCase() == pintentName.toLowerCase()) { 
@@ -501,13 +518,13 @@ def processTts() {
 	}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 	if (outputTxt){
-		return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
+		return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":pShort, "pContCmdsR":pContCmdsR, "pTryAgain":pTryAgain, "pPIN":pPIN]
   	}
 	else {
 		if (state.pShort != true){outputTxt = "I wish I could help, but EchoSistant couldn't find a Profile named " + pintentName + " or the command may not be supported"}
         else {outputTxt = "I've heard " + pintentName + " , but I wasn't able to take any actions "} 
   	pTryAgain = true
-    return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":state.pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
+    return ["outputTxt":outputTxt, "pContCmds":pContCmds, "pShort":pShort, "pContCmdsR":pContCmdsR, "pTryAgain": pTryAgain, "pPIN":pPIN]
  	}
 } 
 /*catch (Throwable t) {

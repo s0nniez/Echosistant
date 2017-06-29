@@ -37,48 +37,48 @@ def groupSetup() {
 			label title:"Name your Group", required:true
 		}
         section("Locks") { //, hideWhenEmpty: true
-            input "gLock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
+            input "lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
         section("Garage Doors") { //, hideWhenEmpty: true
-            input "gGarage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
-        	input "gRelay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
+            input "garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
+        	input "relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
 			if (fRelay) {
-            	input "gContactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
+            	input "contactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
         	}
         }
         section("Window Coverings") { //, hideWhenEmpty: true
-            input "gShade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
+            input "shade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
         }
         section("Climate Control") { //, hideWhenEmpty: true
-            input "gTstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
-            input "gIndoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
-            input "gOutDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-            input "gVent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
+            input "tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
+            input "indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
+            input "outDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
+            input "vent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
         }
 		section("Water") { //, hideWhenEmpty: true
-			input "gValve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
-			input "gWater", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
+			input "valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
+			input "water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
 		}
 		section("Media"){ //, hideWhenEmpty: true
-			input "gSpeaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
-	     	input "gSynth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
-			input "gMedia", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
+			input "speaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
+	     	input "synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
+			input "media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
     	}
         section("Switches, Dimmers") { //, hideWhenEmpty: true
-            input "gLight", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
-            input "gSwitch", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
-            input "gFan", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
+            input "light", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
+            input "switch", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
+            input "fan", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
         }
         section("Feedback Only Devices") { //, hideWhenEmpty: true
-			input "gMotion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-            input "gDoor", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
-            input "gWindow", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
-            input "gPresence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
-            input "gBattery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
-			input "gCO2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
-			input "gCO", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
-			input "gHumidity", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
-			input "gSound", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
+			input "motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
+            input "door", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
+            input "window", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
+            input "presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
+            input "battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
+			input "co2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
+			input "gco", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
+			input "humidity", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
+			input "sound", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
         }
     }
 }
@@ -93,5 +93,9 @@ def updated() {
 }
 
 def initialize() {
-app.updateLabel(sceneName)
+	app.updateLabel(sceneName)
+}
+
+def getGroupData() {
+	return new groovy.json.JsonBuilder(settings)
 }
