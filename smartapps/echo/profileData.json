@@ -1,0 +1,56 @@
+{
+  "Profile" : {
+    "Dear" : [
+      {
+        "devices" : {
+          "light" : "Desk Lamp",
+          "fan" : "Living Room Fan"
+        },
+        "groups" : {
+          "Basement" : [
+            {
+              "devices" : {
+                "light" : "Desk Lamp",
+                "fan" : "Living Room Fan"
+              }
+            }
+          ],
+          "Master" : [
+            {
+              "devices" : {
+                "light" : "Desk Lamp",
+                "fan" : "Living Room Fan"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "Home" : [
+      {
+        "devices" : {
+          "light" : "Desk Lamp",
+          "fan" : "Living Room Fan"
+        },
+        "groups" : {
+          "Living Room" : [
+            {
+              "devices" : {
+                "light" : "Desk Lamp",
+                "fan" : "Living Room Fan"
+              }
+            }
+          ],
+          "Office" : [
+            {
+              "devices" : {
+                "light" : "Desk Lamp",
+                "fan" : "Living Room Fan"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
