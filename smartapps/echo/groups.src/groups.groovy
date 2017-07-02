@@ -19,7 +19,7 @@ definition(
     namespace: "Echo",
     author: "Bobby Dobrescu",
     description: "EchoSistant Add-on",
-    category: "Convenience",
+    category: "My Apps",
 	parent: "Echo:EchoSistantLabs",
     iconUrl			: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant.png",
 	iconX2Url		: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-Echosistant@2x.png",
@@ -39,46 +39,46 @@ def groupSetup() {
         section("Locks") { //, hideWhenEmpty: true
             input "lock", "capability.lock", title: "Allow These Lock(s)...", multiple: true, required: false//, submitOnChange: true
         }
-        section("Garage Doors") { //, hideWhenEmpty: true
-            input "garage", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
-        	input "relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false, submitOnChange: true
-			if (fRelay) {
-            	input "contactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
-        	}
+        section("Garage/Doors") { //, hideWhenEmpty: true
+            input "garageDoorControl", "capability.garageDoorControl", title: "Select garage doors", multiple: true, required: false//, submitOnChange: true
+        	input "doorControl", "capability.doorControl", title: "Select doors", multiple: true, required: false//, submitOnChange: true
+            //input "relay", "capability.switch", title: "Select Garage Door Relay(s)...", multiple: false, required: false//, submitOnChange: true
+			//if (fRelay) {
+            //	input "contactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
+        	//}
         }
         section("Window Coverings") { //, hideWhenEmpty: true
-            input "shade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
+            input "windowShade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
         }
         section("Climate Control") { //, hideWhenEmpty: true
-            input "tstat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
-            input "indoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
-            input "outDoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
-            input "vent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
+            input "thermostat", "capability.thermostat", title: "Allow These Thermostat(s)...", multiple: true, required: false
+            input "temperatureMeasurement", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Indoor Temperature...", multiple: true, required: false
+            //input "outdoor", "capability.temperatureMeasurement", title: "Allow These Device(s) to Report the Outdoor Temperature...", multiple: true, required: false
+            //input "vent", "capability.switchLevel", title: "Select smart vents", multiple: true, required: false//, submitOnChange: true
         }
 		section("Water") { //, hideWhenEmpty: true
 			input "valve", "capability.valve", title: "Select Water Valves", required: false, multiple: true//, submitOnChange: true
-			input "water", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
+			input "waterSensor", "capability.waterSensor", title: "Select Water Sensor(s)", required: false, multiple: true//, submitOnChange: true
 		}
 		section("Media"){ //, hideWhenEmpty: true
-			input "speaker", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
-	     	input "synth", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
-			input "media", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
+			input "musicPlayer", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
+	     	input "speechSynthesis", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
+			input "mediaController", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
     	}
-        section("Switches, Dimmers") { //, hideWhenEmpty: true
-            input "light", "capability.switch", title: "Select Lights and Bulbs", multiple: true, required: false//, submitOnChange: true
-            input "switch", "capability.switch", title: "Select Switches that control misc devices", multiple: true, required: false//, submitOnChange: true
-            input "fan", "capability.switch", title: "Select devices that control Fans and Ceiling Fans", multiple: true, required: false//, submitOnChange: true
+        section("Lights, Switches, Dimmers, Fans, Vents") { //, hideWhenEmpty: true
+            input "light", "capability.light", title: "Select Lights and Bulbs..", multiple: true, required: false//, submitOnChange: true
+            input "switch", "capability.switch", title: "Select Switches...", multiple: true, required: false//, submitOnChange: true
+            input "switchLevel", "capability.switchLevel", title: "Select devices that can take a level..", multiple: true, required: false//, submitOnChange: true
         }
         section("Feedback Only Devices") { //, hideWhenEmpty: true
-			input "motion", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
-            input "door", "capability.contactSensor", title: "Select contacts connected only to Doors", multiple: true, required: false//, submitOnChange: true
-            input "window", "capability.contactSensor", title: "Select contacts connected only to Windows", multiple: true, required: false//, submitOnChange: true
-            input "presence", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
+			input "motionSensor", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
+            input "contactSensor", "capability.contactSensor", title: "Select contacts connected to Doors and Windows", multiple: true, required: false//, submitOnChange: true
+            input "presenceSensor", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
             input "battery", "capability.battery", title: "Select These Device(s) with Batteries...", required: false, multiple: true
-			input "co2", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
-			input "gco", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
-			input "humidity", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
-			input "sound", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
+			input "carbonDioxideMeasurement", "capability.carbonDioxideMeasurement", title: "Select Carbon Dioxide Sensors (CO2)", required: false            
+			input "carbonMonoxideDetector", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
+			input "relativeHumidityMeasurement", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
+			input "soundPressureLevel", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
         }
     }
 }
