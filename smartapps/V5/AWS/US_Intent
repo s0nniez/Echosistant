@@ -7,28 +7,10 @@
           "type": "AMAZON.LITERAL"
         }
       ],
-      "intent": "message"
+      "intent": "home"
     },
     {
-      "slots": [
-        {
-          "name": "startingD",
-          "type": "AMAZON.DATE"
-        },
-        {
-          "name": "startingT",
-          "type": "AMAZON.TIME"
-        },
-        {
-          "name": "endingD",
-          "type": "AMAZON.DATE"
-        },
-        {
-          "name": "duration",
-          "type": "AMAZON.NUMBER"
-        }
-      ],
-      "intent": "mDetails"
+      "intent": "UpdateSettings"
     },
     {
       "intent": "AMAZON.HelpIntent"
