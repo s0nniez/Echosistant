@@ -321,6 +321,7 @@ def initialize() {
     state.pContCmdsR = "init"       
     //Other Settings
     state.pendingConfirmation = false
+    //getAllData()
 }
 
 def subscriptions(){
@@ -395,15 +396,12 @@ def checkToken() {
     return parentToken
 }
 
-def getProfileData() {
-	def json = new groovy.json.JsonBuilder()
-    //def profiles = getChildApps()
-    def root = json(getChildApps()){it ->
-		profile: it.label {
-        	it.getProfileData()
-        }
+def getAllData() {
+    getChildApps()?.each { profile ->
+    	def resultJson = new groovy.json.JsonOutput().toJson(profile.getProfileData())
+    	log.debug resultJson
     }
-    return json.toString()
+    //return json.toString()
 }
 
 /************************************************************************************************************

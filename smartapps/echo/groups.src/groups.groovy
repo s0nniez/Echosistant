@@ -97,5 +97,5 @@ def initialize() {
 }
 
 def getGroupData() {
-	return new groovy.json.JsonBuilder(settings)
+	return getSettings()
 }
