@@ -7,7 +7,7 @@
           "type": "AMAZON.LITERAL"
         }
       ],
-      "intent": "Home"
+      "intent": "home"
     },
     {
       "slots": [
