@@ -412,6 +412,7 @@ def prfData = [:]
     state.mSettings = "${prfData}" 
     return state.mSettings
 */
+	def set=getChildApps()*.settings
     childApps.each {ch ->
             def pSettings = ch.getSettings()
             def pName = ch.label
@@ -419,10 +420,13 @@ def prfData = [:]
             prfData << ["${pName}" : "${pSettings}" , "groups" : gSettings]
       	}
     log.warn "prfData = $prfData"
+    log.warn "set = $set"
+
     state.pSettings = null
 	def resultJson = new groovy.json.JsonOutput().toJson(prfData)     
-    state.gSettings = prfData //resultJson
+        log.warn "resultJson = $resultJson"
 
+    state.gSettings = prfData //resultJson
 
 
 
