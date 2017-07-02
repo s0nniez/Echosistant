@@ -321,7 +321,7 @@ def initialize() {
     state.pContCmdsR = "init"       
     //Other Settings
     state.pendingConfirmation = false
-    //getAllData()
+    getAllData()
 }
 
 def subscriptions(){
@@ -356,6 +356,7 @@ public  webCoRE_handler(evt){switch(evt.value){case 'pistonList':List p=state.we
 def getProfileList(){
 		def cList = getChildApps()*.label
         log.info "cList = $cList"
+        state.esProfiles = null
 		state.esProfiles = state.esProfiles ? state.esProfiles + cList :  cList 
         //return getChildApps()*.label
 		if (debug) log.debug "Refreshing Profiles for CoRE, $state.esProfiles" //${getChildApps()*.label}"
@@ -397,11 +398,42 @@ def checkToken() {
 }
 
 def getAllData() {
+def prfData = [:]
+//def data = [:]
+/*
+	childApps.each {ch ->
+            def pSettings = ch.getSettings() 
+            def name = ch.label
+            def gSettings = ch.getGdata() //in json
+            prfData << ["${name}": "${resultJson}", "gSettings": "${gSettings}"]
+      	}
+    log.warn "prfData = $prfData"
+    			def resultJson = new groovy.json.JsonOutput().toJson(pSettings)// format json
+    state.mSettings = "${prfData}" 
+    return state.mSettings
+*/
+    childApps.each {ch ->
+            def pSettings = ch.getSettings()
+            def pName = ch.label
+            def gSettings = ch.getGdata() 
+            prfData << ["${pName}" : "${pSettings}" , "groups" : gSettings]
+      	}
+    log.warn "prfData = $prfData"
+    state.pSettings = null
+	def resultJson = new groovy.json.JsonOutput().toJson(prfData)     
+    state.gSettings = prfData //resultJson
+
+
+
+
+/*
     getChildApps()?.each { profile ->
     	def resultJson = new groovy.json.JsonOutput().toJson(profile.getProfileData())
-    	log.debug resultJson
+    	log.debug "$resultJson"
     }
     //return json.toString()
+*/
+
 }
 
 /************************************************************************************************************
