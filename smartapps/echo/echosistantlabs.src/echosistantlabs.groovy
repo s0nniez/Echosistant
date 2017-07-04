@@ -412,7 +412,7 @@ def getAppSettings() {
     	mainESSettings << ["${k}":d]
     }
     def allSettings = ["EchoSistant": mainESSettings] + ["profiles" :profileSettings]
-    return [contentType: "application/json", allESSettings: allSettings]
+    return [contentType: "application/json", data: allSettings]
 }
 /************************************************************************************************************
 		Begining Process - Lambda via page b
