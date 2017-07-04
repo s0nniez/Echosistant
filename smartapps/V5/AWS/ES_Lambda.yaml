@@ -11,13 +11,13 @@ Resources:
       Description: ''
       MemorySize: 128
       Timeout: 15
-      Role: 'arn:aws:iam::000000000000:role/echosistant_execution'
+      Role: 'arn:aws:iam::016139245837:role/echosistant_execution'
       Events:
         AlexaSkillEvent:
           Type: AlexaSkill
       Environment:
         Variables:
           STurl: >-
-            https://graph-na04-useast2.api.smartthings.com:443/api/smartapps/installations/5a774ca2-3319-4b6d-bfdb-000000000000/
-          STtoken: 615181ae-948f-44de-b0b5-000000000000
-          profileData: ''
+            https://graph-na04-useast2.api.smartthings.com:443/api/smartapps/installations/16bf4a6d-f99c-4732-b3ea-000000000000/
+          allESSettings: empty
+          STtoken: 015f9d48-f54d-4e11-be78-000000000000
