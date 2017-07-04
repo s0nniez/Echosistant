@@ -732,18 +732,16 @@ def skillConfig() {
 		Base Process
 ************************************************************************************************************/    
 def installed() {
-    log.debug "Installed with settings: ${settings}, current app version: ${release()}"
+    //log.debug "Installed with settings: ${settings}, current app version: ${release()}"
     state.ProfileRelease ="Profile: "  + release()
-    saveGdata()
 }
 def updated() {
-    log.debug "Updated with settings: ${settings}, current app version: ${release()}"
+    //log.debug "Updated with settings: ${settings}, current app version: ${release()}"
     state.ProfileRelease = "Profile: " + release()
     unsubscribe()
     initialize()
 }
 def initialize() {
-	saveGdata()
 	//subscriptions()
     //Alexa Voice Settings
     state.pContCmds = settings.pContCmdsProfile == false ? true : settings.pContCmdsProfile == true ? false : true
@@ -754,6 +752,18 @@ def initialize() {
     state.pMuteAll = settings.pDisableALLProfile ?: false 
     log.debug "Init with settings: ${settings}, current app version: ${release()}"
 }
+def getProfileSettings() {    
+	def groupSettings = []
+    getChildApps().each{group ->
+    	groupSettings << ["${group.label}":group.getGroupSettings()]
+    }
+ 
+    def profileSettings = []
+    settings.each{k,d ->
+    	profileSettings << ["${k}":d]
+    }
+    return ["deviceTypes":profileSettings] + ["groups": groupSettings]
+}
 /******************************************************************************************************
    PARENT STATUS CHECKS
 ******************************************************************************************************/
@@ -762,54 +772,6 @@ def checkState() {
 }
 def checkRelease() {
     return state.ProfileRelease
-}
-
-/*def getProfileData() {
-//	NEED THIS TO RETURN JSON DATA FROM THE CURRENT PROFILE, AND THE GROUPS.
-/*	def groupData = new groovy.json.JsonBuilder()
-	def root = builder {
-              name "Devin"
-              data {
-                 type "Test"
-                 note "Dummy"
-              }
-              addUrn(delegate, "gender", "male")
-              addUrn(delegate, "zip", "43230")
-           }
-	def groupData = 
-    def groups = getChildApps()
-	for(group in groups) {
-        groupData += "'group':'${group.label}'" + group.getGroupData()
-    }
-    def getSettingData() {     
-    	def res = getSettings()     
-        def resultJson = new groovy.json.JsonOutput().toJson(res)     
-        render contentType: "application/json", data: resultJson 
-    }
-    return new groovy.json.JsonBuilder(settings) //+ groupData
- 
-    def res = getSettings()     
-   	def resultJson = new groovy.json.JsonOutput().toJson(res)     
-    //render contentType: "application/json", data: resultJson 
-   log.debug "resultJson = $resultJson"
-    
-    return resultJson //getSettings()
-*/
-def getGdata() {
-    return state.gSettings
-}
-def saveGdata(){
-def gData = [:]
-//def data = [:]
-    childApps.each {ch ->
-            def pSettings = ch.getSettings()
-            def groupName = ch.label
-            gData << ["${groupName}" : "${pSettings}"]
-      	}
-    log.warn "gData = $gData"
-    state.gSettings = null
-	def resultJson = new groovy.json.JsonOutput().toJson(gData)     
-    state.gSettings = gData //resultJson
 }
 /******************************************************************************************************
    TEXT TO SPEECH PROCESS PROFILE

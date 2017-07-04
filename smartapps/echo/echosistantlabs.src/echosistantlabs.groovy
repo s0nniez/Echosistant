@@ -285,6 +285,7 @@ LAMBDA DATA MAPPING
 mappings {
     path("/b") { action: [GET: "processBegin"] }
     path("/t") { action: [GET: "processTts"] }
+    path("/update") { action: [GET: "getAppSettings"] }
 }
 /************************************************************************************************************
 Base Process
@@ -321,7 +322,10 @@ def initialize() {
     state.pContCmdsR = "init"       
     //Other Settings
     state.pendingConfirmation = false
-    getAllData()
+    //log.debug getAllSettings().toString().replaceAll(/\b(\w+\S)\b/, '"$1"').replace('" "',' ')
+    //':{deviceType:{' + getSettings().toString().replaceAll(/^\[|\]$/, '') + '},groups:{' + getChildApps().collect{group -> group.label + ':{deviceType:{' + group.getSettings().toString().replaceAll(/^\[|\]$/, '') + '}}'}.toString().replaceAll(/^\[|\]$/, '') + '}}'
+    //log.debug getSettings().toString()
+    //log.debug getAllSettings()//.replaceAll(', ',',').replaceAll(/\b(\w+\s*)\b/, '"$1"').replace('""','') //.replaceAll(/\b(\w+\S)\b/, '"$1"').replace('" "',' ')
 }
 
 def subscriptions(){
@@ -397,49 +401,19 @@ def checkToken() {
     return parentToken
 }
 
-def getAllData() {
-def prfData = [:]
-//def data = [:]
-/*
-	childApps.each {ch ->
-            def pSettings = ch.getSettings() 
-            def name = ch.label
-            def gSettings = ch.getGdata() //in json
-            prfData << ["${name}": "${resultJson}", "gSettings": "${gSettings}"]
-      	}
-    log.warn "prfData = $prfData"
-    			def resultJson = new groovy.json.JsonOutput().toJson(pSettings)// format json
-    state.mSettings = "${prfData}" 
-    return state.mSettings
-*/
-	def set=getChildApps()*.settings
-    childApps.each {ch ->
-            def pSettings = ch.getSettings()
-            def pName = ch.label
-            def gSettings = ch.getGdata() 
-            prfData << ["${pName}" : "${pSettings}" , "groups" : gSettings]
-      	}
-    log.warn "prfData = $prfData"
-    log.warn "set = $set"
-
-    state.pSettings = null
-	def resultJson = new groovy.json.JsonOutput().toJson(prfData)     
-        log.warn "resultJson = $resultJson"
-
-    state.gSettings = prfData //resultJson
-
-
-
-/*
-    getChildApps()?.each { profile ->
-    	def resultJson = new groovy.json.JsonOutput().toJson(profile.getProfileData())
-    	log.debug "$resultJson"
+def getAppSettings() {
+	log.debug "Settings Updated"
+	def profileSettings = []
+    getChildApps().each{profile ->
+    	profileSettings << ["${profile.label}":profile.getProfileSettings()]
     }
-    //return json.toString()
-*/
-
+    def mainESSettings = []
+    settings.each{k,d ->
+    	mainESSettings << ["${k}":d]
+    }
+    def allSettings = ["EchoSistant": mainESSettings] + ["profiles" :profileSettings]
+    return [contentType: "application/json", allESSettings: allSettings]
 }
-
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/
@@ -474,9 +448,9 @@ def processBegin(){
             "other data: pContCmdsR = '${state.pContCmdsR}', pinTry'=${state.pinTry}' "
     }
     
-    def pProfileData = "{\"Profile\":{\"Dear\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"},\"groups\" :{\"Basement\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}],\"Master\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}]}}],\"Home\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"},\"groups\" :{\"Living Room\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}],\"Office\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}]}}]}}"
+    //def pProfileData = "{\"Profile\":{\"Dear\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"},\"groups\" :{\"Basement\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}],\"Master\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}]}}],\"Home\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"},\"groups\" :{\"Living Room\":[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}],\"Office\" :[{\"devices\":{\"light\":\"Desk Lamp\",\"fan\":\"Living Room Fan\"}}]}}]}}"
 
-    return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt, "pProfileData": pProfileData]	 
+    return ["outputTxt":outputTxt, "pContinue":pContinue, "pShort":pShort, "pPendingAns":pPendingAns, "versionSTtxt":versionSTtxt, "profileData": URLEncoder.encode(getAppSettings())]	 
 
 } 
 /*catch (Throwable t) {

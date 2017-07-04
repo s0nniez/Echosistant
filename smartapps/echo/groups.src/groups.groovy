@@ -83,7 +83,7 @@ def groupSetup() {
     }
 }
     
-    def installed() {
+def installed() {
     initialize()
 }
 
@@ -96,6 +96,10 @@ def initialize() {
 	app.updateLabel(sceneName)
 }
 
-def getGroupData() {
-	return getSettings()
+def getGroupSettings() {
+	def groupSettings = []
+    settings.each{k,d ->
+    	groupSettings << ["${k}":d]
+    }
+    return ["deviceTypes":groupSettings]
 }
