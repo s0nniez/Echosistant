@@ -1,13 +1,7 @@
-home {van|ttstext}
-home {van dog|ttstext}
-home {remain go|ttstext}
-home {dinner's ready|ttstext}
-home {its dinner time|ttstext}
-home {its time for dinner|ttstext}
-home {its dinner time come downstairs|ttstext}
-home {dinner is ready come downstairs now|ttstext}
-home {im not going to tell you again|ttstext}
-home {dinner is ready we are eating without you|ttstext}
-home {dinner is ready we are going to eat without you|ttstext}
-home {my glasses are in the bathroom bring them downstairs with you|ttstext}
-home {dinner is ready we are going to eat all of it without you down here|ttstext}
+Home {turn|ttstext}
+Home {turn on|ttstext}
+Home {turn on the|ttstext}
+Home {turn on the desk|ttstext}
+Home {turn on the desk room|ttstext}
+Home {turn on the desk room area|ttstext}
+Home {turn on the desk room area hall|ttstext}
