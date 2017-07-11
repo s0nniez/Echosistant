@@ -17,7 +17,7 @@
                 StackName: ESStackName,
                 StackStatus: 'CREATE_COMPLETE'
             }
-            cloudformation.listStacks(params, function (err, data) {
+            cloudformation.waitFor('stackExists', params, function (err, data) {
                 if (err) {
                     results.innerHTML = 'ERROR: ' + err;
                 } else {
