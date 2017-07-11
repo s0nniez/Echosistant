@@ -92,7 +92,7 @@
 
         function checkStack(stackName) {
             var output = 'ERROR:';
-            try {
+            //try {
                 var params = {
                     StackName: stackName
                 }
@@ -103,9 +103,9 @@
                         output = data.Stacks[0].Outputs[0].OutputValue;
                     }
                 });
-            } catch (ex) {
-                output = 'ERROR: ' + ex;
-            }
+            //} catch (ex) {
+            //    output = 'ERROR: ' + ex;
+            //}
             return output;
         }
 
