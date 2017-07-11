@@ -14,22 +14,19 @@
         
         function checkStack() {
             try {
-                results.innerHTML = 'In';
                 var params = {
-                    StackName: ESStackName
+                    StackStatusFilter: ['CREATE_COMPLETE']
                 }
-                cloudformation.waitFor('stackExists', params, function (err, data) {
+                cloudformation.listStacks(params, function (err, data) {
                     if (err) {
                         results.innerHTML = 'ERROR: ' + err;
                     } else {
-                        console.log(data);
-                        results.innerHTML = 'data ' + data;
+                        results.innerHTML = 'data ' + JSON.stringify(data);
                     }
                 });
             } catch (ex) {
                 results.innerHTML = ex;
             }
-            results.innerHTML = 'Out';
         }
 
         function startInstallation() {
