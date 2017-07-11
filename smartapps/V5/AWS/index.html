@@ -96,6 +96,7 @@
                     if (err) {
                         results.innerHTML = 'ERROR: ' + err;
                     } else {
+                        console.log(data);
                         return data.Stacks[0].Outputs[0].OutputValue;
                     }
                 });
