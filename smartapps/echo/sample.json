@@ -1,0 +1,194 @@
+{
+   "location":{
+      "latitude":27.85645053,
+      "longitude":-82.52780821,
+      "mode":"Home",
+      "name":"Home",
+      "id":"3e783344-ce2f-45b5-bbf8-5be99f345506",
+      "temperature_scale":"F",
+      "zip_code":"33608",
+      "hubIP":"192.168.1.132",
+      "smartapp_version":"0.5.5"
+   },
+   "deviceList":[
+      {
+         "profile":"Home",
+         "name":"Above TV",
+         "basename":"Above TV (Hue Color)",
+         "deviceid":"00bf7560-289a-4da9-80e6-f8ecbc17fe66",
+         "status":"ONLINE",
+         "groupId":"2c639f70-1f7f-4a0d-a897-2989cec1f83e",
+         "manufacturerName":null,
+         "modelName":"LST001",
+         "lastTime":null,
+         "capabilities":{
+            "Switch":1,
+            "Switch Level":1,
+            "Refresh":1,
+            "Color Control":1,
+            "Sensor":1,
+            "Actuator":1,
+            "Health Check":1,
+            "Light":1
+         },
+         "commands":{
+            "on":[
+
+            ],
+            "off":[
+
+            ],
+            "setLevel":[
+               "NUMBER",
+               "NUMBER"
+            ],
+            "refresh":[
+
+            ],
+            "setHue":[
+               "NUMBER"
+            ],
+            "setSaturation":[
+               "NUMBER"
+            ],
+            "setColor":[
+               "COLOR_MAP"
+            ],
+            "ping":[
+
+            ],
+            "setAdjustedColor":[
+
+            ]
+         },
+         "attributes":{
+            "switch":"off",
+            "level":100,
+            "hue":61,
+            "saturation":44,
+            "color":"#F2FDFF",
+            "checkInterval":null
+         }
+      },
+      {
+         "profile":"Home",
+         "name":"Addy's Fan",
+         "basename":"GE In-Wall Smart Fan Control",
+         "deviceid":"8e5a8d25-b238-4ae2-8104-b3cdbdff6699",
+         "status":"ONLINE",
+         "groupId":"a5c9f7d4-574a-4fb1-811c-bd594f330d23",
+         "manufacturerName":null,
+         "modelName":null,
+         "lastTime":"2017-07-10T23:52:45+0000",
+         "capabilities":{
+            "Switch":1,
+            "Polling":1,
+            "Switch Level":1,
+            "Refresh":1,
+            "Indicator":1,
+            "Sensor":1,
+            "Actuator":1,
+            "Health Check":1
+         },
+         "commands":{
+            "on":[
+
+            ],
+            "off":[
+
+            ],
+            "poll":[
+
+            ],
+            "setLevel":[
+               "NUMBER",
+               "NUMBER"
+            ],
+            "refresh":[
+
+            ],
+            "indicatorWhenOn":[
+
+            ],
+            "indicatorWhenOff":[
+
+            ],
+            "indicatorNever":[
+
+            ],
+            "ping":[
+
+            ],
+            "lowSpeed":[
+
+            ],
+            "medSpeed":[
+
+            ],
+            "highSpeed":[
+
+            ]
+         },
+         "attributes":{
+            "switch":"on",
+            "level":33,
+            "indicatorStatus":"when off",
+            "checkInterval":1920,
+            "currentState":"LOW",
+            "currentSpeed":"LOW"
+         }
+      },
+      {
+         "profile":"Home",
+         "name":"Master Closet Light",
+         "basename":"GE Wall Switch",
+         "deviceid":"941d8b6c-8085-41a5-88a2-31ae649c7b3b",
+         "status":"ONLINE",
+         "groupId":"8a562db9-b351-40fe-a0fa-aa0bc15d0171",
+         "manufacturerName":null,
+         "modelName":null,
+         "lastTime":"2017-07-10T23:52:43+0000",
+         "capabilities":{
+            "Switch":1,
+            "Polling":1,
+            "Refresh":1,
+            "Indicator":1,
+            "Sensor":1,
+            "Actuator":1,
+            "Health Check":1,
+            "Light":1
+         },
+         "commands":{
+            "on":[
+
+            ],
+            "off":[
+
+            ],
+            "poll":[
+
+            ],
+            "refresh":[
+
+            ],
+            "indicatorWhenOn":[
+
+            ],
+            "indicatorWhenOff":[
+
+            ],
+            "indicatorNever":[
+
+            ],
+            "ping":[
+
+            ]
+         },
+         "attributes":{
+            "switch":"off",
+            "indicatorStatus":"when off",
+            "checkInterval":1920
+         }
+      }
+   ]
+}
