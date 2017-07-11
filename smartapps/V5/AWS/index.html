@@ -12,16 +12,15 @@
     <div id="results"></div>
     <script type="text/javascript">
         
-        function checkStack() {
+        function checkStack(stackName) {
             try {
                 var params = {
-                    StackStatusFilter: ['CREATE_COMPLETE']
+                    StackName: stackName
                 }
-                cloudformation.listStacks(params, function (err, data) {
+                cloudformation.waitFor('stackCreateComplete', params, function (err, data) {
                     if (err) {
                         results.innerHTML = 'ERROR: ' + err;
                     } else {
-                        console.log(data);
                         results.innerHTML = 'data ' + JSON.stringify(data);
                     }
                 });
