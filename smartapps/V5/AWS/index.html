@@ -14,16 +14,16 @@
         
         function checkStack() {
             try {
-            var params = {
-                StackName: ESStackName
-            }
-            cloudformation.waitFor('stackExists', params, function (err, data) {
-                if (err) {
-                    results.innerHTML = 'ERROR: ' + err;
-                } else {
-                    results.innerHTML = 'data ' + data;
+                var params = {
+                    StackName: ESStackName
                 }
-            });
+                cloudformation.waitFor('stackExists', params, function (err, data) {
+                    if (err) {
+                        results.innerHTML = 'ERROR: ' + err;
+                    } else {
+                        results.innerHTML = 'data ' + data;
+                    }
+                });
             } catch (ex) {
                 results.innerHTML = ex;
             }
