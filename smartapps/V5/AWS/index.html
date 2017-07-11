@@ -60,6 +60,9 @@
         }
 
         function checkLambda(functionName) {
+            var params = {
+                FunctionName: functionName
+            };
             lambda.getFunction(params, function (err, data) {
                 if (err) {
                     results.innerHTML = 'ERROR: ' + err;
