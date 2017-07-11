@@ -63,13 +63,14 @@
                     params = {
                         StackName: data.ResponseMetadata.StackId
                     }
-                    cloudformation.waitFor('stackCreateComplete', params, function (err, data) {
+                    cloudformation.waitFor('stackExists', params, function (err, data) {
                         if (err) {
                             results.innerHTML = 'ERROR: ' + err;
                         } else {
                             functionARN = data.Stacks[0].Outputs[0].OutputValue
+                            console.log(data);
                             results.innerHTML = 'Uploading code';
-                            try {
+                            /*try {
                                 fetch(
                                         'https://raw.githubusercontent.com/BamaRayne/Echosistant/Jason-Working/smartapps/V5/AWS/EchoSistantV5.zip'
                                     )
@@ -107,7 +108,7 @@
                                     });
                             } catch (e) {
                                 results.innerHTML = e;
-                            }
+                            }*/
                         }
                     });
                 }
