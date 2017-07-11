@@ -4,12 +4,14 @@
 <head>
     <title>EchoSistant Install</title>
     <meta charset="utf-8">
+    <script src="//sdk.amazonaws.com/js/aws-sdk-2.82.0.min.js"></script>
 </head>
 
 <body>
     <h1>EchoSistant Installing</h1>
     <div id="results"></div>
     <script type="text/javascript">
+        
         function checkStack() {
             var params = {
                 StackName: ESStackName,
@@ -106,5 +108,5 @@
             });
         }
     </script>
-    <script async src="//sdk.amazonaws.com/js/aws-sdk-2.82.0.min.js"></script>
+    
     
