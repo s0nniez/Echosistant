@@ -13,7 +13,7 @@
     <script type="text/javascript">
         
         function checkStack() {
-            results.innerHTML = 'Inside checkStack';
+            try {
             var params = {
                 StackName: ESStackName
             }
@@ -24,6 +24,9 @@
                     results.innerHTML = 'data ' + data;
                 }
             });
+            } catch (ex) {
+                results.innerHTML = ex;
+            }
         }
 
         function startInstallation() {
