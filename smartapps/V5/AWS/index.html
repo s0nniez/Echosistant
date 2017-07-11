@@ -4,37 +4,33 @@
 <head>
     <title>EchoSistant Install</title>
     <meta charset="utf-8">
-    <script src="//sdk.amazonaws.com/js/aws-sdk-2.82.0.min.js"></script>
 </head>
 
 <body>
-    AWS Access ID: <input type="text" id="awskey" style="width: 300px;" value="" /><br> AWS Access Secret:
-    <input type="text" id="awssecret" style="width: 300px;" value="" /><br> SmartThings
-    URL with app ID: <input type="text" id="sturl" style="width: 600px;" value="https://graph-na04-useast2.api.smartthings.com:443/api/smartapps/installations//"
-    />
-    <br> SmartThings Token: <input type="text" id="sttoken" style="width: 300px;" value=""
-    /><br>
-    <button id="upload-button">Go!</button><br>
-    <div id="results">Cross your fingers!!!</div>
+    <h1>EchoSistant Installing</h1>
+    <div id="results"></div>
     <script type="text/javascript">
-        var button = document.getElementById('upload-button');
-
-
-        button.addEventListener('click', function () {
-            results.innerHTML = 'Hold on to your butts! This can take a few mintues... ';
-            var awskey = document.getElementById('awskey').value;
-            var awssecret = document.getElementById('awssecret').value;
-            var sturl = document.getElementById('sturl').value;
-            var sttoken = document.getElementById('sttoken').value;
-            var functionARN;
-
-            var cloudformation = new AWS.CloudFormation({
-                accessKeyId: awskey,
-                secretAccessKey: awssecret,
-                region: 'us-east-1'
-            });
+        function checkStack() {
             var params = {
-                StackName: 'EchoSistantV5',
+                StackName: ESStackName,
+                StackStatus: 'CREATE_COMPLETE'
+            }
+            cloudformation.listStacks(params, function (err, data) {
+                if (err) {
+                    results.innerHTML = 'ERROR: ' + err;
+                } else {
+                    results.innerHTML = data;
+
+                }
+
+            });
+        }
+
+        function startInstallation() {
+            results.innerHTML = 'Hold on to your butts! This can take a few mintues... ';
+
+            var params = {
+                StackName: ESStackName,
                 Capabilities: [
                     'CAPABILITY_NAMED_IAM',
                 ],
@@ -53,6 +49,7 @@
                 TemplateBody: "{'AWSTemplateFormatVersion':'2010-09-09','Parameters':{'STurl':{'Default':'','Type':'String'},'FunctionName':{'Default':'EchoSistantV5','Type':'String','Description':'EchoSistantV5'},'STtoken':{'Default':'','Type':'String'}},'Outputs':{'FunctionARN':{'Value':{'Fn::GetAtt':['EchoSistantV5','Arn']}}},'Resources':{'EchoSistantV5Permissions':{'Type':'AWS::Lambda::Permission','Properties':{'Principal':'alexa-appkit.amazon.com','FunctionName':{'Ref':'EchoSistantV5'},'Action':'lambda:InvokeFunction'}},'EchoSistantV5Role':{'Type':'AWS::IAM::Role','Properties':{'AssumeRolePolicyDocument':{'Version':'2012-10-17','Statement':[{'Principal':{'Service':['lambda.amazonaws.com']},'Action':['sts:AssumeRole'],'Effect':'Allow'}]},'Path':'/','Policies':[{'PolicyName':'EchoSistantV5Policy','PolicyDocument':{'Version':'2012-10-17','Statement':[{'Action':['logs:*','dynamodb:*','cloudformation:*','couldwatch:*','lambda:*'],'Sid':'AllowLogging','Effect':'Allow','Resource':['*']}]}}]}},'EchoSistantV5':{'Type':'AWS::Lambda::Function','Properties':{'FunctionName':{'Ref':'FunctionName'},'Role':{'Fn::GetAtt':['EchoSistantV5Role','Arn']},'Code':{'ZipFile':'exports.handler = (event, context, callback) => { callback(null, true);};'},'Handler':'index.handler','Environment':{'Variables':{'STurl':{'Ref':'STurl'},'STtoken':{'Ref':'STtoken'}}},'Runtime':'nodejs6.10','Description':'EchoSistantV5 Lambda','Timeout':'10'}}}}",
                 TimeoutInMinutes: 15
             };
+
             cloudformation.createStack(params, function (err, data) {
                 if (err) {
                     results.innerHTML = 'ERROR: ' + err;
@@ -76,11 +73,7 @@
                                             reader.addEventListener("loadend",
                                                 function () {
                                                     var zipFileBlob = reader.result;
-                                                    var lambda = new AWS.Lambda({
-                                                        accessKeyId: awskey,
-                                                        secretAccessKey: awssecret,
-                                                        region: 'us-east-1'
-                                                    });
+
 
                                                     params = {
                                                         FunctionName: functionARN,
@@ -108,14 +101,12 @@
                                     });
                             } catch (e) {
                                 results.innerHTML = e;
-
                             }
                         }
                     });
                 }
             });
-        }, false);
+        }
     </script>
-</body>
-
-</html>
+    <script async src="//sdk.amazonaws.com/js/aws-sdk-2.82.0.min.js"></script>
+    
