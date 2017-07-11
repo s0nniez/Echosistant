@@ -88,8 +88,7 @@
 
     <script type="text/javascript">
         var results = document.getElementById('results');
-        var loader = document.getElementById('loader');
-        
+
         function checkStack(stackName) {
             try {
                 var params = {
@@ -99,6 +98,8 @@
                     if (err) {
                         results.innerHTML = 'ERROR: ' + err;
                     } else {
+                        results.innerHTML = data.Stacks[0].Outputs[0].OutputValue;
+                        console.log(data.Stacks[0].Outputs[0].OutputValue);
                         return data.Stacks[0].Outputs[0].OutputValue;
                     }
                 });
@@ -180,8 +181,8 @@
                             reader.readAsArrayBuffer(blob);
                         });
                     });
-            } catch (e) {
-                results.innerHTML = e;
+            } catch (ex) {
+                results.innerHTML = ex;
             }
         }
     </script>
