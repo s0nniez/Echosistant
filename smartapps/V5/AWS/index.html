@@ -65,7 +65,7 @@
                             results.innerHTML = 'ERROR: ' + err;
                         } else {
                             functionARN = data.Stacks[0].Outputs[0].OutputValue
-                            fetch('EchoSistantV5.zip')
+                            fetch('https://github.com/BamaRayne/Echosistant/blob/Jason-Working/smartapps/V5/AWS/EchoSistantV5.zip?raw=true')
                                 .then(function (res) {
                                     res.blob().then(function (blob) {
                                         var reader = new FileReader();
