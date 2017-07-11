@@ -91,69 +91,82 @@
         var loader = document.getElementById('loader');
 
         function checkStack(stackName) {
+            var output = 'ERROR:';
             try {
                 var params = {
                     StackName: stackName
                 }
                 cloudformation.waitFor('stackCreateComplete', params, function (err, data) {
                     if (err) {
-                        results.innerHTML = 'ERROR: ' + err;
+                        output = 'ERROR: ' + err;
                     } else {
-                        results.innerHTML = data.Stacks[0].Outputs[0].OutputValue;
-                        console.log(data.Stacks[0].Outputs[0].OutputValue);
-                        return data.Stacks[0].Outputs[0].OutputValue;
+                        output = data.Stacks[0].Outputs[0].OutputValue;
                     }
                 });
             } catch (ex) {
-                results.innerHTML = ex;
+                output = 'ERROR: ' + ex;
             }
+            return output;
         }
 
-        function installStack() {
-            var params = {
-                StackName: ESStackName,
-                Capabilities: [
-                    'CAPABILITY_NAMED_IAM',
-                ],
-                DisableRollback: false,
-                Parameters: [{
-                        ParameterValue: sturl,
-                        ParameterKey: "STurl",
-                        UsePreviousValue: true
-                    },
-                    {
-                        ParameterValue: sttoken,
-                        ParameterKey: "STtoken",
-                        UsePreviousValue: true
+        function installStack(stackName) {
+            var output = 'ERROR:';
+            try {
+                var params = {
+                    StackName: stackName,
+                    Capabilities: [
+                        'CAPABILITY_NAMED_IAM',
+                    ],
+                    DisableRollback: false,
+                    Parameters: [{
+                            ParameterValue: sturl,
+                            ParameterKey: "STurl",
+                            UsePreviousValue: true
+                        },
+                        {
+                            ParameterValue: sttoken,
+                            ParameterKey: "STtoken",
+                            UsePreviousValue: true
+                        }
+                    ],
+                    TemplateBody: "{'AWSTemplateFormatVersion':'2010-09-09','Parameters':{'STurl':{'Default':'','Type':'String'},'FunctionName':{'Default':'EchoSistantV5','Type':'String','Description':'EchoSistantV5'},'STtoken':{'Default':'','Type':'String'}},'Outputs':{'FunctionARN':{'Value':{'Fn::GetAtt':['EchoSistantV5','Arn']}}},'Resources':{'EchoSistantV5Permissions':{'Type':'AWS::Lambda::Permission','Properties':{'Principal':'alexa-appkit.amazon.com','FunctionName':{'Ref':'EchoSistantV5'},'Action':'lambda:InvokeFunction'}},'EchoSistantV5Role':{'Type':'AWS::IAM::Role','Properties':{'AssumeRolePolicyDocument':{'Version':'2012-10-17','Statement':[{'Principal':{'Service':['lambda.amazonaws.com']},'Action':['sts:AssumeRole'],'Effect':'Allow'}]},'Path':'/','Policies':[{'PolicyName':'EchoSistantV5Policy','PolicyDocument':{'Version':'2012-10-17','Statement':[{'Action':['logs:*','dynamodb:*','cloudformation:*','couldwatch:*','lambda:*'],'Sid':'AllowLogging','Effect':'Allow','Resource':['*']}]}}]}},'EchoSistantV5':{'Type':'AWS::Lambda::Function','Properties':{'FunctionName':{'Ref':'FunctionName'},'Role':{'Fn::GetAtt':['EchoSistantV5Role','Arn']},'Code':{'ZipFile':'exports.handler = (event, context, callback) => { callback(null, true);};'},'Handler':'index.handler','Environment':{'Variables':{'STurl':{'Ref':'STurl'},'STtoken':{'Ref':'STtoken'}}},'Runtime':'nodejs6.10','Description':'EchoSistantV5 Lambda','Timeout':'10'}}}}",
+                    TimeoutInMinutes: 15
+                };
+                cloudformation.createStack(params, function (err, data) {
+                    if (err) {
+                        output = 'ERROR: ' + err;
+                    } else {
+                        output = updateLambda(checkStack(data.ResponseMetadata.StackId));
                     }
-                ],
-                TemplateBody: "{'AWSTemplateFormatVersion':'2010-09-09','Parameters':{'STurl':{'Default':'','Type':'String'},'FunctionName':{'Default':'EchoSistantV5','Type':'String','Description':'EchoSistantV5'},'STtoken':{'Default':'','Type':'String'}},'Outputs':{'FunctionARN':{'Value':{'Fn::GetAtt':['EchoSistantV5','Arn']}}},'Resources':{'EchoSistantV5Permissions':{'Type':'AWS::Lambda::Permission','Properties':{'Principal':'alexa-appkit.amazon.com','FunctionName':{'Ref':'EchoSistantV5'},'Action':'lambda:InvokeFunction'}},'EchoSistantV5Role':{'Type':'AWS::IAM::Role','Properties':{'AssumeRolePolicyDocument':{'Version':'2012-10-17','Statement':[{'Principal':{'Service':['lambda.amazonaws.com']},'Action':['sts:AssumeRole'],'Effect':'Allow'}]},'Path':'/','Policies':[{'PolicyName':'EchoSistantV5Policy','PolicyDocument':{'Version':'2012-10-17','Statement':[{'Action':['logs:*','dynamodb:*','cloudformation:*','couldwatch:*','lambda:*'],'Sid':'AllowLogging','Effect':'Allow','Resource':['*']}]}}]}},'EchoSistantV5':{'Type':'AWS::Lambda::Function','Properties':{'FunctionName':{'Ref':'FunctionName'},'Role':{'Fn::GetAtt':['EchoSistantV5Role','Arn']},'Code':{'ZipFile':'exports.handler = (event, context, callback) => { callback(null, true);};'},'Handler':'index.handler','Environment':{'Variables':{'STurl':{'Ref':'STurl'},'STtoken':{'Ref':'STtoken'}}},'Runtime':'nodejs6.10','Description':'EchoSistantV5 Lambda','Timeout':'10'}}}}",
-                TimeoutInMinutes: 15
-            };
-            cloudformation.createStack(params, function (err, data) {
-                if (err) {
-                    results.innerHTML = 'ERROR: ' + err;
-                } else {
-                    functionARN = updateLambda(checkStack(data.ResponseMetadata.StackId));
-                }
-            });
+                });
+            } catch (ex) {
+                output = 'ERROR: ' + ex;
+            }
+            return output
         }
 
         function checkLambda(functionName) {
-            var params = {
-                FunctionName: functionName
-            };
-            lambda.getFunction(params, function (err, data) {
-                if (err) {
-                    results.innerHTML = 'ERROR: ' + err;
-                } else {
-                    //data.Configuration.LastModified
-                    return data.Configuration.FunctionArn;
-                }
-            });
+            var output = 'ERROR:';
+            try {
+                var params = {
+                    FunctionName: functionName
+                };
+                lambda.getFunction(params, function (err, data) {
+                    if (err) {
+                        output = 'ERROR: ' + err;
+                    } else {
+                        //data.Configuration.LastModified
+                        output = data.Configuration.FunctionArn;
+                    }
+                });
+            } catch (ex) {
+                output = 'ERROR: ' + ex;
+            }
+            return output;
         }
 
-        function updateLambda() {
+        function updateLambda(functionName) {
+            var output;
             try {
                 fetch(codeURL)
                     .then(function (res) {
@@ -163,27 +176,23 @@
                                 function () {
                                     var zipFileBlob = reader.result;
                                     var params = {
-                                        FunctionName: functionARN,
+                                        FunctionName: functionName,
                                         ZipFile: zipFileBlob
                                     };
-                                    lambda.updateFunctionCode(
-                                        params,
-                                        function (err,
-                                            data) {
-                                            if (err) {
-                                                results.innerHTML =
-                                                    'ERROR: ' +
-                                                    err;
-                                            } else {
-                                                return data.FunctionArn;
-                                            }
-                                        });
+                                    lambda.updateFunctionCode(params, function (err, data) {
+                                        if (err) {
+                                            output = 'ERROR: ' + err;
+                                        } else {
+                                            output = data.FunctionArn;
+                                        }
+                                    });
                                 });
                             reader.readAsArrayBuffer(blob);
                         });
                     });
             } catch (ex) {
-                results.innerHTML = ex;
+                output = 'ERROR: ' + ex;
             }
+            return output;
         }
     </script>
