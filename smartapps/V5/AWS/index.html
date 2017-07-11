@@ -67,7 +67,8 @@
                 if (err) {
                     results.innerHTML = 'ERROR: ' + err;
                 } else {
-                    results.innerHTML = JSON.stringify(data);
+                    //data.Configuration.LastModified
+                    return data.Configuration.FunctionArn;
                 }
             });
         }
@@ -81,7 +82,7 @@
                             reader.addEventListener("loadend",
                                 function () {
                                     var zipFileBlob = reader.result;
-                                    params = {
+                                    var params = {
                                         FunctionName: functionARN,
                                         ZipFile: zipFileBlob
                                     };
