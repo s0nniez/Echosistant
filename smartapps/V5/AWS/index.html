@@ -87,6 +87,9 @@
     <div id="results" class="animate-bottom"></div>
 
     <script type="text/javascript">
+        var results = document.getElementById('results');
+        var loader = document.getElementById('loader');
+        
         function checkStack(stackName) {
             try {
                 var params = {
