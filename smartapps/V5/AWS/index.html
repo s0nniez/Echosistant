@@ -93,7 +93,7 @@
         var sturl = '';
         var sttoken = '';
         var ESStackName = '';
-        var AWS = new AWS();
+        AWS.config = new AWS.Config()
         var cloudformation = new AWS.CloudFormation();
         var lambda = new AWS.Lambda();
 
