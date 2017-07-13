@@ -777,7 +777,7 @@ def getProfileSettings() {
                     lastTime: dev.getLastActivity(),
                     capabilities: dev.capabilities.collect{cap->cap.name},
                     commands: dev.supportedCommands.collect{cmd->cmd.name}, 
-                    attributes: dev.supportedAttributes.collectEntries{attr->[(attr.name):dev?.currentValue(attr?.name)]}
+                    attributes: dev.supportedAttributes.collectEntries{attr->[(attr.name):dev.currentValue(attr.name) == "" ? null : dev.currentValue(attr.name)]}
                 ]
         	}
        	} else {
