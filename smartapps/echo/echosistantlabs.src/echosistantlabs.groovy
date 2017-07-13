@@ -138,6 +138,13 @@ def settings(){
         section ("Directions, How-to's, and Troubleshooting") { 
             href url:"http://thingsthataresmart.wiki/index.php?title=EchoSistant", title: "Tap to go to the EchoSistant Wiki", description: none,
                 image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/wiki.png"
+            
+         }
+         section ("Alexa Install Codes") { 
+            input "accessKeyId", "text", title: "AWS Access Key ID", required: "false"
+            input "secretAccessKey", "text", title: "AWS Access Key Secret", required: "false"
+            href url: apiServerUrl("/api/smartapps/installations/${app.id}/internalHTML?access_token=${state.accessToken}"), title: "Tap to go install EchoSistant Lamda", description: none,
+                image: "https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/Echosistant_Config.png"
             input "debug", "bool", title: "Enable Debug Logging", default: true, submitOnChange: true 
 
         } 
@@ -286,6 +293,7 @@ mappings {
     path("/b") { action: [GET: "processBegin"] }
     path("/t") { action: [GET: "processTts"] }
     path("/update") { action: [GET: "getAppSettings"] }
+    path("/internalHTML") {action: [GET: "internalHTML"]}
 }
 /************************************************************************************************************
 Base Process
@@ -401,19 +409,301 @@ def checkToken() {
     return parentToken
 }
 
+def renderLocation() {
+  	[
+    	latitude: location.latitude,
+    	longitude: location.longitude,
+    	mode: location.mode,
+    	name: location.name,
+        id: location.id,
+    	temperature_scale: location.temperatureScale,
+    	zip_code: location.zipCode,
+        hubIP: location.hubs[0].localIP,
+        smartapp_version: '5.4'
+  	]
+}
+
 def getAppSettings() {
 	log.debug "Settings Updated"
-	def profileSettings = []
-    getChildApps().each{profile ->
+	/*def profileSettings = []
+    getChildApps().each{profile->
     	profileSettings << ["${profile.label}":profile.getProfileSettings()]
     }
     def mainESSettings = []
     settings.each{k,d ->
     	mainESSettings << ["${k}":d]
     }
-    def allSettings = ["EchoSistant": mainESSettings] + ["profiles" :profileSettings]
-    return [contentType: "application/json", data: allSettings]
+    def allSettings = ["EchoSistant": mainESSettings] + ["profiles" :profileSettings]*/
+    
+    def allSettings = [
+    	appSettings: settings,
+        profileList: getChildApps().collectEntries{profile->[(profile.label):(profile.getProfileSettings())]}
+    ]
+    
+    //def deviceJson = new groovy.json.JsonOutput().toJson(allSettings)
+    //render contentType: "application/json", data: allSettings
+    
+    //def allSettings = "{\"location\":{\"latitude\":27.85645053,\"longitude\":-82.52780821,\"mode\":\"Home\",\"name\":\"Home\",\"id\":\"3e783344-ce2f-45b5-bbf8-5be99f345506\",\"temperature_scale\":\"F\",\"zip_code\":\"33608\",\"hubIP\":\"192.168.1.132\",\"smartapp_version\":\"0.5.5\"},\"deviceList\":[{\"profile\":\"Home\",\"name\":\"Front Door\",\"basename\":\"NYCE Door Hinge Sensor\",\"deviceid\":\"226a0377-a2ae-49b7-8fc1-21107e217f65\",\"status\":\"ONLINE\",\"groupId\":\"c444e46c-e850-47d9-a58d-3abeed7e50b4\",\"manufacturerName\":\"NYCE\",\"modelName\":\"3010\",\"lastTime\":\"2017-07-11T01:05:20+0000\",\"capabilities\":{\"Battery\":1,\"Contact Sensor\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Health Check\":1},\"commands\":{\"configure\":[],\"refresh\":[],\"ping\":[],\"enrollResponse\":[]},\"attributes\":{\"battery\":25,\"contact\":\"closed\",\"checkInterval\":7260}},{\"profile\":\"Home\",\"name\":\"Front Door Lock\",\"basename\":\"Z-Wave Lock\",\"deviceid\":\"5d84039e-0c2a-471e-a77f-7f950d7d153f\",\"status\":\"ACTIVE\",\"groupId\":\"c444e46c-e850-47d9-a58d-3abeed7e50b4\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-10T15:09:23+0000\",\"capabilities\":{\"Battery\":1,\"Contact Sensor\":1,\"Polling\":1,\"Lock\":1,\"Refresh\":1,\"Smoke Detector\":1,\"Lock Codes\":1,\"Sensor\":1,\"Actuator\":1,\"Tamper Alert\":1},\"commands\":{\"poll\":[],\"lock\":[],\"unlock\":[],\"refresh\":[],\"setCode\":[\"STRING\",\"NUMBER\",\"STRING\"],\"deleteCode\":[\"NUMBER\"],\"requestCode\":[\"NUMBER\"],\"reloadAllCodes\":[],\"unlockWithTimeout\":[],\"setCodeLength\":[\"NUMBER\"],\"nameSlot\":[\"NUMBER\",\"STRING\"],\"updateCodes\":[\"JSON_OBJECT\"],\"unlockwtimeout\":[],\"alarmToggle\":[],\"setAlarm\":[\"STRING\"],\"sensitiveToggle\":[],\"setSensitivity\":[\"STRING\"],\"disableKeypad\":[],\"enableKeypad\":[],\"enableAutolock\":[],\"disableAutolock\":[],\"disableAudio\":[],\"enableAudio\":[]},\"attributes\":{\"battery\":100,\"contact\":\"closed\",\"lock\":\"locked\",\"smoke\":\"clear\",\"carbonMonoxide\":null,\"codeChanged\":\"2\",\"lockCodes\":null,\"scanCodes\":null,\"codeLength\":null,\"maxCodes\":30,\"maxCodeLength\":null,\"minCodeLength\":null,\"codeReport\":\"2\",\"tamper\":\"clear\",\"alarm\":\"\",\"sensitive\":\"\",\"codeunlock\":\"enabled\",\"autolock\":\"disabled\",\"lockStatus\":\"Battery 100%\",\"invalidCode\":null,\"beeper\":\"enabled\",\"pinLength\":4,\"codeVersion\":\"03.03.03\",\"dhName\":\"Universal Z-Wave Lock Device Handler\",\"contactX\":\"unknown\"}},{\"profile\":\"Home\",\"name\":\"Garage Door\",\"basename\":\"NYCE Door Hinge Sensor\",\"deviceid\":\"2578b104-59e8-4f30-9372-e4dd302cf408\",\"status\":\"ONLINE\",\"groupId\":\"69dbf695-41e3-463e-a48f-422521d1e921\",\"manufacturerName\":\"NYCE\",\"modelName\":\"3010\",\"lastTime\":\"2017-07-11T01:08:59+0000\",\"capabilities\":{\"Battery\":1,\"Contact Sensor\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Health Check\":1},\"commands\":{\"configure\":[],\"refresh\":[],\"ping\":[],\"enrollResponse\":[]},\"attributes\":{\"battery\":75,\"contact\":\"closed\",\"checkInterval\":720}},{\"profile\":\"Home\",\"name\":\"Garage Door Opener\",\"basename\":\"Linear GoControl Garage Door Opener\",\"deviceid\":\"7c0fb708-295b-47ae-a3cd-780e710a915c\",\"status\":\"ONLINE\",\"groupId\":\"69dbf695-41e3-463e-a48f-422521d1e921\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-11T01:05:02+0000\",\"capabilities\":{\"Contact Sensor\":1,\"Refresh\":1,\"Sensor\":1,\"Actuator\":1,\"Door Control\":1,\"Garage Door Control\":1,\"Health Check\":1},\"commands\":{\"refresh\":[],\"open\":[],\"close\":[],\"ping\":[]},\"attributes\":{\"contact\":\"closed\",\"door\":\"closed\",\"checkInterval\":1920}},{\"profile\":\"Home\",\"name\":\"Garage Keypad\",\"basename\":\"Iris 3405-L Keypad\",\"deviceid\":\"49ca789e-37e4-4fb2-85dc-e3c29212d28d\",\"status\":\"ONLINE\",\"groupId\":\"69dbf695-41e3-463e-a48f-422521d1e921\",\"manufacturerName\":\"CentraLite\",\"modelName\":\"3405-L\",\"lastTime\":\"2017-07-11T00:44:56+0000\",\"capabilities\":{\"Temperature Measurement\":1,\"Battery\":1,\"Motion Sensor\":1,\"Configuration\":1,\"Tone\":1,\"Refresh\":1,\"Button\":1,\"Lock Codes\":1,\"Health Check\":1,\"Tamper Alert\":1},\"commands\":{\"configure\":[],\"beep\":[],\"refresh\":[],\"lock\":[],\"unlock\":[],\"setCode\":[\"STRING\",\"STRING\",\"NUMBER\"],\"deleteCode\":[\"NUMBER\"],\"requestCode\":[\"NUMBER\"],\"reloadAllCodes\":[],\"unlockWithTimeout\":[],\"setCodeLength\":[\"NUMBER\"],\"nameSlot\":[\"STRING\",\"NUMBER\"],\"updateCodes\":[\"JSON_OBJECT\"],\"ping\":[],\"setDisarmed\":[],\"setArmedAway\":[],\"setArmedStay\":[],\"setArmedNight\":[],\"setExitDelay\":[\"NUMBER\"],\"setEntryDelay\":[\"NUMBER\"],\"sendInvalidKeycodeResponse\":[],\"acknowledgeArmRequest\":[],\"enrollResponse\":[]},\"attributes\":{\"temperature\":76,\"battery\":100,\"motion\":\"inactive\",\"button\":null,\"numberOfButtons\":null,\"lock\":null,\"codeChanged\":null,\"lockCodes\":null,\"scanCodes\":null,\"codeLength\":null,\"maxCodes\":null,\"maxCodeLength\":null,\"minCodeLength\":null,\"codeReport\":null,\"checkInterval\":7260,\"tamper\":\"clear\",\"armMode\":\"disarmed\",\"lastUpdate\":\"Fri, Jun 16 2017 @ 5:19 PM EDT\"}},{\"profile\":\"Master\",\"name\":\"Master Closet Motion\",\"basename\":\"Iris Motion Sensor\",\"deviceid\":\"48627f5e-ce5e-49a8-b57f-b7b3e0da8020\",\"status\":\"ONLINE\",\"groupId\":\"8a562db9-b351-40fe-a0fa-aa0bc15d0171\",\"manufacturerName\":\"CentraLite\",\"modelName\":\"3326-L\",\"lastTime\":\"2017-07-11T01:04:38+0000\",\"capabilities\":{\"Temperature Measurement\":1,\"Battery\":1,\"Motion Sensor\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Health Check\":1},\"commands\":{\"configure\":[],\"refresh\":[],\"ping\":[],\"enrollResponse\":[]},\"attributes\":{\"temperature\":72,\"battery\":78,\"motion\":\"inactive\",\"checkInterval\":720}},{\"profile\":\"Office\",\"name\":\"Test\",\"basename\":\"Iris Contact Sensor\",\"deviceid\":\"2720be92-9253-4b21-8c43-db83c0ecb4dd\",\"status\":\"ONLINE\",\"groupId\":\"49c61fd2-6ccc-4255-abb1-d9fac98032c7\",\"manufacturerName\":\"CentraLite\",\"modelName\":\"3320\",\"lastTime\":\"2017-07-11T01:04:24+0000\",\"capabilities\":{\"Temperature Measurement\":1,\"Battery\":1,\"Contact Sensor\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Health Check\":1},\"commands\":{\"configure\":[],\"refresh\":[],\"ping\":[],\"enrollResponse\":[]},\"attributes\":{\"temperature\":78,\"battery\":89,\"contact\":\"open\",\"checkInterval\":720,\"status\":\"open\"}},{\"profile\":\"Kitchen\",\"name\":\"Living Room Glass Break\",\"basename\":\"Utilitech Glass Break Sensor\",\"deviceid\":\"a3b3ea16-e083-4bb1-bc3b-94ac05b2377d\",\"status\":\"ONLINE\",\"groupId\":\"2c639f70-1f7f-4a0d-a897-2989cec1f83e\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-11T00:59:35+0000\",\"capabilities\":{\"Battery\":1,\"Contact Sensor\":1,\"Alarm\":1,\"Refresh\":1,\"Health Check\":1},\"commands\":{\"off\":[],\"strobe\":[],\"siren\":[],\"both\":[],\"refresh\":[],\"ping\":[]},\"attributes\":{\"battery\":67,\"contact\":\"closed\",\"alarm\":null,\"checkInterval\":14520,\"alarmState\":null}},{\"profile\":\"Kitchen\",\"name\":\"Garage Siren\",\"basename\":\"Z-Wave Siren\",\"deviceid\":\"8896bf36-5c01-4ced-b51f-927441cac874\",\"status\":\"ONLINE\",\"groupId\":\"69dbf695-41e3-463e-a48f-422521d1e921\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-10T21:19:48+0000\",\"capabilities\":{\"Switch\":1,\"Battery\":1,\"Alarm\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Actuator\":1,\"Health Check\":1},\"commands\":{\"on\":[],\"off\":[],\"strobe\":[],\"siren\":[],\"both\":[],\"configure\":[],\"refresh\":[],\"ping\":[]},\"attributes\":{\"switch\":\"off\",\"battery\":100,\"alarm\":\"off\",\"checkInterval\":14520,\"alarmState\":\"standing by\"}},{\"profile\":\"Home\",\"name\":\"AC Water Sensor\",\"basename\":\"Iris Smart Water Sensor\",\"deviceid\":\"a7ae6a36-5287-4767-bf4a-704d46d6e254\",\"status\":\"ONLINE\",\"groupId\":\"b32e6b95-7935-4959-847b-af481dae0a99\",\"manufacturerName\":\"CentraLite\",\"modelName\":\"3315-L\",\"lastTime\":\"2017-07-11T01:05:58+0000\",\"capabilities\":{\"Temperature Measurement\":1,\"Battery\":1,\"Water Sensor\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Health Check\":1},\"commands\":{\"configure\":[],\"refresh\":[],\"ping\":[],\"enrollResponse\":[]},\"attributes\":{\"temperature\":71,\"battery\":67,\"water\":\"dry\",\"checkInterval\":720}},{\"profile\":\"Office\",\"name\":\"Desk Lamp\",\"basename\":\"Desk Lamp (Hue Extended Color)\",\"deviceid\":\"5bf37f31-346f-49bd-b7a5-79f4f0e5a20d\",\"status\":\"ONLINE\",\"groupId\":\"49c61fd2-6ccc-4255-abb1-d9fac98032c7\",\"manufacturerName\":null,\"modelName\":\"LCT001\",\"lastTime\":null,\"capabilities\":{\"Switch\":1,\"Switch Level\":1,\"Refresh\":1,\"Color Control\":1,\"Sensor\":1,\"Actuator\":1,\"Color Temperature\":1,\"Health Check\":1,\"Light\":1},\"commands\":{\"on\":[],\"off\":[],\"setLevel\":[\"NUMBER\",\"NUMBER\"],\"refresh\":[],\"setHue\":[\"NUMBER\"],\"setSaturation\":[\"NUMBER\"],\"setColor\":[\"COLOR_MAP\"],\"setColorTemperature\":[\"NUMBER\"],\"ping\":[],\"setAdjustedColor\":[]},\"attributes\":{\"switch\":\"off\",\"level\":48,\"hue\":52,\"saturation\":100,\"color\":\"#F4FCFF\",\"colorTemperature\":6536,\"checkInterval\":null}},{\"profile\":\"Kitchen\",\"name\":\"Dining Room Light\",\"basename\":\"Z-Wave Relay\",\"deviceid\":\"dc23d52e-b554-49b0-b0db-e5e86bd9a081\",\"status\":\"ACTIVE\",\"groupId\":\"95532e31-bbb7-4aa1-b374-bf4ecfa27a76\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-10T22:39:34+0000\",\"capabilities\":{\"Switch\":1,\"Polling\":1,\"Refresh\":1,\"Sensor\":1,\"Actuator\":1,\"Relay Switch\":1},\"commands\":{\"on\":[],\"off\":[],\"poll\":[],\"refresh\":[]},\"attributes\":{\"switch\":\"off\"}},{\"profile\":\"Home\",\"name\":\"Addy's Fan\",\"basename\":\"GE In-Wall Smart Fan Control\",\"deviceid\":\"8e5a8d25-b238-4ae2-8104-b3cdbdff6699\",\"status\":\"ONLINE\",\"groupId\":\"a5c9f7d4-574a-4fb1-811c-bd594f330d23\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-11T01:08:05+0000\",\"capabilities\":{\"Switch\":1,\"Polling\":1,\"Switch Level\":1,\"Refresh\":1,\"Indicator\":1,\"Sensor\":1,\"Actuator\":1,\"Health Check\":1},\"commands\":{\"on\":[],\"off\":[],\"poll\":[],\"setLevel\":[\"NUMBER\",\"NUMBER\"],\"refresh\":[],\"indicatorWhenOn\":[],\"indicatorWhenOff\":[],\"indicatorNever\":[],\"ping\":[],\"lowSpeed\":[],\"medSpeed\":[],\"highSpeed\":[]},\"attributes\":{\"switch\":\"on\",\"level\":33,\"indicatorStatus\":\"when off\",\"checkInterval\":1920,\"currentState\":\"LOW\",\"currentSpeed\":\"LOW\"}},{\"profile\":\"Office\",\"name\":\"Fan Light\",\"basename\":\"KOF Zigbee Fan Controller - Light Child Device\",\"deviceid\":\"f40b0f3c-cd12-484b-bef0-0e9ff6f10f65\",\"status\":\"INACTIVE\",\"groupId\":\"49c61fd2-6ccc-4255-abb1-d9fac98032c7\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":null,\"capabilities\":{\"Switch\":1,\"Switch Level\":1,\"Sensor\":1,\"Actuator\":1,\"Light\":1},\"commands\":{\"on\":[],\"off\":[],\"setLevel\":[\"NUMBER\",\"NUMBER\"]},\"attributes\":{\"switch\":\"on\",\"level\":29}},{\"profile\":\"Kitchen\",\"name\":\"Living Room Fan\",\"basename\":\"GE Wall Switch\",\"deviceid\":\"cc9dc773-cba0-4753-b35c-f80acf85c10e\",\"status\":\"ONLINE\",\"groupId\":\"2c639f70-1f7f-4a0d-a897-2989cec1f83e\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-11T01:08:06+0000\",\"capabilities\":{\"Switch\":1,\"Polling\":1,\"Refresh\":1,\"Indicator\":1,\"Sensor\":1,\"Actuator\":1,\"Health Check\":1,\"Light\":1},\"commands\":{\"on\":[],\"off\":[],\"poll\":[],\"refresh\":[],\"indicatorWhenOn\":[],\"indicatorWhenOff\":[],\"indicatorNever\":[],\"ping\":[]},\"attributes\":{\"switch\":\"off\",\"indicatorStatus\":\"when off\",\"checkInterval\":1920}},{\"profile\":\"Master\",\"name\":\"Master Bathroom Lights\",\"basename\":\"GE Wall Switch\",\"deviceid\":\"c7c4c9ab-772c-4bf6-ac9e-b0a4f2137a75\",\"status\":\"ONLINE\",\"groupId\":\"8a562db9-b351-40fe-a0fa-aa0bc15d0171\",\"manufacturerName\":null,\"modelName\":null,\"lastTime\":\"2017-07-11T01:08:01+0000\",\"capabilities\":{\"Switch\":1,\"Polling\":1,\"Refresh\":1,\"Indicator\":1,\"Sensor\":1,\"Actuator\":1,\"Health Check\":1,\"Light\":1},\"commands\":{\"on\":[],\"off\":[],\"poll\":[],\"refresh\":[],\"indicatorWhenOn\":[],\"indicatorWhenOff\":[],\"indicatorNever\":[],\"ping\":[]},\"attributes\":{\"switch\":\"off\",\"indicatorStatus\":\"when off\",\"checkInterval\":1920}},{\"profile\":\"Office\",\"name\":\"Office Fan\",\"basename\":\"KOF Zigbee Fan Controller\",\"deviceid\":\"06cd80e0-5bbc-43b8-add0-d203525f2007\",\"status\":\"ACTIVE\",\"groupId\":\"49c61fd2-6ccc-4255-abb1-d9fac98032c7\",\"manufacturerName\":\"King Of Fans,  Inc.\",\"modelName\":\"HDC52EastwindFan\",\"lastTime\":\"2017-07-11T01:09:12+0000\",\"capabilities\":{\"Switch\":1,\"Polling\":1,\"Configuration\":1,\"Refresh\":1,\"Sensor\":1,\"Actuator\":1,\"Light\":1},\"commands\":{\"on\":[],\"off\":[],\"poll\":[],\"configure\":[],\"refresh\":[],\"lightOn\":[],\"lightOff\":[],\"lightLevel\":[],\"setFanSpeed\":[]},\"attributes\":{\"switch\":\"on\",\"fanMode\":\"03\",\"lightBrightness\":29,\"lastFanMode\":\"03\",\"LchildVer\":\"ver 0.2.170515a\",\"FchildVer\":\"ver 0.2.170515\",\"LchildCurr\":\"2\",\"FchildCurr\":\"2\"}},{\"profile\":\"Home\",\"name\":\"Not Used Yet\",\"basename\":\"Not Used Yet (Hue Extended Color)\",\"deviceid\":\"15fd1f06-c7ea-4c09-adbc-9d0c7d5164e4\",\"status\":\"OFFLINE\",\"groupId\":\"c444e46c-e850-47d9-a58d-3abeed7e50b4\",\"manufacturerName\":null,\"modelName\":\"LCT001\",\"lastTime\":null,\"capabilities\":{\"Switch\":1,\"Switch Level\":1,\"Refresh\":1,\"Color Control\":1,\"Sensor\":1,\"Actuator\":1,\"Color Temperature\":1,\"Health Check\":1,\"Light\":1},\"commands\":{\"on\":[],\"off\":[],\"setLevel\":[\"NUMBER\",\"NUMBER\"],\"refresh\":[],\"setHue\":[\"NUMBER\"],\"setSaturation\":[\"NUMBER\"],\"setColor\":[\"COLOR_MAP\"],\"setColorTemperature\":[\"NUMBER\"],\"ping\":[],\"setAdjustedColor\":[]},\"attributes\":{\"switch\":\"off\",\"level\":1,\"hue\":0,\"saturation\":0,\"color\":\"#FFFFFF\",\"colorTemperature\":null,\"checkInterval\":null}}]}"
+    return [contentType: "application/text", data: allSettings]
 }
+
+def internalHTML() {
+    def html = 
+"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EchoSistant Install</title>
+    <meta name="viewport" content="width=640">
+    <meta charset="utf-8">
+    <script src="https://rawgit.com/BamaRayne/Echosistant/Jason-Working/smartapps/V5/AWS/aws-sdk-2.82.0.min.js"></script>
+    <style type="text/css">
+        @font-face {
+            font-family: 'Swiss 721 W01 Thin';
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.eot');
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.eot?#iefix') format('embedded-opentype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.woff') format('woff'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.ttf') format('truetype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.svg#swis721_th_btthin') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Swiss 721 W01 Light';
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.eot');
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.eot?#iefix') format('embedded-opentype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.woff') format('woff'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.ttf') format('truetype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.svg#swis721_lt_btlight') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            padding: 1em;
+            background: #2B3134;
+            color: #777;
+            text-align: center;
+            font-family: "Gill sans", sans-serif;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin: 1em 0;
+            border-bottom: 1px dashed;
+            padding-bottom: 1em;
+            font-weight: lighter;
+        }
+
+        #loader {
+            height: 70%;
+            width: 70%;
+            text-align: center;
+            padding: 1em;
+            margin: 0 auto 1em;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .animate-bottom {
+            position: relative;
+            -webkit-animation-name: animatebottom;
+            -webkit-animation-duration: 1s;
+            animation-name: animatebottom;
+            animation-duration: 1s
+        }
+
+        @-webkit-keyframes animatebottom {
+            from {
+                bottom: -300px;
+                opacity: 0
+            }
+            to {
+                bottom: 0;
+                opacity: 1
+            }
+        }
+
+        @keyframes animatebottom {
+            from {
+                bottom: -300px;
+                opacity: 0
+            }
+            to {
+                bottom: 0;
+                opacity: 1
+            }
+        }
+
+        #results {
+            display: none;
+            text-align: center;
+            font-size: 2.2em;
+            font-family: 'Swiss 721 W01 Thin';
+            color: #666666;
+            padding: 0 40px;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>EchoSistant Installing</h1>
+    <!-- By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL -->
+    <svg id="loader" width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" stroke="rgb(0%, 51.3%, 100%)">
+        <g fill="none" fill-rule="evenodd">
+            <g transform="translate(1 1)" stroke-width="2">
+                <circle stroke-opacity=".5" cx="18" cy="18" r="18" />
+                <path d="M36 18c0-9.94-8.06-18-18-18">
+                    <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite"
+                    />
+                </path>
+            </g>
+        </g>
+    </svg>
+    <div id="results" class="animate-bottom"></div>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                cloudformation.describeStacks({StackName: ESStackName}, function (err, data) {
+                    if (err) {
+                        if (err.message == 'Stack with id EchoSistantV5 does not exist') {
+                            var params = {
+                                StackName: ESStackName,
+                                Capabilities: ['CAPABILITY_NAMED_IAM'],
+                                DisableRollback: false,
+                                Parameters: [
+                                    {ParameterValue: sturl, ParameterKey: "STurl", UsePreviousValue: true},
+                                    {ParameterValue: sttoken, ParameterKey: "STtoken", UsePreviousValue: true}
+                                ],
+                                TemplateBody: "{'AWSTemplateFormatVersion':'2010-09-09','Parameters':{'STurl':{'Default':'','Type':'String'},'FunctionName':{'Default':'EchoSistantV5','Type':'String','Description':'EchoSistantV5'},'STtoken':{'Default':'','Type':'String'}},'Outputs':{'FunctionARN':{'Value':{'Fn::GetAtt':['EchoSistantV5','Arn']}}},'Resources':{'EchoSistantV5Permissions':{'Type':'AWS::Lambda::Permission','Properties':{'Principal':'alexa-appkit.amazon.com','FunctionName':{'Ref':'EchoSistantV5'},'Action':'lambda:InvokeFunction'}},'EchoSistantV5Role':{'Type':'AWS::IAM::Role','Properties':{'AssumeRolePolicyDocument':{'Version':'2012-10-17','Statement':[{'Principal':{'Service':['lambda.amazonaws.com']},'Action':['sts:AssumeRole'],'Effect':'Allow'}]},'Path':'/','Policies':[{'PolicyName':'EchoSistantV5Policy','PolicyDocument':{'Version':'2012-10-17','Statement':[{'Action':['logs:*','dynamodb:*','cloudformation:*','couldwatch:*','lambda:*'],'Sid':'AllowLogging','Effect':'Allow','Resource':['*']}]}}]}},'EchoSistantV5':{'Type':'AWS::Lambda::Function','Properties':{'FunctionName':{'Ref':'FunctionName'},'Role':{'Fn::GetAtt':['EchoSistantV5Role','Arn']},'Code':{'ZipFile':'exports.handler = (event, context, callback) => { callback(null, true);};'},'Handler':'index.handler','Environment':{'Variables':{'STurl':{'Ref':'STurl'},'STtoken':{'Ref':'STtoken'}}},'Runtime':'nodejs6.10','Description':'EchoSistantV5 Lambda','Timeout':'10'}}}}",
+                                TimeoutInMinutes: 15
+                            };
+                            cloudformation.createStack(params, function (err, data) {
+                                if (err) {
+                                    errors += 'ERROR: ' + err;
+                                    installError();
+                                } else {
+                                    cloudformation.waitFor('stackCreateComplete', {StackName: ESStackName}, function (err, data) {
+                                        if (err) {
+                                            errors += 'ERROR: ' + err;
+                                            installError();
+                                        } else {
+                                            fetch(codeURL).then(function (res) {
+                                                res.blob().then(function (blob) {
+                                                    var reader = new FileReader();
+                                                    reader.addEventListener("loadend", function () {
+                                                        var zipFileBlob = reader.result;
+                                                        lambda.updateFunctionCode({FunctionName: ESStackName, ZipFile: zipFileBlob}, function (err, data) {
+                                                            if (err) {
+                                                                errors += 'ERROR: ' + err;
+                                                            } else {
+                                                                functionArn = data.FunctionArn;
+                                                                installComplete();
+                                                            }
+                                                        });
+                                                    });
+                                                    reader.readAsArrayBuffer(blob);
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            errors += 'ERROR: ' + err;
+                            installError();
+                        }
+                    } else {
+                        var outputs = {}
+                        data.Stacks.find(function (value) {
+                            if (value.StackName === ESStackName && value.StackStatus === 'CREATE_COMPLETE') {
+                                outputs = value.Outputs[0];
+                            }
+                        });
+                        functionArn = outputs.OutputValue;
+                        fetch(codeURL).then(function (res) {
+                            res.blob().then(function (blob) {
+                                var reader = new FileReader();
+                                reader.addEventListener("loadend", function () {
+                                    var zipFileBlob = reader.result;
+                                    lambda.updateFunctionCode({FunctionName: ESStackName, ZipFile: zipFileBlob}, function (err, data) {
+                                        if (err) {
+                                            errors += 'ERROR: ' + err;
+                                            installError();
+                                        } else {
+                                            functionArn = data.FunctionArn;
+                                            installComplete();
+                                        }
+                                    });
+                                });
+                                reader.readAsArrayBuffer(blob);
+                            });
+                        });
+                    }
+                });
+            } catch (ex) {
+                errors += 'ERROR: ' + ex;
+                installError();
+            }
+        }, false);
+
+        function checkLambda(functionName) {
+            try {
+                lambda.getFunction({FunctionName: functionName}, function (err, data) {
+                    if (err) {
+                        output = 'ERROR: ' + err;
+                    } else {
+                        //data.Configuration.LastModified
+                        functionArn = data.Configuration.FunctionArn;
+                    }
+                });
+            } catch (ex) {
+                errors += 'ERROR: ' + ex;
+            }
+        }
+
+		function installError() {
+            results.innerHTML = errors;
+            loader.style.display = 'none';
+            results.style.display = 'block';       	
+        }
+        
+        function installComplete() {
+            results.innerHTML = 'Installation Successful!<br> Here is your ARN link for the Alexa Skill<br>' + functionArn;
+            loader.style.display = 'none';
+            results.style.display = 'block';
+        }
+
+        var results = document.getElementById('results');
+        var loader = document.getElementById('loader');
+        var errors = '';
+        var codeURL = 'https://raw.githubusercontent.com/BamaRayne/Echosistant/Jason-Working/smartapps/V5/AWS/EchoSistantV5.zip';
+        var sturl = '${apiServerUrl("/api/smartapps/installations/") + app.id}/';
+        var sttoken = '${state.accessToken}';
+        var ESStackName = 'EchoSistantV5';
+        var functionArn = '';
+        var cloudformation = new AWS.CloudFormation({
+            accessKeyId: '${settings.accessKeyId}',
+            secretAccessKey: '${settings.secretAccessKey}',
+            region: 'us-east-1'
+        });
+        var lambda = new AWS.Lambda({
+            accessKeyId: '${settings.accessKeyId}',
+            secretAccessKey: '${settings.secretAccessKey}',
+            region: 'us-east-1'
+        });
+    </script>
+</body>
+</html>
+"""  
+	render contentType: "text/html", data: html, status: 200
+}
+
+
+
 /************************************************************************************************************
 		Begining Process - Lambda via page b
 ************************************************************************************************************/

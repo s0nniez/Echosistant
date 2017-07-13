@@ -98,9 +98,9 @@ def devices(){
     dynamicPage(name: "devices", title: "", uninstall: false){  
         section("") {
             href "pDevices", title: "Main Profile Control and Feedback"//, description: pRestrictComplete(), state: pRestrictSettings()
-            href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
-            href "pShortcuts", title: "Create Shortcuts within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
-            href "pKeypads", title: "Keypads and Associated Actions"//, description: pSendComplete(), state: pSendSettings()
+            //href "pGroups", title: "Create Groups within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
+            //href "pShortcuts", title: "Create Shortcuts within Profile", required: false //description: pGroupComplete(), state: pGroupSettings()
+            //href "pKeypads", title: "Keypads and Associated Actions"//, description: pSendComplete(), state: pSendSettings()
             href "pDefaults", title: "Profile Defaults"//, description: mDefaultsD(), state: mDefaultsS()           
         }        
     }
@@ -122,7 +122,7 @@ def pDevices(){
             //	input "contactRelay", "capability.contactSensor", title: "Allow This Contact Sensor to Monitor the Garage Door Relay(s)...", multiple: false, required: false
         	//}
         }
-        section("Window Coverings") { //, hideWhenEmpty: true
+        /*section("Window Coverings") { //, hideWhenEmpty: true
             input "windowShade", "capability.windowShade", title: "Select devices that control your Window Coverings", multiple: true, required: false//, submitOnChange: true
         }
         section("Climate Control") { //, hideWhenEmpty: true
@@ -139,13 +139,13 @@ def pDevices(){
 			input "musicPlayer", "capability.musicPlayer", title: "Allow These Media Player Type Device(s)...", required: false, multiple: true
 	     	input "speechSynthesis", "capability.speechSynthesis", title: "Allow These Speech Synthesis Capable Device(s)", multiple: true, required: false
 			input "mediaController", "capability.mediaController", title: "Allow These Media Controller(s)", multiple: true, required: false
-    	}
+    	}*/
         section("Lights, Switches, Dimmers, Fans, Vents") { //, hideWhenEmpty: true
             input "light", "capability.light", title: "Select Lights and Bulbs..", multiple: true, required: false//, submitOnChange: true
             input "switch", "capability.switch", title: "Select Switches...", multiple: true, required: false//, submitOnChange: true
             input "switchLevel", "capability.switchLevel", title: "Select devices that can take a level..", multiple: true, required: false//, submitOnChange: true
         }
-        section("Feedback Only Devices") { //, hideWhenEmpty: true
+        /*section("Feedback Only Devices") { //, hideWhenEmpty: true
 			input "motionSensor", "capability.motionSensor", title: "Select Motion Sensors...", required: false, multiple: true
             input "contactSensor", "capability.contactSensor", title: "Select contacts connected to Doors and Windows", multiple: true, required: false//, submitOnChange: true
             input "presenceSensor", "capability.presenceSensor", title: "Select These Presence Sensors...", required: false, multiple: true
@@ -154,7 +154,7 @@ def pDevices(){
 			input "carbonMonoxideDetector", "capability.carbonMonoxideDetector", title: "Select Carbon Monoxide Sensors (CO)", required: false
 			input "relativeHumidityMeasurement", "capability.relativeHumidityMeasurement", title: "Select Relative Humidity Sensor(s)", required: false
 			input "soundPressureLevel", "capability.soundPressureLevel", title: "Select Sound Pressure Sensor(s) (noise level)", required: false
-        }
+        }*/
 	}
 }   
 //////////////////////////////////////////////////////////////////////////////
@@ -753,17 +753,64 @@ def initialize() {
     log.debug "Init with settings: ${settings}, current app version: ${release()}"
 }
 def getProfileSettings() {    
-	def groupSettings = []
+	/*def groupSettings = []
     getChildApps().each{group ->
     	groupSettings << ["${group.label}":group.getGroupSettings()]
+    }*/
+  	
+    
+    def localSettings = []
+    def devices = []
+   	//def devices = settings.findAll{k,v-> v instanceof Collection}
+    
+    settings.keySet().each{key->
+    	if (settings[key] instanceof Collection) {
+        	settings[key].each{dev->
+        	    devices << [
+                	name: dev.displayName,
+                    basename: dev.name,
+                    deviceid: dev.id, 
+                    status: dev.status,
+                    groupId: dev.device.groupId,
+                    manufacturerName: dev.getManufacturerName(),
+                    modelName: dev.getModelName(),
+                    lastTime: dev.getLastActivity(),
+                    capabilities: dev.capabilities.collect{cap->cap.name},
+                    commands: dev.supportedCommands.collect{cmd->cmd.name}, 
+                    attributes: dev.supportedAttributes.collectEntries{attr->[(attr.name):dev?.currentValue(attr?.name)]}
+                ]
+        	}
+       	} else {
+			//localSettings << ["${key}": settings[key]]
+    	}
     }
- 
-    def profileSettings = []
-    settings.each{k,d ->
-    	profileSettings << ["${k}":d]
-    }
-    return ["deviceTypes":profileSettings] + ["groups": groupSettings]
+    
+    //def profileSettings = [deviceList: devices] + [profileSettings: localSettings]
+  
+    return [deviceList: devices] //+ [profileSettings: localSettings]
+    //return ["deviceTypes":profileSettings] + ["groups": groupSettings]
 }
+
+def getObjType(obj) {
+	if(obj instanceof String) {return "String"}
+	else if(obj instanceof GString) {return "GString"}
+	else if(obj instanceof Map) {return "Map"}
+    else if(obj instanceof Collection) {return "Collection"}
+    else if(obj instanceof Closure) {return "Closure"}
+    else if(obj instanceof LinkedHashMap) {return "LinkedHashMap"}
+    else if(obj instanceof HashMap) {return "HashMap"}
+	else if(obj instanceof List) {return "List"}
+	else if(obj instanceof ArrayList) {return "ArrayList"}
+	else if(obj instanceof Integer) {return "Integer"}
+	else if(obj instanceof BigInteger) {return "BigInteger"}
+	else if(obj instanceof Long) {return "Long"}
+	else if(obj instanceof Boolean) {return "Boolean"}
+	else if(obj instanceof BigDecimal) {return "BigDecimal"}
+	else if(obj instanceof Float) {return "Float"}
+	else if(obj instanceof Byte) {return "Byte"}
+	else { return "unknown"}
+}
+
 /******************************************************************************************************
    PARENT STATUS CHECKS
 ******************************************************************************************************/
