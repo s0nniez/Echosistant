@@ -1,19 +1,11 @@
 /**
  *  EchoSistant - Lambda Code
  *
- *  Version 5.0.01a - 6/27/17 Proof of concept for Environment variables
- *  Version 5.0.01 - 6/14/2017 Alpha
- * 
- *  Special thanks for Michael Struck @MichaelS (Developer of AskAlexa) for allowing me
- *  to build off of his base code.  Special thanks to Keith DeLong  @N8XD for his 
- *  assistance in troubleshooting.... as I learned.....  Special thanks to Bobby
- *  @SBDOBRESCU for jumping on board and being a co-consipirator in this adventure.
+ *  Version 5.4.00 - 6/30/2017 Complete overhaul!
+ *  Version 5.3.00 - 6/21/2017 Added US Skill
+ *  Version 5.1.00 - 3/21/2017 Added Reminders Profile
  *
- *  Version 5.0.00 - 3/24/2017 Beta Release
- *  Version 4.0.00 - 2/17/2017 Public Release
- *  Version 3.0.00 - 12/1/2016  Added new parent variables
- *  Version 2.0.00 - 11/20/2016  Continued Commands
- * 
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
  *
@@ -25,278 +17,187 @@
  *
  */
 'use strict';
-exports.handler = function( event, context ) {
-    var https = require( 'https' );
-        //---------------------------------------------------------------------------------------
-        var STtoken = process.env.STtoken;
-        var url = process.env.STurl
-        var cardName = "";
-        var areWeDone = process.env.areWeDone;
-//-------- Validation process and begining interaction with SmartThings app-------------------- 
-        var versionTxt = '5.0';
-        var versionDate = '6/1/2017';
-        var releaseTxt = "5.2.00";
-        var intentResp = process.env.intentResp;
-        if (event.request.type == "IntentRequest"){
-            intentResp = event.request.intent.name;
-        }
-        var beginURL = url + 'b?&versionTxt=' + versionTxt + '&intentResp=' + intentResp + '&versionDate=' + versionDate + '&releaseTxt=' + releaseTxt + '&access_token=' + STtoken;
-        https.get( beginURL, function( response ) {
-        response.on( 'data', function( data ) {
-            var startJSON = JSON.parse(data);
-            var verST = startJSON.versionSTtxt;
-            var text = startJSON.outputTxt;
-            var pMuteAlexa = startJSON.pContinue; //setting global variable if Alexa feedback is allowed
-            var short = startJSON.pShort; //setting global variable for short answers
-            var pPendingAns = startJSON.pPendingAns;
-//-------- Error trapping--------------------------------------------------------------------
-            if (startJSON.error) { 
-                output("There was an error. If this continues to happen, please reach out for help", context, "Lambda Error", areWeDone); 
-            }
-            if (startJSON.error === "invalid_token" || startJSON.type === "AccessDenied") {
-                output("There was an error accessing the SmartThings cloud environment. Please check your security token and application ID and try again. ", context, "Lambda Error", areWeDone); 
-            }
-            if (verST != versionTxt) { 
-                output("You are using outdated smart apps. Please make sure to update both the Lambda code and the SmartThings code to most recent versions, and then try again.", context, "Lambda Error", areWeDone);
-            }
-//-------- Begining Request------------------------------------------------------------------            
-            if (event.request.type == "LaunchRequest") { 
-                alexaResp ("LaunchRequest", context, areWeDone, short); 
-            }
-            else if (event.request.type == "SessionEndedRequest"){}
-            else if (event.request.type == "IntentRequest") {
-                var process = false;
-                var intentName = event.request.intent.name;
-                if (intentName == "AMAZON.YesIntent" && pPendingAns == "level") {
-                    alexaResp ("Pending Yes Level", context, "Amazon Intent", areWeDone, short); 
-                }
-                else if (intentName == "AMAZON.YesIntent" && pPendingAns == "door") {
-                    areWeDone=true;
-                    return output(text, context, cardName, areWeDone);
-                }
-                else if (intentName == "AMAZON.YesIntent" && pPendingAns == "caps" && short !== true) {
-                    areWeDone=false;
-                    text = text + ", would you like anything else?";
-                    return output(text, context, cardName, areWeDone);
-                }
-                else if (intentName == "AMAZON.YesIntent" && pPendingAns == "caps" && short === true ) {
-                    areWeDone=false;
-                    text = text + ", anythingI else?";
-                    return output(text, context, cardName, areWeDone);
-                }
-                else if (intentName == "AMAZON.YesIntent" && pPendingAns == "pin") {
-                    areWeDone=false;
-                    return output(text, context, cardName, areWeDone);
-                }
-                else if (intentName == "AMAZON.YesIntent" && pPendingAns == "feedback") {
-                    areWeDone=true;
-                    return output(text, context, cardName, areWeDone);
-                }
-                else if (intentName == "AMAZON.NoIntent" && pPendingAns == "level") {
-                    areWeDone=false;
-                    text = text + ', is it better?';
-                    return output(text, context, cardName, areWeDone);
-                }
-                else if (intentName.startsWith("AMAZON") && intentName.endsWith("Intent")) { 
-                    alexaResp (intentName, context, "Amazon Intent", areWeDone, short); 
-                }
-//-------- Reminder Type Request------------------------------------------------------------------
-                else if (intentName == "message"){           
-                    var rMessage = event.request.intent.slots.ttstext.value;
-                    url += 'r?rMessage=' + rMessage  + '&intentName=' + intentName;
-                    process = true;
-                    cardName = "EchoSistant Event Message";
-                } 
-                else if (intentName == "mDetails"){           
-                    var rCalendarName = event.request.intent.slots.calendarName.value;
-                    var rType = event.request.intent.slots.type.value;
-                    var rFrequency = event.request.intent.slots.unit.value;
-                    var rStartingDate = event.request.intent.slots.startingD.value;
-                    var rStartingTime = event.request.intent.slots.startingT.value;
-                    var rDuration = event.request.intent.slots.duration.value;
-                    var rProfile = event.request.intent.slots.profile.value;
-                    url += 'r?rCalendarName=' + rCalendarName + '&rType=' + rType + '&rProfile=' + rProfile + '&rFrequency=' + rFrequency + '&rStartingDate=' + rStartingDate + '&rStartingTime=' + rStartingTime + '&rDuration=' + rDuration + '&intentName=' + intentName;
-                    process = true;
-                    cardName = "EchoSistant Event Details";
-                }                
-//-------- TTS Type Request------------------------------------------------------------------
-                else if (intentName != "main" || intentName != "security" || intentName != "feedback") {
-                    var ttstext = event.request.intent.slots.ttstext.value;
-                    url += 't?ttstext=' + ttstext + '&intentName=' + intentName;
-                    process = true;
-                    cardName = "EchoSistant Free Text";
-                }
-//-------- General Response------------------------------------------------------------------
-                if (!process) {
-                    output("I am not sure what you are asking. Please try again", context, areWeDone); 
-                }
-                else {
-                    url += '&access_token=' + STtoken;
-                    https.get( url, function( response ) {
-                        response.on( 'data', function( data ) {
-                        var resJSON = JSON.parse(data);
-                        var pContCmds = resJSON.pContCmds;
-                        var pContCmdsR = resJSON.pContCmdsR;
-                        var pTryAgain = resJSON.pTryAgain;
-                        var short = resJSON.pShort;
-                        var pPIN = resJSON.pPIN;
-                        var speechText = resJSON.outputTxt;
-                        if (pPIN === true){
-                            //just wait
-                            areWeDone=false;
-                        }
-                        else if (pMuteAlexa === true && pTryAgain !== true) {
-                            areWeDone=true;
-                            //return output("", context, cardName, areWeDone);
-                        }    
-                        else if (pContCmds === true && pContCmdsR == "profile" ) { 
-                            areWeDone=false;
-                            speechText = speechText + ', send another message to ' + intentName;
-                            return output(speechText, context, cardName, areWeDone);
-                        }
-                        else if (pContCmds === true && pContCmdsR == "level" ) { 
-                            areWeDone=false;
-                            speechText = speechText + ', is it better?';
-                            return output(speechText, context, cardName, areWeDone);
-                        }
-                        else if (pContCmds === true && pContCmdsR == "door" ) { 
-                            areWeDone=false;
-                            return output(speechText, context, cardName, areWeDone);
-                        }
-                        else if (pContCmds === true && pContCmdsR == "feedback"){
-                            //just wait
-                            areWeDone=false;
-                        }
-                        else if (pContCmds === true && pContCmdsR == "caps"){
-                            //just wait
-                            areWeDone=false;                            
-                        } 
-                        else if (pContCmds === true && pContCmdsR == "bat"){
-                            //just wait
-                            areWeDone=false;                            
-                        }
-                        else if (pContCmds === true && pContCmdsR == "act"){
-                            //just wait
-                            areWeDone=false;                            
-                        } 
-                        else if (pContCmds === true && pContCmdsR == "stayORleave"){
-                            //just wait
-                            areWeDone=false;                            
-                        } 
-                        else if (pTryAgain === true){
-                            alexaContResp ("Try Again", speechText, context, areWeDone, short);
-                        }
-                        else if (pContCmdsR == "reminder"){
-                            //just wait
-                            areWeDone=false;
-                        }                        
-                        else if (pPIN === true){
-                            //just wait
-                            areWeDone=false;
-                        }
-                        else if (pContCmds === true) {
-                            alexaContResp ("Response", speechText, context, areWeDone, short);
-                        }
-                        else if (pContCmds === false){
-                            //no sound
-                            areWeDone=true;
-                        }
-                        output(speechText, context, cardName, areWeDone);
-                        } );
-                    } );
-                }
-            }
-        } );
-    } );
+const Alexa = require('alexa-sdk');
+const https = require('https');
+const STtoken = process.env.STtoken;
+const STurl = process.env.STurl;
+const versionTxt = '5.4';
+
+var keywords = {
+    'feedback': ['give', 'for', 'tell', 'what', 'how', 'is', 'when', 'which', 'are', 'how many', 'check', 'who', 'status'],
+    'enable': ['on', 'start', 'enable', 'engage', 'open', 'begin', 'unlock', 'unlocked'],
+    'disable': ['off', 'stop', 'cancel', 'disable', 'disengage', 'kill', 'close', 'silence', 'lock', 'locked', 'quit', 'end'],
+    'more': ['increase', 'more', 'too dark', 'not bright enough', 'brighten', 'brighter', 'turn up'],
+    'less': ['darker', 'too bright', 'dim', 'dimmer', 'decrease', 'lower', 'low', 'softer', 'less'],
+    'delay': ['delay', 'wait', 'until', 'after', 'around', 'within', 'in', 'about']
 };
-function alexaResp(type, context, cardName, areWeDone, short){
-    process.env.areWeDone = areWeDone;
-    process.env.pShort = short;
-    if (type == "AMAZON.YesIntent") { 
-        areWeDone=false;
-        output("Please continue, ", context, "EchoSistant Continue", areWeDone);
+
+//will eventually be a var...
+var deviceTypes = {
+    'switch': ['light', 'switch', 'fan', 'outlet', 'relay'],
+    'lock': ['lock'],
+    'door': ['door', 'garage'], //'window', 'shade', 'curtain', 'blind', 'tstat', 'indoor', 'outdoor', 'vent', 'valve', 'water', 'speaker', 'synth', 'media', 'relay'
+    'contact': ['window', 'door', 'window']
+};
+
+const SKILL_NAME = 'EchoSistant';
+const WELCOME_MESSAGE = 'Yes';
+const WELCOME_REPROMT = 'Welcome reprompt';
+const REPROMPT_SPEECH = 'Anything else?';
+const EXIT_SKILL_MESSAGE = 'Goodbye';
+const HELP_MESSAGE = 'Examples of things to say';
+const HELP_REPROMT = 'Need more Help?';
+const STOP_MESSAGE = 'I am here if you need me';
+const SETTINGS_UPDATED = 'I have updated your settings.';
+const ERROR = 'Something went wrong';
+
+
+exports.handler = function (event, context, callback) {
+
+    //this.event.context.System.device.deviceId
+    //console.log('Intent ' + event.request.intent.name);
+
+    
+    if (event.header === undefined) { //Custom Skill
+
+        const alexa = Alexa.handler(event, context, callback);
+        alexa.dynamoDBTableName = 'EchoSistant';
+        alexa.registerHandlers(handlers);
+        alexa.execute();
+
+    } else { //Smart Home Skill
+        switch (event.header.namespace) {
+            case "Alexa.ConnectedHome.Discovery":
+                //handleDiscovery(event, context);
+                break;
+            case "Alexa.ConnectedHome.Control":
+                //handleControl(event, context);
+                break;
+            case "Alexa.ConnectedHome.Query":
+                //handleQuery(event, context);
+                break;
+            default:
+                console.log("Error, unsupported namespace: " + event.header.namespace);
+                context.fail("Something went wrong");
+                break;
+        }
     }
-    else if (type == "AMAZON.NoIntent" && short === false) { 
-        areWeDone=true;
-        output(" It has been my pleasure.  Goodbye ", context, "EchoSistant Stop", areWeDone);
-    }
-    else if (type == "AMAZON.NoIntent" && short === true) { 
-        areWeDone=true;
-        output(" Ok ", context, "EchoSistant Stop", areWeDone);
-    }    
-    else if (type == "AMAZON.StopIntent" || type == "AMAZON.CancelIntent") { 
-        areWeDone=true;
-        output(" Cancelling", context, "EchoSistant Stop", areWeDone);
-    }
-    else if (type == "Pending Yes Level" && short !== true){
-        areWeDone=true;
-        output(" Great, I am here if you need me.", context, "EchoSistant Stop", areWeDone);
-    }
-    else if (type == "Pending Yes Level" && short === true){
-        areWeDone=true;
-        output(" Ok", context, "EchoSistant Stop", areWeDone);
-    }    
-    else if (type == "Pending Yes Door"){
-        areWeDone=true;
-        output(" Ok,", context, "EchoSistant Continue", areWeDone);
-    }
-    else if (type == "LaunchRequest" && short !== true){
-        areWeDone=false;
-        output(" how may I help you? ", context, "EchoSistant Continue", areWeDone);
-    } 
-    else if (type == "LaunchRequest" && short === true){
-        areWeDone=false;
-        output(" What's up? ", context, "EchoSistant Continue", areWeDone);
-    }     
-}
-function alexaContResp(type, text , context, areWeDone, short){
-    process.env.areWeDone = areWeDone;
-    process.env.pShort = short;
-    var speechText = text;
-    if (type == "Try Again" && short !== true ) { 
-        speechText = speechText + ',  would you like to try again? '; 
-        areWeDone=false;
-        output(speechText, context, "EchoSistant Try Again", areWeDone);
-    }
-    if (type == "Try Again" && short === true) { 
-        speechText = speechText + ',  try again? '; 
-        areWeDone=false;
-        output(speechText, context, "EchoSistant Try Again", areWeDone);
-    }    
-    else if (type == "PIN" && short !== true) { 
-        areWeDone=false;
-        speechText = "Pin number, please";
-        output(speechText, context, "EchoSistant Pin Request", areWeDone);
-    }
-    else if (type == "PIN" && short === true) { 
-        areWeDone=false;
-        speechText = "Pin number?";
-        output(speechText, context, "EchoSistant Pin Request", areWeDone);
-    }    
-    else if (type == "Response" && short !== true) { 
-        areWeDone=false;
-        speechText =speechText + " , would you like anything else";
-        output(speechText, context, "EchoSistant Continue", areWeDone);
-    }
-    else if (type == "Response" && short === true) { 
-        areWeDone=false;
-        speechText =speechText + " , anything else?";
-        output(speechText, context, "EchoSistant Continue", areWeDone);
-    }
-}
-function output( text, context, cardName, areWeDone) {
-        process.env.areWeDone = areWeDone;
-        var response = {
-             outputSpeech: {
-             type: "PlainText",
-             text: text
-                 },
-                 card: {
-                 type: "Simple",
-                 title: cardName,
-                 content: text
-                    },
-        shouldEndSession: areWeDone
-        };
-        context.succeed( { response: response } );
-  }
+};
+
+const handlers = {
+    'NewSession': function () {
+        console.log('NewSession');
+        if (Object.keys(this.attributes).length === 0) {
+            //First time user has called so we need to update settings
+            this.emitWithState('UpdateSettings');
+        } else {
+            //Settings have already been setup, so we call the request type
+            this.emitWithState(this.event.request.type);
+        }
+    },
+    'LaunchRequest': function () {
+        console.log('LaunchRequest');
+        //Called the Invocation word without an intent....
+
+
+        this.attributes.speechOutput = WELCOME_MESSAGE;
+        // If the user either does not reply to the welcome message or says something that is not
+        // understood, they will be prompted again with this text.
+        this.attributes.repromptSpeech = WELCOME_REPROMT;
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    },
+    'IntentRequest': function () {
+        console.log('IntentRequest');
+        //Called the invocation word with an intent...
+        // this.event.request.intent.name = the profile name
+
+        this.attributes.speechOutput = WELCOME_MESSAGE;
+        // If the user either does not reply to the welcome message or says something that is not
+        // understood, they will be prompted again with this text.
+        this.attributes.repromptSpeech = WELCOME_REPROMT;
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    },
+    'UpdateSettings': function () {
+        console.log('UpdateSettings');
+        var beginURL = STurl + 'update?access_token=' + STtoken;
+        this.attributes.allSettings = '{"appSettings":{}}';
+        var self = this;
+        https.get(beginURL, function (res) {
+            console.error("Got response: " + res.statusCode);
+            res.on("data", function (data) {
+                var getJSON = JSON.parse(data);
+                console.log(getJSON.data);
+                self.attributes.allSettings = getJSON.data;
+                if (self.event.request.intent.name == 'UpdateSettings') {
+                    self.emit(':tell', SETTINGS_UPDATED);
+                } else {
+                    self.emitWithState(self.event.request.type);
+                }
+            });
+        }).on('error', function (e) {
+            console.error("Got error: " + e.message);
+            self.emit(':tell', ERROR);
+        });
+    },
+    'AMAZON.HelpIntent': function () {
+        console.log('HelpIntent');
+        this.attributes.speechOutput = HELP_MESSAGE;
+        this.attributes.repromptSpeech = HELP_REPROMT;
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    },
+    'AMAZON.RepeatIntent': function () {
+        console.log('RepeatIntent');
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    },
+    'AMAZON.StopIntent': function () {
+        console.log('StopIntent');
+        this.emit('SessionEndedRequest');
+    },
+    'AMAZON.CancelIntent': function () {
+        console.log('CancelIntent');
+        this.emit('SessionEndedRequest');
+    },
+    'SessionEndedRequest': function () {
+        console.log('SessionEndedRequest');
+        this.emit(':saveState', true);
+        this.emit(':tell', STOP_MESSAGE);
+    },
+    'Unhandled': function () {
+        console.log('Unhandled');
+        if (Object.keys(this.attributes).length === 0) {
+            this.emitWithState('UpdateSettings');
+        } else {
+            /*check for real device
+            let profiles = [...new Set(settings.deviceList.map(p => p.profile.toLowerCase()))];
+            let realDevices = [...new Set(settings.deviceList.map(p => p.name.toLowerCase()))];
+            let theCommand = this.event.request.intent.slots.ttstext.value;
+            for (let [key, value] of realDevices.entries()) {
+                if (theCommand.match('\\b' + value + '\\b')) {
+                    console.log('realDevice ' + value);
+                }
+            }
+
+            for (let [key, value] of profiles.entries()) {
+                if (theCommand.match('\\b' + value + '\\b')) {
+                    console.log('profile ' + value);
+                }
+            }
+
+            for (let keyword in keywords) {
+                if (keywords[keyword].find((it) => theCommand.includes(it))) {
+                    console.log('keyword ' + keyword);
+                }
+            }
+
+            for (let device in deviceTypes) {
+                if (deviceTypes[device].find((it) => theCommand.includes(it))) {
+                    console.log('device ' + device);
+                }
+            }*/
+
+            this.attributes.speechOutput = HELP_MESSAGE;
+            this.attributes.repromptSpeech = HELP_REPROMT;
+            this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+        }
+    },
+};
