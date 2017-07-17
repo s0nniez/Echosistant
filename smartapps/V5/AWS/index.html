@@ -1,11 +1,33 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>EchoSistant Install</title>
+    <meta name="viewport" content="width=640">
     <meta charset="utf-8">
-    <script src="//sdk.amazonaws.com/js/aws-sdk-2.82.0.min.js"></script>
-    <style>
+    <script src="https://rawgit.com/BamaRayne/Echosistant/Jason-Working/smartapps/V5/AWS/aws-sdk-2.82.0.min.js"></script>
+    <style type="text/css">
+        @font-face {
+            font-family: 'Swiss 721 W01 Thin';
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.eot');
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.eot?#iefix') format('embedded-opentype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.woff') format('woff'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.ttf') format('truetype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-thin-webfont.svg#swis721_th_btthin') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Swiss 721 W01 Light';
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.eot');
+            src: url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.eot?#iefix') format('embedded-opentype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.woff') format('woff'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.ttf') format('truetype'),
+            url('https://s3.amazonaws.com/smartapp-icons/Partner/fonts/swiss-721-light-webfont.svg#swis721_lt_btlight') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         body {
             padding: 1em;
             background: #2B3134;
@@ -24,18 +46,13 @@
         }
 
         #loader {
-            height: 100px;
-            width: 20%;
+            height: 70%;
+            width: 70%;
             text-align: center;
             padding: 1em;
             margin: 0 auto 1em;
             display: inline-block;
             vertical-align: top;
-        }
-
-        svg path,
-        svg rect {
-            fill: rgb(0%, 51.3%, 100%);
         }
 
         .animate-bottom {
@@ -48,7 +65,7 @@
 
         @-webkit-keyframes animatebottom {
             from {
-                bottom: -100px;
+                bottom: -300px;
                 opacity: 0
             }
             to {
@@ -59,7 +76,7 @@
 
         @keyframes animatebottom {
             from {
-                bottom: -100px;
+                bottom: -300px;
                 opacity: 0
             }
             to {
@@ -71,135 +88,161 @@
         #results {
             display: none;
             text-align: center;
+            font-size: 2.2em;
+            font-family: 'Swiss 721 W01 Thin';
+            color: #666666;
+            padding: 0 40px;
+            margin-bottom: 0;
         }
     </style>
 </head>
 
 <body>
     <h1>EchoSistant Installing</h1>
-    <svg id="loader" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="200px"
-        height="200px" viewBox="0 0 50 50" style="enable-background:new 0 0 50 50;" xml:space="preserve">
-        <path fill="#000" d="M43.935,25.145c0-10.318-8.364-18.683-18.683-18.683c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615c8.072,0,14.615,6.543,14.615,14.615H43.935z">
-            <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.6s" repeatCount="indefinite"
-            />
-        </path>
+    <!-- By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL -->
+    <svg id="loader" width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" stroke="rgb(0%, 51.3%, 100%)">
+        <g fill="none" fill-rule="evenodd">
+            <g transform="translate(1 1)" stroke-width="2">
+                <circle stroke-opacity=".5" cx="18" cy="18" r="18" />
+                <path d="M36 18c0-9.94-8.06-18-18-18">
+                    <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite"
+                    />
+                </path>
+            </g>
+        </g>
     </svg>
     <div id="results" class="animate-bottom"></div>
-
     <script type="text/javascript">
-        var results = document.getElementById('results');
-        var loader = document.getElementById('loader');
-        var codeURL = '';
-        var sturl = '';
-        var sttoken = '';
-        var ESStackName = '';
-        AWS.config = new AWS.Config()
-        var cloudformation = new AWS.CloudFormation();
-        var lambda = new AWS.Lambda();
-
-        function checkStack(stackName) {
-            var output = 'ERROR:';
+        document.addEventListener('DOMContentLoaded', function () {
             try {
-                var params = {
-                    StackName: stackName
-                }
-                cloudformation.waitFor('stackCreateComplete', params, function (err, data) {
+                cloudformation.describeStacks({StackName: ESStackName}, function (err, data) {
                     if (err) {
-                        output = 'ERROR: ' + err;
-                    } else {
-                        output = data.Stacks[0].Outputs[0].OutputValue;
-                    }
-                });
-            } catch (ex) {
-                output = 'ERROR: ' + ex;
-            }
-            return output;
-        }
-
-        function installStack(stackName) {
-            var output = 'ERROR:';
-            try {
-                var params = {
-                    StackName: stackName,
-                    Capabilities: [
-                        'CAPABILITY_NAMED_IAM',
-                    ],
-                    DisableRollback: false,
-                    Parameters: [{
-                            ParameterValue: sturl,
-                            ParameterKey: "STurl",
-                            UsePreviousValue: true
-                        },
-                        {
-                            ParameterValue: sttoken,
-                            ParameterKey: "STtoken",
-                            UsePreviousValue: true
+                        if (err.message == 'Stack with id EchoSistantV5 does not exist') {
+                            var params = {
+                                StackName: ESStackName,
+                                Capabilities: ['CAPABILITY_NAMED_IAM'],
+                                DisableRollback: false,
+                                Parameters: [
+                                    {ParameterValue: sturl, ParameterKey: "STurl", UsePreviousValue: true},
+                                    {ParameterValue: sttoken, ParameterKey: "STtoken", UsePreviousValue: true}
+                                ],
+                                TemplateBody: "{'AWSTemplateFormatVersion':'2010-09-09','Parameters':{'STurl':{'Default':'','Type':'String'},'FunctionName':{'Default':'EchoSistantV5','Type':'String','Description':'EchoSistantV5'},'STtoken':{'Default':'','Type':'String'}},'Outputs':{'FunctionARN':{'Value':{'Fn::GetAtt':['EchoSistantV5','Arn']}}},'Resources':{'EchoSistantV5Permissions':{'Type':'AWS::Lambda::Permission','Properties':{'Principal':'alexa-appkit.amazon.com','FunctionName':{'Ref':'EchoSistantV5'},'Action':'lambda:InvokeFunction'}},'EchoSistantV5Role':{'Type':'AWS::IAM::Role','Properties':{'AssumeRolePolicyDocument':{'Version':'2012-10-17','Statement':[{'Principal':{'Service':['lambda.amazonaws.com']},'Action':['sts:AssumeRole'],'Effect':'Allow'}]},'Path':'/','Policies':[{'PolicyName':'EchoSistantV5Policy','PolicyDocument':{'Version':'2012-10-17','Statement':[{'Action':['logs:*','dynamodb:*','cloudformation:*','couldwatch:*','lambda:*'],'Sid':'AllowLogging','Effect':'Allow','Resource':['*']}]}}]}},'EchoSistantV5':{'Type':'AWS::Lambda::Function','Properties':{'FunctionName':{'Ref':'FunctionName'},'Role':{'Fn::GetAtt':['EchoSistantV5Role','Arn']},'Code':{'ZipFile':'exports.handler = (event, context, callback) => { callback(null, true);};'},'Handler':'index.handler','Environment':{'Variables':{'STurl':{'Ref':'STurl'},'STtoken':{'Ref':'STtoken'}}},'Runtime':'nodejs6.10','Description':'EchoSistantV5 Lambda','Timeout':'10'}}}}",
+                                TimeoutInMinutes: 15
+                            };
+                            cloudformation.createStack(params, function (err, data) {
+                                if (err) {
+                                    errors += 'ERROR: ' + err;
+                                    installError();
+                                } else {
+                                    cloudformation.waitFor('stackCreateComplete', {StackName: ESStackName}, function (err, data) {
+                                        if (err) {
+                                            errors += 'ERROR: ' + err;
+                                            installError();
+                                        } else {
+                                            fetch(codeURL).then(function (res) {
+                                                res.blob().then(function (blob) {
+                                                    var reader = new FileReader();
+                                                    reader.addEventListener("loadend", function () {
+                                                        var zipFileBlob = reader.result;
+                                                        lambda.updateFunctionCode({FunctionName: ESStackName, ZipFile: zipFileBlob}, function (err, data) {
+                                                            if (err) {
+                                                                errors += 'ERROR: ' + err;
+                                                            } else {
+                                                                functionArn = data.FunctionArn;
+                                                                installComplete();
+                                                            }
+                                                        });
+                                                    });
+                                                    reader.readAsArrayBuffer(blob);
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            errors += 'ERROR: ' + err;
+                            installError();
                         }
-                    ],
-                    TemplateBody: "{'AWSTemplateFormatVersion':'2010-09-09','Parameters':{'STurl':{'Default':'','Type':'String'},'FunctionName':{'Default':'EchoSistantV5','Type':'String','Description':'EchoSistantV5'},'STtoken':{'Default':'','Type':'String'}},'Outputs':{'FunctionARN':{'Value':{'Fn::GetAtt':['EchoSistantV5','Arn']}}},'Resources':{'EchoSistantV5Permissions':{'Type':'AWS::Lambda::Permission','Properties':{'Principal':'alexa-appkit.amazon.com','FunctionName':{'Ref':'EchoSistantV5'},'Action':'lambda:InvokeFunction'}},'EchoSistantV5Role':{'Type':'AWS::IAM::Role','Properties':{'AssumeRolePolicyDocument':{'Version':'2012-10-17','Statement':[{'Principal':{'Service':['lambda.amazonaws.com']},'Action':['sts:AssumeRole'],'Effect':'Allow'}]},'Path':'/','Policies':[{'PolicyName':'EchoSistantV5Policy','PolicyDocument':{'Version':'2012-10-17','Statement':[{'Action':['logs:*','dynamodb:*','cloudformation:*','couldwatch:*','lambda:*'],'Sid':'AllowLogging','Effect':'Allow','Resource':['*']}]}}]}},'EchoSistantV5':{'Type':'AWS::Lambda::Function','Properties':{'FunctionName':{'Ref':'FunctionName'},'Role':{'Fn::GetAtt':['EchoSistantV5Role','Arn']},'Code':{'ZipFile':'exports.handler = (event, context, callback) => { callback(null, true);};'},'Handler':'index.handler','Environment':{'Variables':{'STurl':{'Ref':'STurl'},'STtoken':{'Ref':'STtoken'}}},'Runtime':'nodejs6.10','Description':'EchoSistantV5 Lambda','Timeout':'10'}}}}",
-                    TimeoutInMinutes: 15
-                };
-                cloudformation.createStack(params, function (err, data) {
-                    if (err) {
-                        output = 'ERROR: ' + err;
                     } else {
-                        output = updateLambda(checkStack(data.ResponseMetadata.StackId));
+                        var outputs = {}
+                        data.Stacks.find(function (value) {
+                            if (value.StackName === ESStackName && value.StackStatus === 'CREATE_COMPLETE') {
+                                outputs = value.Outputs[0];
+                            }
+                        });
+                        functionArn = outputs.OutputValue;
+                        fetch(codeURL).then(function (res) {
+                            res.blob().then(function (blob) {
+                                var reader = new FileReader();
+                                reader.addEventListener("loadend", function () {
+                                    var zipFileBlob = reader.result;
+                                    lambda.updateFunctionCode({FunctionName: ESStackName, ZipFile: zipFileBlob}, function (err, data) {
+                                        if (err) {
+                                            errors += 'ERROR: ' + err;
+                                            installError();
+                                        } else {
+                                            functionArn = data.FunctionArn;
+                                            installComplete();
+                                        }
+                                    });
+                                });
+                                reader.readAsArrayBuffer(blob);
+                            });
+                        });
                     }
                 });
             } catch (ex) {
-                output = 'ERROR: ' + ex;
+                errors += 'ERROR: ' + ex;
+                installError();
             }
-            return output
-        }
+        }, false);
 
         function checkLambda(functionName) {
-            var output = 'ERROR:';
             try {
-                var params = {
-                    FunctionName: functionName
-                };
-                lambda.getFunction(params, function (err, data) {
+                lambda.getFunction({FunctionName: functionName}, function (err, data) {
                     if (err) {
                         output = 'ERROR: ' + err;
                     } else {
                         //data.Configuration.LastModified
-                        output = data.Configuration.FunctionArn;
+                        functionArn = data.Configuration.FunctionArn;
                     }
                 });
             } catch (ex) {
-                output = 'ERROR: ' + ex;
+                errors += 'ERROR: ' + ex;
             }
-            return output;
         }
 
-        function updateLambda(functionName) {
-            var output;
-            try {
-                fetch(codeURL)
-                    .then(function (res) {
-                        res.blob().then(function (blob) {
-                            var reader = new FileReader();
-                            reader.addEventListener("loadend",
-                                function () {
-                                    var zipFileBlob = reader.result;
-                                    var params = {
-                                        FunctionName: functionName,
-                                        ZipFile: zipFileBlob
-                                    };
-                                    lambda.updateFunctionCode(params, function (err, data) {
-                                        if (err) {
-                                            output = 'ERROR: ' + err;
-                                        } else {
-                                            output = data.FunctionArn;
-                                        }
-                                    });
-                                });
-                            reader.readAsArrayBuffer(blob);
-                        });
-                    });
-            } catch (ex) {
-                output = 'ERROR: ' + ex;
-            }
-            return output;
+		function installError() {
+            results.innerHTML = errors;
+            loader.style.display = 'none';
+            results.style.display = 'block';       	
         }
+        
+        function installComplete() {
+            results.innerHTML = 'Installation Successful!<br> Here is your ARN link for the Alexa Skill<br>' + functionArn;
+            loader.style.display = 'none';
+            results.style.display = 'block';
+        }
+
+        var results = document.getElementById('results');
+        var loader = document.getElementById('loader');
+        var errors = '';
+        var codeURL = 'https://raw.githubusercontent.com/BamaRayne/Echosistant/Jason-Working/smartapps/V5/AWS/EchoSistantV5.zip';
+        var sturl = '${apiServerUrl("/api/smartapps/installations/") + app.id}/';
+        var sttoken = '${state.accessToken}';
+        var ESStackName = 'EchoSistantV5';
+        var functionArn = '';
+        var cloudformation = new AWS.CloudFormation({
+            accessKeyId: '${settings.accessKeyId}',
+            secretAccessKey: '${settings.secretAccessKey}',
+            region: 'us-east-1'
+        });
+        var lambda = new AWS.Lambda({
+            accessKeyId: '${settings.accessKeyId}',
+            secretAccessKey: '${settings.secretAccessKey}',
+            region: 'us-east-1'
+        });
     </script>
+</body>
+</html>
