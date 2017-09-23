@@ -1081,7 +1081,6 @@ def profileFeedbackEvaluate(params) {
     }
 }
 
-
 /******************************************************************************************************
 SPEECH AND TEXT PROCESSING INTERNAL - CONTROL & MESSAGING
 ******************************************************************************************************/
@@ -1613,49 +1612,22 @@ def ttsHandler(tts) {
         if (pAlexaRepeat) {
             result = "The following message has been sent to " + cm + " : " + tts
         }
-/*        else {
-        	childApps.each {child ->
-            def ch = child.label
-            if (!ch) {
-			ttsActions(tts)
-      			log.info "No grandchild profiles"
-                outputTxt = "Your message has been sent to " + cm 
-                return outputTxt
-                	}
-				}
-*/				childApps.each {child ->
-                        def ch = child.label
-                        if (tts.toLowerCase() == ch.toLowerCase()) {
-                        	child.ttsActions()
-                            log.info "Multiple grandchild profiles"
-                     //   		tts = tts.replace("${tts}", "")
-                            	outputTxt = "I'm executing the shortcut for the room, " + cm
-                            		return outputTxt
-                                    }
-                            else if (tts.toLowerCase() != ch.toLowerCase() && tts.toLowerCase() == ch.toLowerCase()) {
-								ttsActions(tts)
-                            	outputTxt = "Your message has been sent to " + cm
-                                	return outputTxt
-                            	}
-                                else {
-                                	if (tts.toLowerCase() != ch.toLowerCase()) { 
-                                	ttsActions(tts)
-                            			outputTxt = "Your message has been sent to " + cm
-                                			return outputTxt
-                                	}
-                                }
-                            }
-                            ttsActions(tts)
-                                outputTxt = "Your message has been sent to " + cm
-                            	return outputTxt 
-                                }    
-                      		      
-            		//	}    
-        			
-        if(parent.debug) log.debug "running actions, sending result to Parent = ${result}"
-    	return outputTxt
     }
-//}    
+    def sc = childApps.find {s -> s.label?.toLowerCase() == tts.toLowerCase()}
+    if (sc) {
+        sc.ttsActions()
+        outputTxt = "I'm executing the shortcut for the room, " + cm
+        return outputTxt
+    }
+    else {
+        ttsActions(tts)
+        outputTxt = "Your message has been sent to " + cm
+        return outputTxt
+    }
+    if(parent.debug) log.debug "running actions, sending result to Parent = ${result}"
+    return outputTxt
+}
+    
 /******************************************************************************************************
 SPEECH AND TEXT ACTION
 ******************************************************************************************************/

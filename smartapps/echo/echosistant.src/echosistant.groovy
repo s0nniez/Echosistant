@@ -3135,7 +3135,6 @@ def processTts() {
 					def childRelease = child.checkRelease()
 					log.warn "childRelease = $childRelease"
                		
-
                     if (ptts.startsWith("get") || ptts.endsWith("tonight") || ptts.contains("weather") || ptts.contains("temperature") || ptts.contains("forecast") || ptts.contains("humidity") || ptts.contains("rain") || ptts.contains("wind")) {
                     	def pResponse = child.profileFeedbackEvaluate(dataSet)
                         outputTxt = pResponse.outputTxt
@@ -3143,14 +3142,14 @@ def processTts() {
                     	pContCmdsR = pResponse.pContCmdsR
                     	pTryAgain = pResponse.pTryAgain
                     	}
-					if (ptts.startsWith("has") || ptts.startsWith("give") || ptts.startsWith("for") || ptts.startsWith("how") || ptts.startsWith("what") || ptts.startsWith("is") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("check") || ptts.startsWith("who")) {
+					if (ptts.startsWith("has") || ptts.startsWith("give") || ptts.startsWith("for") || ptts.startsWith("how") || ptts.startsWith("what") || ptts.startsWith("when") || ptts.startsWith("which") || ptts.startsWith("are") || ptts.startsWith("check") || ptts.startsWith("who")) {
                         def pResponse = child.profileFeedbackEvaluate(dataSet)
                         outputTxt = pResponse.outputTxt
                     	pContCmds = pResponse.pContCmds
                     	pContCmdsR = pResponse.pContCmdsR
                     	pTryAgain = pResponse.pTryAgain
                     	}
-					else {  
+                    else {  
                         def pResponse = child.profileEvaluate(dataSet)
                 		outputTxt = pResponse.outputTxt
                     	pContCmds = pResponse.pContCmds
